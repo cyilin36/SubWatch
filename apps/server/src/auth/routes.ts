@@ -37,6 +37,23 @@ function sessionMeta(request: FastifyRequest): { userAgent: string | null; ip: s
   };
 }
 
+
+/**
+ * Direct port access is the default deployment. Capture the origin the admin
+ * actually used so notification deep links work without any domain/HTTPS
+ * configuration. Existing explicit (non-loopback) base URLs are never replaced.
+ */
+function maybeDetectBaseUrl(ctx: CoreContext, request: FastifyRequest): void {
+  const host = request.headers.host;
+  if (!host || !/^[A-Za-z0-9.\-:\[\]]+$/.test(host)) return;
+  const origin = `${request.protocol}://${host}`;
+  const current = ctx.settings.getGeneral().baseUrl;
+  const loopback = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i;
+  if (!current || (loopback.test(host) === false && loopback.test(current.replace(/^https?:\/\//, '')))) {
+    ctx.settings.updateGeneral({ baseUrl: origin });
+  }
+}
+
 export async function registerAuthRoutes(app: FastifyInstance, ctx: CoreContext): Promise<void> {
   const requireAuth = createRequireAuth(ctx);
 
@@ -55,6 +72,7 @@ export async function registerAuthRoutes(app: FastifyInstance, ctx: CoreContext)
       }
       const body = setupSchema.parse(request.body);
       ctx.settings.setPassword(body.password);
+      maybeDetectBaseUrl(ctx, request);
       const session = createSession(ctx.db, sessionMeta(request));
       setSessionCookie(reply, session.token, session.expiresAt, isSecure(request));
       ctx.logger.info('admin password initialized');
@@ -74,6 +92,7 @@ export async function registerAuthRoutes(app: FastifyInstance, ctx: CoreContext)
         ctx.logger.warn({ ip: request.ip }, 'failed admin login attempt');
         throw new UnauthorizedError('Invalid password');
       }
+      maybeDetectBaseUrl(ctx, request);
       const session = createSession(ctx.db, sessionMeta(request));
       setSessionCookie(reply, session.token, session.expiresAt, isSecure(request));
       return { setupRequired: false, authenticated: true } satisfies AuthStatusDto;

@@ -23,7 +23,7 @@ mkdir -p data
 docker compose up -d --build
 ```
 
-默认监听 `http://<主机>:8080`。首次打开会要求设置管理员密码。
+默认监听 `http://<主机>:8080`。**直接用浏览器打开 `http://<服务器IP>:8080` 即可使用，不需要域名、SSL 证书、反向代理或任何访问配置。** 首次打开会要求设置管理员密码。
 
 如果宿主机用户不是 UID/GID 1000，请先调整：
 
@@ -41,7 +41,6 @@ docker run -d --name subwatch \
   --restart unless-stopped \
   -p 8080:8080 \
   -e TZ=Asia/Shanghai \
-  -e SUBWATCH_BASE_URL=http://localhost:8080 \
   -v "$PWD/data:/app/data" \
   subwatch:latest
 ```
@@ -67,10 +66,10 @@ pnpm dev
 
 ## 首次使用
 
-1. 打开 `http://localhost:8080`，设置管理员密码（至少 8 位）。
+1. 浏览器打开 `http://<服务器IP>:8080`（或者 `http://localhost:8080`），设置管理员密码（至少 8 位）。
 2. 进入 **通知频道** 配置 SMTP 或 Webhook，并点击测试。
 3. 进入 **监控** 创建监控，或进入 **订阅** 从模板创建第一条订阅。
-4. 建议在 **设置 → 通用** 中确认时区、提醒时刻、默认提醒天数与实例公网地址（用于通知里的深链）。
+4. 实例地址会自动记录你首次登录时使用的地址，仅用于通知里的深链，**不影响访问**；只有以后改用域名/反代时才需要去 **设置 → 通用** 修改。
 
 如果忘记密码、或需要自动化初始化，可在首次启动前设置环境变量：
 
@@ -224,8 +223,8 @@ X-SubWatch-Signature: sha256=<hex hmac of raw body>
 | `TZ` | `Asia/Shanghai` | 默认时区（也可在设置里改） |
 | `SUBWATCH_SECRET_KEY` | 自动生成 | 32 字节密钥（64 hex 或 base64）；不设置则写入 `DATA_DIR/.secret-key` |
 | `SUBWATCH_ADMIN_PASSWORD` | 无 | 仅首次启动时初始化管理员密码 |
-| `SUBWATCH_BASE_URL` | `http://localhost:<PORT>` | 通知中的实例地址；设置页可覆盖 |
-| `TRUST_PROXY` | `0` | 位于可信反代后设为 `1` |
+| `SUBWATCH_BASE_URL` | 自动（首次登录地址） | 可选。仅用于通知里的深链，不影响访问 |
+| `TRUST_PROXY` | `0` | 仅在使用反向代理时需要设为 `1` |
 | `LOG_LEVEL` | `info` | pino 日志级别 |
 | `SUBWATCH_WEB_DIR` | 自动推导 | 前端构建产物目录（Docker 已设置） |
 
@@ -249,9 +248,11 @@ docker compose start
 
 ---
 
-## 反向代理与 HTTPS
+## 可选：域名与 HTTPS（不配置也能正常使用）
 
-建议放在 Nginx/Caddy 后，并将 `TRUST_PROXY=1`、`SUBWATCH_BASE_URL=https://你的域名`。
+SubWatch 默认就是“**能访问端口即可访问程序**”：直接使用 `http://IP:8080`，不依赖域名、证书、反向代理或 `TRUST_PROXY`。
+
+只有当你**主动希望**用域名/HTTPS 时才需要下面的配置；不做这些，直连 IP:端口仍然完全可用。
 
 Caddy 示例：
 
@@ -277,7 +278,7 @@ server {
 }
 ```
 
-HTTPS 下会话 Cookie 会自动带 `Secure` 标记。
+使用 HTTPS 时会话 Cookie 会自动带 `Secure` 标记；使用 HTTP 时不会，登录和全部功能照常工作。
 
 ---
 
@@ -286,7 +287,7 @@ HTTPS 下会话 Cookie 会自动带 `Secure` 标记。
 - 单管理员密码，scrypt 哈希；会话 Cookie `HttpOnly` + `SameSite=Lax`，7 天过期；登录限流。
 - 变更类请求要求同源与 `X-Requested-With: subwatch` 头；CSP 限制外部资源。
 - 敏感配置 AES-256-GCM 加密存储；API 返回掩码；日志脱敏。
-- 监控目标 URL 由管理员配置（这是工具能力），请勿把管理权限开放给不可信用户；不要将 WebUI 直接暴露公网而不加认证/反代保护。
+- 监控目标 URL 由管理员配置（这是工具能力），请勿把管理权限开放给不可信用户；即使直接暴露端口，也请保留管理员密码。
 - 自定义 JS 由管理员编写并受信任；沙箱用于防误操作，不是对抗恶意管理员的强安全边界。
 - 不执行任意 Shell；外部脚本通过 Push API 上报。
 

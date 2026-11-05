@@ -16,7 +16,6 @@ services:
       TZ: ${TZ:-Asia/Shanghai}
       DATA_DIR: /app/data
       SUBWATCH_WEB_DIR: /app/web
-      SUBWATCH_BASE_URL: ${SUBWATCH_BASE_URL:-http://localhost:8080}
       TRUST_PROXY: ${TRUST_PROXY:-0}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     env_file:

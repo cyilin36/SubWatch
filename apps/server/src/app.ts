@@ -36,6 +36,9 @@ export async function buildApp(context: CoreContext, modules: AppModules): Promi
         frameAncestors: ["'self'"],
       },
     },
+    // Direct HTTP access on a LAN/NAS is the primary deployment. Never let a
+    // browser cache an HSTS policy that would force HTTPS later.
+    strictTransportSecurity: false,
     crossOriginEmbedderPolicy: false,
   });
   await app.register(fastifyCookie);
