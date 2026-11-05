@@ -1,0 +1,79 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+}
+
+:root {
+  --background: #f6f7f9;
+  --surface: #ffffff;
+  --surface-muted: #f0f2f5;
+  --border: #e3e6eb;
+  --foreground: #1d2129;
+  --muted-foreground: #6b7280;
+  --brand: #2563eb;
+  --brand-foreground: #ffffff;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --info: #0ea5e9;
+  color-scheme: light;
+}
+
+.dark {
+  --background: #0f1115;
+  --surface: #171a21;
+  --surface-muted: #1e222b;
+  --border: #2a2f3a;
+  --foreground: #e5e7eb;
+  --muted-foreground: #9ca3af;
+  --brand: #3b82f6;
+  --brand-foreground: #ffffff;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #38bdf8;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  border-color: var(--border);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 25%, transparent);
+}
+
+/* Thin, theme-aware scrollbars for long tables/log panels. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}

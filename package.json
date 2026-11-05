@@ -1,0 +1,18 @@
+{
+  "name": "subwatch",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-hosted subscription tracker, custom quota monitor and reminder with webhook/email notifications",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@11.22.0",
+  "scripts": {
+    "dev": "pnpm build:shared && pnpm -r --parallel --filter @subwatch/server --filter @subwatch/web dev",
+    "build:shared": "pnpm --filter @subwatch/shared build",
+    "build": "pnpm build:shared && pnpm --filter @subwatch/web build && pnpm --filter @subwatch/server build",
+    "start": "node apps/server/dist/index.js",
+    "typecheck": "pnpm build:shared && pnpm -r typecheck"
+  }
+}

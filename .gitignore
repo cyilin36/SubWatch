@@ -1,0 +1,47 @@
+# ---------------------------------------------------------------------------
+# Hard rule 2 (see AGENTS.md): only production source, deployment config and
+# user/ops documentation may enter git. Everything below is local-only.
+# ---------------------------------------------------------------------------
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+/dist/
+/apps/*/dist/
+/packages/*/dist/
+
+# Runtime data (SQLite DB, secret key, backups)
+/data/
+/apps/*/data/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Tool caches and temporary files
+.cache/
+.tmp/
+*.log
+*.pid
+
+# Development, tests, design, research and generated artifacts
+/dev/
+/tests/
+/design/
+/docs-private/
+/coverage/
+/playwright-report/
+/test-results/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Editor / OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
