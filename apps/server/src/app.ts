@@ -24,15 +24,21 @@ export async function buildApp(context: CoreContext, modules: AppModules): Promi
 
   await app.register(fastifyHelmet, {
     contentSecurityPolicy: {
+      // Do not merge Helmet's defaults: its default policy includes
+      // `upgrade-insecure-requests`, which makes browsers silently rewrite
+      // http://<lan-ip>:PORT/assets/*.js to https:// and leaves the SPA blank.
+      useDefaults: false,
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
+        scriptSrcAttr: ["'none'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", 'data:'],
         fontSrc: ["'self'", 'data:'],
         connectSrc: ["'self'"],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
+        formAction: ["'self'"],
         frameAncestors: ["'self'"],
       },
     },
@@ -40,6 +46,8 @@ export async function buildApp(context: CoreContext, modules: AppModules): Promi
     // browser cache an HSTS policy that would force HTTPS later.
     strictTransportSecurity: false,
     crossOriginEmbedderPolicy: false,
+    // Ignored on plain-HTTP LAN origins and only produces console noise.
+    crossOriginOpenerPolicy: false,
   });
   await app.register(fastifyCookie);
   await app.register(fastifyRateLimit, {
@@ -72,6 +80,15 @@ export async function buildApp(context: CoreContext, modules: AppModules): Promi
         throw new ForbiddenError('Invalid Origin header');
       }
     }
+  });
+
+  // Never let a mobile browser keep a stale index.html/CSP after an upgrade.
+  app.addHook('onSend', async (_request, reply, payload) => {
+    const contentType = reply.getHeader('content-type');
+    if (typeof contentType === 'string' && contentType.includes('text/html')) {
+      reply.header('cache-control', 'no-cache, no-store, must-revalidate');
+    }
+    return payload;
   });
 
   const webIndex = path.join(context.config.webDir, 'index.html');
