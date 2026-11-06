@@ -2,15 +2,13 @@ import type { FastifyInstance } from 'fastify';
 import type { ModuleContext, SubscriptionModule } from '../context.js';
 import { REMINDER_SCAN_INTERVAL_MS, rebuildAllPendingReminders, scanDueReminders } from './reminders.js';
 import { registerSubscriptionRoutes } from './routes.js';
-import { registerTemplateRoutes, seedBuiltinTemplates } from './templates.js';
 
 /**
- * Subscription + template module: built-in template seeding, CRUD/renewal
- * routes and the expiry reminder scheduler.
+ * Subscription module: reminder CRUD/renewal routes and the expiry reminder
+ * scheduler. Every subscription is now a plain reminder record: name, optional
+ * link, expiry date, cycle, offsets and channels.
  */
 export function createSubscriptionModule(ctx: ModuleContext): SubscriptionModule {
-  seedBuiltinTemplates(ctx);
-
   let timer: ReturnType<typeof setInterval> | undefined;
   let stopped = false;
 
@@ -34,7 +32,6 @@ export function createSubscriptionModule(ctx: ModuleContext): SubscriptionModule
 
   return {
     registerRoutes(app: FastifyInstance) {
-      registerTemplateRoutes(app, ctx);
       registerSubscriptionRoutes(app, ctx);
     },
     start() {

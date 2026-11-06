@@ -17,39 +17,6 @@ export function intlLocale(locale: string): string {
   return INTL_LOCALES[locale] ?? 'en-US';
 }
 
-/** Format an integer amount of cents with the given ISO-4217 currency. */
-export function formatMoney(
-  cents: number | null | undefined,
-  currency: string,
-  locale: string,
-): string {
-  if (cents === null || cents === undefined || !Number.isFinite(cents)) return '—';
-  try {
-    return new Intl.NumberFormat(intlLocale(locale), {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(cents / 100);
-  } catch {
-    return `${(cents / 100).toFixed(2)} ${currency}`;
-  }
-}
-
-/** Parse a user-entered money amount (major units) into integer cents. */
-export function parseMoneyToCents(input: string): number | null {
-  const trimmed = input.trim();
-  if (trimmed === '') return null;
-  const value = Number(trimmed);
-  if (!Number.isFinite(value) || value < 0) return null;
-  return Math.round(value * 100);
-}
-
-export function formatCentsInput(cents: number | null | undefined): string {
-  if (cents === null || cents === undefined) return '';
-  return (cents / 100).toFixed(2);
-}
-
 export function formatDateTime(
   iso: string | null | undefined,
   timezone: string,
@@ -158,7 +125,6 @@ const STATUS_TONES: Record<string, Tone> = {
   unknown: 'muted',
   skipped_no_channel: 'muted',
   paused: 'info',
-  archived: 'muted',
 };
 
 export function statusTone(status: MonitorStatus | SubscriptionStatus | NotificationStatus | string): Tone {
@@ -226,14 +192,8 @@ export function localizeFieldError(message: string | undefined, t: (key: string,
     'Expected a valid YYYY-MM-DD date': 'validation.invalidDate',
     'At least one warning or critical threshold is required': 'validation.thresholdRequired',
     'Critical threshold must be more severe than the warning threshold': 'validation.thresholdOrder',
-    'expiryDate must be after startDate': 'validation.expiryAfterStart',
-    'Custom day cycles require cycleDays': 'validation.cycleDaysRequired',
-    'Custom renewal mode requires a date': 'validation.renewDateRequired',
     'Password must be at least 8 characters': 'validation.passwordTooShort',
-    'Expected ISO-4217 currency code': 'validation.invalidCurrency',
-    'Field key must start with a letter or underscore': 'validation.fieldKey',
     'Metric key must start with a letter or underscore': 'validation.metricKey',
-    'Select fields require at least one option': 'validation.selectOptionsRequired',
     'Expected HH:mm': 'validation.invalidTime',
     'baseUrl must be empty or start with http(s)://': 'validation.invalidBaseUrl',
     'Recovery condition must be set together with recovery value': 'validation.recoveryTogether',
@@ -243,8 +203,6 @@ export function localizeFieldError(message: string | undefined, t: (key: string,
     'Number must be greater than or equal to 1000': 'validation.numberTooSmall',
   };
   if (exact[message]) return t(exact[message]);
-  const duplicate = /^Duplicate field key: (.+)$/.exec(message);
-  if (duplicate) return t('validation.duplicateFieldKey', { key: duplicate[1] });
   const minString = /^String must contain at least (\d+) character\(s\)$/.exec(message);
   if (minString) return t('validation.minLength', { count: minString[1] });
   const minNumber = /^Number must be greater than or equal to (.+)$/.exec(message);

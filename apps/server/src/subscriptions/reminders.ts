@@ -7,9 +7,10 @@ import {
   type NotificationEventType,
 } from '@subwatch/shared';
 import type { ModuleContext } from '../context.js';
-import { all, nowIso, parseJson, run, withTransaction } from '../db/helpers.js';
+import { all, nowIso, run, withTransaction } from '../db/helpers.js';
 import { BadRequestError } from '../lib/errors.js';
-import { resolveEffectiveOffsets, type SubscriptionReminderState } from './fields.js';
+import { parseChannelIds, parseReminderOffsets } from './parse.js';
+import { resolveEffectiveOffsets, type SubscriptionReminderState } from './status.js';
 
 export const REMINDER_SCAN_INTERVAL_MS = 30_000;
 
@@ -18,7 +19,6 @@ interface ReminderStateRow {
   expiry_date: string;
   reminder_offsets: string;
   paused: number;
-  archived: number;
 }
 
 interface DueReminderRow {
@@ -30,7 +30,6 @@ interface DueReminderRow {
   name: string;
   channel_ids: string;
   paused: number;
-  archived: number;
 }
 
 interface ReminderSchedule {
@@ -62,7 +61,7 @@ function insertScheduleRows(
   general: GeneralSettings,
   state: SubscriptionReminderState,
 ): void {
-  if (state.paused || state.archived) return;
+  if (state.paused) return;
   const offsets = resolveEffectiveOffsets(state.reminderOffsets, general);
   if (offsets.length === 0) return;
   let schedules: ReminderSchedule[];
@@ -114,27 +113,17 @@ export function rebuildAllPendingReminders(ctx: ModuleContext): void {
     run(ctx.db, "DELETE FROM subscription_reminders WHERE status = 'pending'");
     const rows = all<ReminderStateRow>(
       ctx.db,
-      'SELECT id, expiry_date, reminder_offsets, paused, archived FROM subscriptions',
+      'SELECT id, expiry_date, reminder_offsets, paused FROM subscriptions',
     );
     for (const row of rows) {
-      const offsets = parseJson<unknown>(row.reminder_offsets, []);
       insertScheduleRows(ctx.db, general, {
         subscriptionId: row.id,
         expiryDate: row.expiry_date,
-        reminderOffsets: Array.isArray(offsets)
-          ? offsets.filter((value): value is number => typeof value === 'number' && Number.isInteger(value))
-          : [],
+        reminderOffsets: parseReminderOffsets(row.reminder_offsets),
         paused: Number(row.paused) === 1,
-        archived: Number(row.archived) === 1,
       });
     }
   });
-}
-
-function parseChannelIds(raw: string): string[] {
-  const values = parseJson<unknown>(raw, []);
-  if (!Array.isArray(values)) return [];
-  return values.filter((value): value is string => typeof value === 'string' && value.length > 0);
 }
 
 function appUrlFor(ctx: ModuleContext, subscriptionId: string): string {
@@ -184,7 +173,7 @@ function buildReminderCopy(
  * Send one reminder per (subscription, expiry) group for all rows that are due.
  * The most urgent offset (smallest remaining days) wins; less urgent due rows
  * are marked `suppressed` so a long outage does not fan out into a notification
- * storm. Paused/archived subscriptions have their pending rows dropped.
+ * storm. Paused subscriptions have their pending rows dropped.
  */
 export function scanDueReminders(ctx: ModuleContext): void {
   const general = ctx.settings.getGeneral();
@@ -193,7 +182,7 @@ export function scanDueReminders(ctx: ModuleContext): void {
   const rows = all<DueReminderRow>(
     ctx.db,
     `SELECT r.id AS reminder_id, r.subscription_id, r.expiry_date, r.offset_days, r.scheduled_for,
-            s.name, s.channel_ids, s.paused, s.archived
+            s.name, s.channel_ids, s.paused
        FROM subscription_reminders r
        JOIN subscriptions s ON s.id = r.subscription_id
       WHERE r.status = 'pending' AND r.scheduled_for <= ?
@@ -213,7 +202,7 @@ export function scanDueReminders(ctx: ModuleContext): void {
   for (const group of groups.values()) {
     const chosen = group[0];
     if (!chosen) continue;
-    if (Number(chosen.paused) === 1 || Number(chosen.archived) === 1) {
+    if (Number(chosen.paused) === 1) {
       run(ctx.db, "DELETE FROM subscription_reminders WHERE subscription_id = ? AND status = 'pending'", [
         chosen.subscription_id,
       ]);
@@ -314,23 +303,15 @@ export function enqueueRenewedNotification(
     name: string;
     fromDate: string;
     toDate: string;
-    amountCents: number | null;
-    currency: string;
     channelIds: string[];
   },
 ): void {
   const general = ctx.settings.getGeneral();
-  const amount =
-    input.amountCents === null
-      ? ''
-      : general.locale === 'en'
-        ? ` (${(input.amountCents / 100).toFixed(2)} ${input.currency})`
-        : `（${(input.amountCents / 100).toFixed(2)} ${input.currency}）`;
   const title = general.locale === 'en' ? `Subscription renewed: ${input.name}` : `订阅已续期：${input.name}`;
   const message =
     general.locale === 'en'
-      ? `Renewed from ${input.fromDate} to ${input.toDate}${amount}`
-      : `已从 ${input.fromDate} 续期至 ${input.toDate}${amount}`;
+      ? `Renewed from ${input.fromDate} to ${input.toDate}`
+      : `已从 ${input.fromDate} 续期至 ${input.toDate}`;
   ctx.notifications.enqueue({
     eventType: 'subscription.renewed',
     eventKey: `sub-renewed:${input.subscriptionId}:${input.toDate}`,
@@ -344,8 +325,6 @@ export function enqueueRenewedNotification(
         fromDate: input.fromDate,
         toDate: input.toDate,
         expiryDate: input.toDate,
-        amountCents: input.amountCents,
-        currency: input.currency,
       },
       appUrl: appUrlFor(ctx, input.subscriptionId),
     },

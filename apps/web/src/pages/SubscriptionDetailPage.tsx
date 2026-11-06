@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  Archive,
-  ArchiveRestore,
   ArrowLeft,
   BellRing,
   CreditCard,
+  ExternalLink,
   Pause,
   Pencil,
   Play,
@@ -17,20 +16,16 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import {
-  SECRET_KEEP,
-  subscriptionInputSchema,
-  type ChannelDto,
-  type MonitorDto,
-  type SubscriptionDto,
-  type TemplateDto,
-  type TemplateField,
-} from '@subwatch/shared';
+import { subscriptionInputSchema, type SubscriptionDto } from '@subwatch/shared';
 import { api } from '../lib/api';
 import { applyZodIssues } from '../lib/form';
-import { subscriptionInputFromDto } from '../lib/subscriptions';
+import {
+  subscriptionFormToInput,
+  subscriptionToFormValues,
+  type SubscriptionFormValues,
+} from '../lib/subscriptions';
 import { useAuth } from '../providers/AuthProvider';
-import { errorMessage, formatDateTime, formatMoney } from '../lib/utils';
+import { errorMessage, formatDateTime } from '../lib/utils';
 import {
   Alert,
   Badge,
@@ -53,12 +48,7 @@ import {
   TR,
 } from '../components/ui';
 import { RenewDialog, type RenewTarget } from '../components/subscriptions/RenewDialog';
-import {
-  SubscriptionFormFields,
-  subscriptionToFormValues,
-  validateRequiredTemplateFields,
-  type SubscriptionFormValues,
-} from '../components/subscriptions/SubscriptionFormFields';
+import { SubscriptionFormFields } from '../components/subscriptions/SubscriptionFormFields';
 
 export function SubscriptionDetailPage() {
   const { t } = useTranslation();
@@ -70,9 +60,6 @@ export function SubscriptionDetailPage() {
     enabled: Boolean(id),
     refetchInterval: 15_000,
   });
-  const templatesQuery = useQuery({ queryKey: ['templates'], queryFn: () => api.templates.list() });
-  const monitorsQuery = useQuery({ queryKey: ['monitors'], queryFn: () => api.monitors.list() });
-  const channelsQuery = useQuery({ queryKey: ['channels'], queryFn: () => api.channels.list() });
 
   if (subscriptionQuery.isPending) {
     return (
@@ -92,62 +79,33 @@ export function SubscriptionDetailPage() {
     );
   }
 
-  return (
-    <SubscriptionDetailContent
-      subscription={subscriptionQuery.data}
-      templates={templatesQuery.data ?? []}
-      monitors={monitorsQuery.data ?? []}
-      channels={channelsQuery.data ?? []}
-    />
-  );
+  return <SubscriptionDetailContent subscription={subscriptionQuery.data} />;
 }
 
-function displayTemplateFieldValue(
-  field: TemplateField,
-  value: unknown,
-  t: (key: string) => string,
-): string {
-  if (value === undefined || value === null || value === '') return '—';
-  if (value === SECRET_KEEP || field.type === 'secret') return '••••••••';
-  if (field.type === 'switch') return value ? t('common.yes') : t('common.no');
-  return String(value);
-}
-
-function SubscriptionDetailContent({
-  subscription,
-  templates,
-  monitors,
-  channels,
-}: {
-  subscription: SubscriptionDto;
-  templates: TemplateDto[];
-  monitors: MonitorDto[];
-  channels: ChannelDto[];
-}) {
+function SubscriptionDetailContent({ subscription }: { subscription: SubscriptionDto }) {
   const { t } = useTranslation();
   const { timezone, locale } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const template = templates.find((entry) => entry.id === subscription.templateId);
+  const channelsQuery = useQuery({ queryKey: ['channels'], queryFn: () => api.channels.list() });
   const [editing, setEditing] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [renewTarget, setRenewTarget] = useState<RenewTarget | null>(null);
 
   const form = useForm<SubscriptionFormValues>({
-    defaultValues: subscriptionToFormValues(subscription, template),
+    defaultValues: subscriptionToFormValues(subscription),
   });
 
   useEffect(() => {
-    if (!editing) form.reset(subscriptionToFormValues(subscription, template));
+    if (!editing) form.reset(subscriptionToFormValues(subscription));
     // Only re-sync while not editing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subscription, template, editing]);
+  }, [subscription, editing]);
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['subscription', subscription.id] });
     void queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
-    void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
   };
 
   const updateMutation = useMutation({
@@ -171,21 +129,6 @@ function SubscriptionDetailContent({
     onError: (error) => toast.error(errorMessage(error)),
   });
 
-  const archiveMutation = useMutation({
-    mutationFn: () =>
-      api.subscriptions.update(subscription.id, {
-        ...subscriptionInputFromDto(subscription),
-        archived: !subscription.archived,
-      }),
-    onSuccess: () => {
-      toast.success(
-        subscription.archived ? t('subscriptions.unarchiveSuccess') : t('subscriptions.archiveSuccess'),
-      );
-      invalidate();
-    },
-    onError: (error) => toast.error(errorMessage(error)),
-  });
-
   const testReminderMutation = useMutation({
     mutationFn: () => api.subscriptions.testReminder(subscription.id),
     onSuccess: (result) => {
@@ -201,22 +144,13 @@ function SubscriptionDetailContent({
     onSuccess: () => {
       toast.success(t('subscriptions.deleted'));
       void queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
-      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      navigate('/subscriptions', { replace: true });
+      navigate('/', { replace: true });
     },
     onError: (error) => toast.error(errorMessage(error)),
   });
 
   const onSave = form.handleSubmit((values) => {
-    if (
-      !validateRequiredTemplateFields(form, template, (label) =>
-        t('subscriptionForm.requiredField', { label }),
-      )
-    ) {
-      toast.error(t('errors.validation'));
-      return;
-    }
-    const parsed = subscriptionInputSchema.safeParse(values);
+    const parsed = subscriptionInputSchema.safeParse(subscriptionFormToInput(values));
     if (!parsed.success) {
       applyZodIssues(form, parsed.error);
       toast.error(t('errors.validation'));
@@ -225,20 +159,12 @@ function SubscriptionDetailContent({
     updateMutation.mutate(parsed.data);
   });
 
-  const renewals = subscription.renewals ?? [];
-  const channelNames = subscription.channelIds.map(
-    (channelId) => channels.find((channel) => channel.id === channelId)?.name ?? channelId,
-  );
-  const linkedMonitors = subscription.linkedMonitorIds.map((monitorId) => ({
-    id: monitorId,
-    name: monitors.find((monitor) => monitor.id === monitorId)?.name ?? monitorId,
-  }));
+  const channelNames = subscription.channelIds
+    .map((channelId) => (channelsQuery.data ?? []).find((channel) => channel.id === channelId)?.name)
+    .filter((name): name is string => Boolean(name));
 
   const daysLeft = subscription.daysLeft;
-  const cycleLabel =
-    subscription.cycle === 'custom_days'
-      ? `${t('cycle.custom_days')} · ${subscription.cycleDays ?? '—'}`
-      : t(`cycle.${subscription.cycle}`);
+  const renewals = subscription.renewals ?? [];
 
   const editingForm = (
     <form
@@ -250,18 +176,15 @@ function SubscriptionDetailContent({
     >
       <SubscriptionFormFields
         form={form}
-        templates={templates}
-        channels={channels}
-        monitors={monitors}
+        channels={channelsQuery.data ?? []}
         timezone={timezone}
-        locale={locale}
       />
       <Card className="flex flex-wrap items-center justify-end gap-2 p-3">
         <Button
           type="button"
           variant="outline"
           onClick={() => {
-            form.reset(subscriptionToFormValues(subscription, template));
+            form.reset(subscriptionToFormValues(subscription));
             setEditing(false);
           }}
         >
@@ -284,12 +207,12 @@ function SubscriptionDetailContent({
             <StatusBadge status={subscription.status} />
           </span>
         }
-        description={template?.name ?? t('subscriptionForm.blankTemplate')}
+        description={`${subscription.expiryDate} · ${t(`cycle.${subscription.cycle}`)}`}
         icon={<CreditCard className="h-5 w-5" />}
         actions={
           editing ? null : (
             <>
-              <Button variant="outline" size="sm" onClick={() => navigate('/subscriptions')}>
+              <Button variant="outline" size="sm" onClick={() => navigate('/')}>
                 <ArrowLeft className="h-4 w-4" aria-hidden />
                 {t('common.back')}
               </Button>
@@ -305,10 +228,7 @@ function SubscriptionDetailContent({
                     id: subscription.id,
                     name: subscription.name,
                     expiryDate: subscription.expiryDate,
-                    amountCents: subscription.amountCents,
-                    currency: subscription.currency,
                     cycle: subscription.cycle,
-                    cycleDays: subscription.cycleDays,
                   })
                 }
               >
@@ -324,27 +244,18 @@ function SubscriptionDetailContent({
                 {!testReminderMutation.isPending ? <BellRing className="h-4 w-4" aria-hidden /> : null}
                 {t('subscriptions.testReminder')}
               </Button>
-              {!subscription.archived ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => lifecycleMutation.mutate(subscription.paused ? 'resume' : 'pause')}
-                >
-                  {subscription.paused ? (
-                    <Play className="h-4 w-4" aria-hidden />
-                  ) : (
-                    <Pause className="h-4 w-4" aria-hidden />
-                  )}
-                  {subscription.paused ? t('subscriptions.resume') : t('subscriptions.pause')}
-                </Button>
-              ) : null}
-              <Button variant="outline" size="sm" onClick={() => archiveMutation.mutate()}>
-                {subscription.archived ? (
-                  <ArchiveRestore className="h-4 w-4" aria-hidden />
+              <Button
+                variant="outline"
+                size="sm"
+                loading={lifecycleMutation.isPending}
+                onClick={() => lifecycleMutation.mutate(subscription.paused ? 'resume' : 'pause')}
+              >
+                {subscription.paused ? (
+                  <Play className="h-4 w-4" aria-hidden />
                 ) : (
-                  <Archive className="h-4 w-4" aria-hidden />
+                  <Pause className="h-4 w-4" aria-hidden />
                 )}
-                {subscription.archived ? t('subscriptions.unarchive') : t('subscriptions.archive')}
+                {subscription.paused ? t('subscriptions.resume') : t('subscriptions.pause')}
               </Button>
               <Button variant="danger" size="sm" onClick={() => setDeleteOpen(true)}>
                 <Trash2 className="h-4 w-4" aria-hidden />
@@ -358,223 +269,153 @@ function SubscriptionDetailContent({
       {editing ? (
         editingForm
       ) : (
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="min-w-0 space-y-4 lg:col-span-2">
-            {daysLeft < 0 && !subscription.archived ? (
-              <Alert tone="danger" title={t('subscriptions.expiredLabel')}>
-                {t('subscriptions.expiredHint')}
-              </Alert>
-            ) : daysLeft <= 7 && !subscription.paused && !subscription.archived ? (
-              <Alert tone="warning" title={t('subscriptions.expiringLabel')}>
-                {t('subscriptions.expiringHint', { count: Math.max(daysLeft, 0) })}
-              </Alert>
-            ) : null}
+        <div className="mx-auto max-w-3xl space-y-4">
+          {!subscription.paused && subscription.status === 'expired' ? (
+            <Alert tone="danger" title={t('status.expired')}>
+              {t('subscriptions.expiredHint')}
+            </Alert>
+          ) : !subscription.paused && subscription.status === 'expiring' ? (
+            <Alert tone="warning" title={t('status.expiring')}>
+              {t('subscriptions.expiringHint', { count: Math.max(daysLeft, 0) })}
+            </Alert>
+          ) : null}
 
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('subscriptions.baseInfo')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <div>
-                    <dt className="text-xs text-[var(--muted-foreground)]">{t('subscriptions.template')}</dt>
-                    <dd className="mt-0.5 text-sm font-medium">
-                      {template?.name ?? t('subscriptionForm.blankTemplate')}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-[var(--muted-foreground)]">{t('subscriptions.startDate')}</dt>
-                    <dd className="mt-0.5 text-sm">{subscription.startDate}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-[var(--muted-foreground)]">
-                      {t('subscriptions.expiryDate')}
-                    </dt>
-                    <dd className="mt-0.5 text-sm font-medium">{subscription.expiryDate}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-[var(--muted-foreground)]">{t('subscriptions.daysLeft')}</dt>
-                    <dd className="mt-0.5 text-sm">
-                      {daysLeft < 0
-                        ? t('subscriptions.daysOverdue', { count: Math.abs(daysLeft) })
-                        : daysLeft === 0
-                          ? t('subscriptions.dueToday')
-                          : t('subscriptions.daysUntil', { count: daysLeft })}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-[var(--muted-foreground)]">{t('subscriptions.cycle')}</dt>
-                    <dd className="mt-0.5 text-sm">{cycleLabel}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-[var(--muted-foreground)]">{t('subscriptions.amount')}</dt>
-                    <dd className="mt-0.5 text-sm font-medium">
-                      {formatMoney(subscription.amountCents, subscription.currency, locale)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-[var(--muted-foreground)]">
-                      {t('subscriptions.reminders')}
-                    </dt>
-                    <dd className="mt-1 flex flex-wrap gap-1">
-                      {subscription.reminderOffsets.length === 0 ? (
-                        <span className="text-sm text-[var(--muted-foreground)]">{t('common.none')}</span>
-                      ) : (
-                        subscription.reminderOffsets.map((offset) => (
-                          <Badge key={offset} tone="info">
-                            {t('common.days', { count: offset })}
-                          </Badge>
-                        ))
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-[var(--muted-foreground)]">{t('subscriptions.reminders')}</dt>
-                    <dd className="mt-1 flex flex-wrap gap-1">
-                      {channelNames.length === 0 ? (
-                        <span className="text-sm text-[var(--muted-foreground)]">{t('settings.noChannels')}</span>
-                      ) : (
-                        channelNames.map((name) => (
-                          <Badge key={name} tone="muted">
-                            {name}
-                          </Badge>
-                        ))
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-[var(--muted-foreground)]">
-                      {t('subscriptions.createdAtLabel')}
-                    </dt>
-                    <dd className="mt-0.5 text-sm">
-                      {formatDateTime(subscription.createdAt, timezone, locale)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-[var(--muted-foreground)]">
-                      {t('subscriptions.updatedAtLabel')}
-                    </dt>
-                    <dd className="mt-0.5 text-sm">
-                      {formatDateTime(subscription.updatedAt, timezone, locale)}
-                    </dd>
-                  </div>
-                </dl>
-                {subscription.paused ? (
-                  <p className="mt-3 text-xs text-[var(--warning)]">{t('subscriptions.statusPaused')}</p>
-                ) : null}
-                {subscription.archived ? (
-                  <p className="mt-3 text-xs text-[var(--muted-foreground)]">
-                    {t('subscriptions.statusArchived')}
-                  </p>
-                ) : null}
-              </CardContent>
-            </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('subscriptions.info')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs text-[var(--muted-foreground)]">
+                    {t('subscriptions.expiryDate')}
+                  </dt>
+                  <dd className="mt-0.5 text-sm font-medium">{subscription.expiryDate}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-[var(--muted-foreground)]">
+                    {t('subscriptions.daysLeft')}
+                  </dt>
+                  <dd className="mt-0.5 text-sm">
+                    {subscription.paused ? (
+                      <span className="text-[var(--muted-foreground)]">
+                        {t('subscriptions.statusPaused')}
+                      </span>
+                    ) : daysLeft < 0 ? (
+                      <span className="text-[var(--danger)]">
+                        {t('subscriptions.daysOverdue', { count: Math.abs(daysLeft) })}
+                      </span>
+                    ) : daysLeft === 0 ? (
+                      <span className="text-[var(--warning)]">{t('subscriptions.dueToday')}</span>
+                    ) : (
+                      <span className={daysLeft <= 7 ? 'text-[var(--warning)]' : undefined}>
+                        {t('subscriptions.daysUntil', { count: daysLeft })}
+                      </span>
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-[var(--muted-foreground)]">{t('subscriptions.cycle')}</dt>
+                  <dd className="mt-0.5 text-sm">{t(`cycle.${subscription.cycle}`)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-[var(--muted-foreground)]">
+                    {t('subscriptions.link')}
+                  </dt>
+                  <dd className="mt-0.5 truncate text-sm">
+                    {subscription.url ? (
+                      <a
+                        href={subscription.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex max-w-full items-center gap-1 text-[var(--brand)] hover:underline"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                        <span className="truncate">{subscription.url}</span>
+                      </a>
+                    ) : (
+                      <span className="text-[var(--muted-foreground)]">
+                        {t('subscriptions.noLink')}
+                      </span>
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-[var(--muted-foreground)]">
+                    {t('subscriptions.reminders')}
+                  </dt>
+                  <dd className="mt-1 flex flex-wrap gap-1">
+                    {subscription.reminderOffsets.length === 0 ? (
+                      <span className="text-sm text-[var(--muted-foreground)]">{t('common.none')}</span>
+                    ) : (
+                      subscription.reminderOffsets.map((offset) => (
+                        <Badge key={offset} tone="info">
+                          {t('common.days', { count: offset })}
+                        </Badge>
+                      ))
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-[var(--muted-foreground)]">
+                    {t('subscriptions.channels')}
+                  </dt>
+                  <dd className="mt-1 flex flex-wrap gap-1">
+                    {channelNames.length === 0 ? (
+                      <span className="text-sm text-[var(--muted-foreground)]">
+                        {t('subscriptions.defaultChannels')}
+                      </span>
+                    ) : (
+                      channelNames.map((name) => (
+                        <Badge key={name} tone="muted">
+                          {name}
+                        </Badge>
+                      ))
+                    )}
+                  </dd>
+                </div>
+              </dl>
 
-            {template && template.fields.length > 0 ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('subscriptions.templateFields')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {template.fields.map((field) => (
-                      <div key={field.key}>
-                        <dt className="text-xs text-[var(--muted-foreground)]">{field.label}</dt>
-                        <dd className="mt-0.5 break-words text-sm">
-                          {displayTemplateFieldValue(field, subscription.fields[field.key], t)}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                </CardContent>
-              </Card>
-            ) : null}
+              {subscription.notes ? (
+                <div className="mt-4 border-t border-[var(--border)] pt-3">
+                  <p className="text-xs text-[var(--muted-foreground)]">{t('subscriptions.notes')}</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-sm">{subscription.notes}</p>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('subscriptions.renewals')}</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                {renewals.length === 0 ? (
-                  <EmptyState className="border-none py-8" title={t('subscriptions.noRenewals')} />
-                ) : (
-                  <Table>
-                    <THead>
-                      <TR>
-                        <TH>{t('subscriptions.renewalFrom')}</TH>
-                        <TH>{t('subscriptions.renewalTo')}</TH>
-                        <TH className="hidden sm:table-cell">{t('subscriptions.renewalAmount')}</TH>
-                        <TH className="hidden md:table-cell">{t('subscriptions.renewalNote')}</TH>
-                        <TH className="hidden lg:table-cell">{t('subscriptions.renewalCreatedAt')}</TH>
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('subscriptions.renewals')}</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {renewals.length === 0 ? (
+                <EmptyState className="border-none py-8" title={t('subscriptions.noRenewals')} />
+              ) : (
+                <Table>
+                  <THead>
+                    <TR>
+                      <TH>{t('subscriptions.renewalFrom')}</TH>
+                      <TH>{t('subscriptions.renewalTo')}</TH>
+                      <TH className="hidden sm:table-cell">{t('subscriptions.renewalCreatedAt')}</TH>
+                    </TR>
+                  </THead>
+                  <TBody>
+                    {renewals.map((renewal) => (
+                      <TR key={renewal.id}>
+                        <TD>{renewal.fromDate}</TD>
+                        <TD className="font-medium">{renewal.toDate}</TD>
+                        <TD className="hidden text-xs sm:table-cell">
+                          {formatDateTime(renewal.createdAt, timezone, locale)}
+                        </TD>
                       </TR>
-                    </THead>
-                    <TBody>
-                      {renewals.map((renewal) => (
-                        <TR key={renewal.id}>
-                          <TD>{renewal.fromDate}</TD>
-                          <TD className="font-medium">{renewal.toDate}</TD>
-                          <TD className="hidden sm:table-cell">
-                            {formatMoney(
-                              renewal.amountCents,
-                              renewal.currency ?? subscription.currency,
-                              locale,
-                            )}
-                          </TD>
-                          <TD className="hidden max-w-[200px] truncate md:table-cell">
-                            {renewal.note || '—'}
-                          </TD>
-                          <TD className="hidden lg:table-cell text-xs">
-                            {formatDateTime(renewal.createdAt, timezone, locale)}
-                          </TD>
-                        </TR>
-                      ))}
-                    </TBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <aside className="min-w-0 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('subscriptions.linkedMonitors')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {linkedMonitors.length === 0 ? (
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    {t('subscriptions.noLinkedMonitors')}
-                  </p>
-                ) : (
-                  <ul className="space-y-1.5">
-                    {linkedMonitors.map((monitor) => (
-                      <li key={monitor.id}>
-                        <Link
-                          to={`/monitors/${monitor.id}`}
-                          className="text-sm font-medium text-[var(--brand)] hover:underline"
-                        >
-                          {monitor.name}
-                        </Link>
-                      </li>
                     ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('subscriptions.notes')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {subscription.notes ? (
-                  <p className="whitespace-pre-wrap break-words text-sm">{subscription.notes}</p>
-                ) : (
-                  <p className="text-sm text-[var(--muted-foreground)]">{t('subscriptions.noNotes')}</p>
-                )}
-              </CardContent>
-            </Card>
-          </aside>
+                  </TBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -590,7 +431,9 @@ function SubscriptionDetailContent({
 
       <RenewDialog
         open={Boolean(renewTarget)}
-        onOpenChange={(open) => !open && setRenewTarget(null)}
+        onOpenChange={(open) => {
+          if (!open) setRenewTarget(null);
+        }}
         target={renewTarget}
       />
     </div>

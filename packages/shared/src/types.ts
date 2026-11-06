@@ -22,8 +22,6 @@ import type {
   pushMonitorConfigSchema,
   ruleInputSchema,
   subscriptionInputSchema,
-  templateFieldSchema,
-  templateInputSchema,
   webhookChannelConfigSchema,
 } from './schemas.js';
 
@@ -36,8 +34,6 @@ export type PushMonitorConfig = z.infer<typeof pushMonitorConfigSchema>;
 export type HttpExtractor = z.infer<typeof extractorSchema>;
 export type MonitorInput = z.infer<typeof monitorInputSchema>;
 export type RuleInput = z.infer<typeof ruleInputSchema>;
-export type TemplateField = z.infer<typeof templateFieldSchema>;
-export type TemplateInput = z.infer<typeof templateInputSchema>;
 export type SubscriptionInput = z.infer<typeof subscriptionInputSchema>;
 export type EmailChannelConfig = z.infer<typeof emailChannelConfigSchema>;
 export type WebhookChannelConfig = z.infer<typeof webhookChannelConfigSchema>;
@@ -126,54 +122,29 @@ export interface MonitorTestResult {
   logs: string[];
 }
 
-export interface TemplateDto {
-  id: string;
-  builtinKey: string | null;
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-  category: string;
-  fields: TemplateField[];
-  defaultCycle: Cycle;
-  defaultCycleDays: number | null;
-  defaultAmountCents: number | null;
-  defaultCurrency: string;
-  defaultReminderOffsets: number[];
-  isBuiltin: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface RenewalDto {
   id: string;
   subscriptionId: string;
   fromDate: string;
   toDate: string;
-  amountCents: number | null;
-  currency: string | null;
-  note: string;
   createdAt: string;
 }
 
+/**
+ * A simple reminder / subscription record. The single built-in template means
+ * there are no custom template fields here: name, optional link, expiry date,
+ * a renewal cycle, reminder offsets and notification channels.
+ */
 export interface SubscriptionDto {
   id: string;
-  templateId: string | null;
-  templateName: string | null;
   name: string;
-  fields: Record<string, unknown>;
-  startDate: string;
+  url: string | null;
   expiryDate: string;
   cycle: Cycle;
-  cycleDays: number | null;
-  amountCents: number | null;
-  currency: string;
   reminderOffsets: number[];
   channelIds: string[];
-  linkedMonitorIds: string[];
   notes: string;
   paused: boolean;
-  archived: boolean;
   status: SubscriptionStatus;
   daysLeft: number;
   renewals?: RenewalDto[];
@@ -243,58 +214,6 @@ export interface Paginated<T> {
   total: number;
   limit: number;
   offset: number;
-}
-
-export interface DashboardAlert {
-  monitorId: string;
-  monitorName: string;
-  metricKey: string | null;
-  metricLabel: string | null;
-  severity: 'warning' | 'critical';
-  value: number | string | boolean | null;
-  since: string;
-}
-
-export interface DashboardExpiring {
-  id: string;
-  name: string;
-  templateName: string | null;
-  expiryDate: string;
-  daysLeft: number;
-  amountCents: number | null;
-  currency: string;
-}
-
-export interface DashboardMonitorCard {
-  id: string;
-  name: string;
-  status: MonitorStatus;
-  metrics: Record<string, MetricValue>;
-  lastCheckedAt: string | null;
-}
-
-export interface DashboardDto {
-  monitors: {
-    total: number;
-    up: number;
-    warning: number;
-    critical: number;
-    down: number;
-    unknown: number;
-    paused: number;
-  };
-  subscriptions: {
-    total: number;
-    active: number;
-    expiring: number;
-    expired: number;
-    monthlyCostCents: number;
-    currency: string;
-  };
-  alerts: DashboardAlert[];
-  expiring: DashboardExpiring[];
-  recentNotifications: NotificationDto[];
-  monitorCards: DashboardMonitorCard[];
 }
 
 export interface AppMeta {

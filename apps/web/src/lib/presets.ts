@@ -15,26 +15,6 @@ export const INTERVAL_PRESETS: number[] = [
 /** Common reminder offsets (days before expiry). */
 export const OFFSET_PRESETS: number[] = [0, 1, 3, 7, 14, 30];
 
-/** Common currencies for amount inputs. */
-export const CURRENCY_OPTIONS: string[] = [
-  'CNY',
-  'USD',
-  'EUR',
-  'GBP',
-  'JPY',
-  'HKD',
-  'TWD',
-  'SGD',
-  'AUD',
-  'CAD',
-  'CHF',
-  'KRW',
-  'INR',
-  'THB',
-  'MYR',
-  'NZD',
-];
-
 const FALLBACK_TIMEZONES: string[] = [
   'UTC',
   'Asia/Shanghai',

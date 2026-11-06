@@ -107,7 +107,6 @@ export function MonitorDetailPage() {
     void queryClient.invalidateQueries({ queryKey: ['monitor-runs', id] });
     void queryClient.invalidateQueries({ queryKey: ['monitor-metrics', id] });
     void queryClient.invalidateQueries({ queryKey: ['monitors'] });
-    void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
   };
 
   const runMutation = useMutation({
@@ -145,8 +144,7 @@ export function MonitorDetailPage() {
     onSuccess: () => {
       toast.success(t('monitorDetail.deleteSuccess'));
       void queryClient.invalidateQueries({ queryKey: ['monitors'] });
-      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      navigate('/monitors', { replace: true });
+      navigate('/', { replace: true });
     },
     onError: (error) => toast.error(errorMessage(error)),
   });
@@ -187,9 +185,9 @@ export function MonitorDetailPage() {
         icon={<Activity className="h-5 w-5" />}
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={() => navigate('/monitors')}>
+            <Button variant="outline" size="sm" onClick={() => navigate('/')}>
               <ArrowLeft className="h-4 w-4" aria-hidden />
-              {t('monitorDetail.backToList')}
+              {t('common.back')}
             </Button>
             <Button variant="outline" size="sm" loading={runMutation.isPending} onClick={() => runMutation.mutate()}>
               {!runMutation.isPending ? <Play className="h-4 w-4" aria-hidden /> : null}
@@ -226,12 +224,6 @@ export function MonitorDetailPage() {
             <CardContent>
               <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('monitorDetail.statusLabel')}</dt>
-                  <dd className="mt-0.5">
-                    <StatusBadge status={effectiveStatus} />
-                  </dd>
-                </div>
-                <div>
                   <dt className="text-xs text-[var(--muted-foreground)]">{t('monitorDetail.interval')}</dt>
                   <dd className="mt-0.5 text-sm font-medium">
                     {formatInterval(monitor.intervalSeconds, locale)}
@@ -242,7 +234,7 @@ export function MonitorDetailPage() {
                   <dd className="mt-0.5 text-sm">
                     {monitor.lastCheckedAt
                       ? formatRelativeTime(monitor.lastCheckedAt, timezone, locale)
-                      : t('dashboard.neverChecked')}
+                      : t('common.never')}
                   </dd>
                 </div>
                 <div>

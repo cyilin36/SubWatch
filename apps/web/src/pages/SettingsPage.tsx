@@ -22,7 +22,7 @@ import { api } from '../lib/api';
 import { applyZodIssues, getFieldError } from '../lib/form';
 import { errorMessage, formatDateTime, formatDurationSeconds } from '../lib/utils';
 import { useAuth } from '../providers/AuthProvider';
-import { CURRENCY_OPTIONS, getTimezoneOptions, THEME_OPTIONS } from '../lib/presets';
+import { getTimezoneOptions, THEME_OPTIONS } from '../lib/presets';
 import {
   Alert,
   Badge,
@@ -366,15 +366,6 @@ export function SettingsPage() {
                       value: option.value,
                       label: t(option.labelKey),
                     }))}
-                  />
-                </Field>
-                <Field label={t('settings.currency')} hint={t('settings.currencyHint')}>
-                  <Select
-                    value={generalForm.watch('currency')}
-                    onValueChange={(value) =>
-                      generalForm.setValue('currency', value, { shouldDirty: true })
-                    }
-                    options={CURRENCY_OPTIONS.map((code) => ({ value: code, label: code }))}
                   />
                 </Field>
               </div>

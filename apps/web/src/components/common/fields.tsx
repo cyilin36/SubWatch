@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
-import { cn, formatCentsInput, parseMoneyToCents, prettyJson } from '../../lib/utils';
+import { cn, prettyJson } from '../../lib/utils';
 import { OFFSET_PRESETS } from '../../lib/presets';
 import { Button, Input } from '../ui';
 
@@ -221,63 +221,6 @@ export function OffsetsInput({
           </span>
         ) : null}
       </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Amount input (major units <-> integer cents)
-// ---------------------------------------------------------------------------
-
-export function AmountInput({
-  id,
-  value,
-  onChange,
-  currency,
-  placeholder,
-  invalid,
-  disabled,
-}: {
-  id?: string;
-  value: number | null;
-  onChange: (cents: number | null) => void;
-  currency: string;
-  placeholder?: string;
-  invalid?: boolean;
-  disabled?: boolean;
-}) {
-  const [text, setText] = useState(() => formatCentsInput(value));
-
-  useEffect(() => {
-    if (parseMoneyToCents(text) !== value) setText(formatCentsInput(value));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
-
-  const handleChange = (next: string) => {
-    setText(next);
-    if (next.trim() === '') {
-      onChange(null);
-      return;
-    }
-    const cents = parseMoneyToCents(next);
-    if (cents !== null) onChange(cents);
-  };
-
-  return (
-    <div className="relative">
-      <Input
-        id={id}
-        inputMode="decimal"
-        value={text}
-        onChange={(event) => handleChange(event.target.value)}
-        placeholder={placeholder ?? '0.00'}
-        invalid={invalid}
-        disabled={disabled}
-        className="pr-14"
-      />
-      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--muted-foreground)]">
-        {currency}
-      </span>
     </div>
   );
 }

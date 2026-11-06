@@ -32,6 +32,7 @@ import {
 } from '../ui';
 import { CodeEditor } from '../ui/CodeEditor';
 import { FormSection, MultiCheckbox, RootError, Segmented, TagsInput } from '../common/fields';
+import { Collapsible } from './Collapsible';
 import { MonitorTestPanel } from './MonitorTestPanel';
 import {
   blankMetricRow,
@@ -61,6 +62,16 @@ return {
 `;
 
 const METRIC_KEYS_DATALIST_ID = 'monitor-metric-keys';
+
+/** Form fields hidden inside the rule's "advanced" disclosure (used to force it open on errors). */
+const RULE_ADVANCED_FIELDS = [
+  'durationChecks',
+  'cooldownSeconds',
+  'repeatIntervalSeconds',
+  'recoveryOperator',
+  'recoveryValue',
+  'recoveryChecks',
+] as const;
 
 export interface MonitorFormProps {
   mode: 'create' | 'edit';
@@ -102,7 +113,37 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
   const watchedMetrics = watch('metrics');
   const watchedTags = watch('tags');
   const watchedChannels = watch('channelIds');
+  const watchedRules = watch('rules');
   const enabled = watch('enabled');
+
+  // Advanced disclosures start expanded when the loaded monitor already uses
+  // any of the hidden options, and pop open when a hidden field fails validation.
+  const basicAdvancedHasError = Boolean(
+    getFieldError(errors, 'failureThreshold') || getFieldError(errors, 'staleAfterSeconds'),
+  );
+  const requestAdvancedHasError = Boolean(
+    errors.request && Object.keys(errors.request).some((key) => key !== 'url'),
+  );
+
+  const initiallyOpenAdvanced = useMemo(() => {
+    const request = defaultValues.request;
+    return {
+      basic:
+        defaultValues.description.trim() !== '' ||
+        defaultValues.tags.length > 0 ||
+        defaultValues.failureThreshold !== '2' ||
+        defaultValues.staleAfterSeconds !== '3600',
+      request:
+        request.headers.length > 0 ||
+        request.query.length > 0 ||
+        request.bodyType !== 'none' ||
+        request.authType !== 'none' ||
+        request.timeoutMs !== '10000' ||
+        !request.followRedirects ||
+        !request.verifyTls ||
+        request.maxResponseBytes !== '1048576',
+    };
+  }, [defaultValues]);
 
   const channelsQuery = useQuery({
     queryKey: ['channels'],
@@ -138,7 +179,6 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
     onSuccess: (result) => {
       toast.success(mode === 'create' ? t('monitorForm.createSuccess') : t('monitorForm.updateSuccess'));
       void queryClient.invalidateQueries({ queryKey: ['monitors'] });
-      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       if (result.id) {
         void queryClient.invalidateQueries({ queryKey: ['monitor', result.id] });
         void queryClient.invalidateQueries({ queryKey: ['monitor-runs', result.id] });
@@ -248,18 +288,9 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
                   </Field>
                 </div>
 
-                <Field label={t('common.description')} htmlFor="monitor-description">
-                  <Textarea
-                    id="monitor-description"
-                    rows={2}
-                    placeholder={t('monitorForm.descriptionPlaceholder')}
-                    {...register('description')}
-                  />
-                </Field>
-
                 {monitorType === 'push' ? <Alert tone="info">{t('monitors.pushHint')}</Alert> : null}
 
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 sm:items-start">
                   <Field
                     label={t('monitors.intervalSeconds')}
                     htmlFor="monitor-interval"
@@ -273,55 +304,19 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
                       {...register('intervalSeconds')}
                     />
                   </Field>
-                  <Field
-                    label={t('monitors.failureThreshold')}
-                    htmlFor="monitor-failure"
-                    error={getFieldError(errors, 'failureThreshold')}
-                    hint={t('monitorForm.failureThresholdHint')}
-                  >
-                    <Input
-                      id="monitor-failure"
-                      type="number"
-                      min={1}
-                      max={20}
-                      {...register('failureThreshold')}
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2">
+                    <div>
+                      <p className="text-sm font-medium">{t('common.enabled')}</p>
+                      <p className="text-xs text-[var(--muted-foreground)]">
+                        {t('monitorDetail.enabledHint')}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={enabled}
+                      onCheckedChange={(checked) => setValue('enabled', checked, { shouldDirty: true })}
+                      ariaLabel={t('common.enabled')}
                     />
-                  </Field>
-                  <Field
-                    label={t('monitors.staleAfterSeconds')}
-                    htmlFor="monitor-stale"
-                    error={getFieldError(errors, 'staleAfterSeconds')}
-                    hint={t('monitorForm.staleAfterHint')}
-                  >
-                    <Input
-                      id="monitor-stale"
-                      type="number"
-                      min={60}
-                      {...register('staleAfterSeconds')}
-                    />
-                  </Field>
-                </div>
-
-                <Field label={t('monitors.tags')} hint={t('monitors.tagsHint')}>
-                  <TagsInput
-                    value={watchedTags ?? []}
-                    onChange={(next) => setValue('tags', next, { shouldDirty: true })}
-                    placeholder="vps, api, quota"
-                  />
-                </Field>
-
-                <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2">
-                  <div>
-                    <p className="text-sm font-medium">{t('common.enabled')}</p>
-                    <p className="text-xs text-[var(--muted-foreground)]">
-                      {t('monitorDetail.enabledHint')}
-                    </p>
                   </div>
-                  <Switch
-                    checked={enabled}
-                    onCheckedChange={(checked) => setValue('enabled', checked, { shouldDirty: true })}
-                    ariaLabel={t('common.enabled')}
-                  />
                 </div>
 
                 <div>
@@ -334,6 +329,60 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
                   />
                   <p className="mt-1 text-xs text-[var(--muted-foreground)]">{t('monitors.channelsHint')}</p>
                 </div>
+
+                <Collapsible
+                  title={t('common.advanced')}
+                  hint={t('common.advancedHint')}
+                  defaultOpen={initiallyOpenAdvanced.basic}
+                  forceOpen={basicAdvancedHasError}
+                >
+                  <Field label={t('common.description')} htmlFor="monitor-description">
+                    <Textarea
+                      id="monitor-description"
+                      rows={2}
+                      placeholder={t('monitorForm.descriptionPlaceholder')}
+                      {...register('description')}
+                    />
+                  </Field>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field
+                      label={t('monitors.failureThreshold')}
+                      htmlFor="monitor-failure"
+                      error={getFieldError(errors, 'failureThreshold')}
+                      hint={t('monitorForm.failureThresholdHint')}
+                    >
+                      <Input
+                        id="monitor-failure"
+                        type="number"
+                        min={1}
+                        max={20}
+                        {...register('failureThreshold')}
+                      />
+                    </Field>
+                    <Field
+                      label={t('monitors.staleAfterSeconds')}
+                      htmlFor="monitor-stale"
+                      error={getFieldError(errors, 'staleAfterSeconds')}
+                      hint={t('monitorForm.staleAfterHint')}
+                    >
+                      <Input
+                        id="monitor-stale"
+                        type="number"
+                        min={60}
+                        {...register('staleAfterSeconds')}
+                      />
+                    </Field>
+                  </div>
+
+                  <Field label={t('monitors.tags')} hint={t('monitors.tagsHint')}>
+                    <TagsInput
+                      value={watchedTags ?? []}
+                      onChange={(next) => setValue('tags', next, { shouldDirty: true })}
+                      placeholder="vps, api, quota"
+                    />
+                  </Field>
+                </Collapsible>
               </FormSection>
             </TabsContent>
 
@@ -369,225 +418,254 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
                   </Field>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <Field label={t('monitorForm.timeoutMs')} error={getFieldError(errors, 'request.timeoutMs')}>
-                    <Input type="number" min={1000} step={500} {...register('request.timeoutMs')} />
-                  </Field>
-                  <Field
-                    label={t('monitorForm.maxResponseBytes')}
-                    error={getFieldError(errors, 'request.maxResponseBytes')}
-                  >
-                    <Input type="number" min={1024} step={1024} {...register('request.maxResponseBytes')} />
-                  </Field>
-                  <div className="flex flex-col justify-end gap-2">
-                    <div className="flex items-center justify-between gap-2 text-sm">
-                      <span>{t('monitorForm.followRedirects')}</span>
-                      <Controller
-                        control={control}
-                        name="request.followRedirects"
-                        render={({ field }) => (
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        )}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between gap-2 text-sm">
-                      <span>{t('monitorForm.verifyTls')}</span>
-                      <Controller
-                        control={control}
-                        name="request.verifyTls"
-                        render={({ field }) => (
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        )}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Headers */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">{t('monitorForm.headers')}</p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => headersArray.append({ key: '', value: '', secret: false })}
+                <Collapsible
+                  title={t('common.advanced')}
+                  hint={t('common.advancedHint')}
+                  defaultOpen={initiallyOpenAdvanced.request}
+                  forceOpen={requestAdvancedHasError}
+                >
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Field
+                      label={t('monitorForm.timeoutMs')}
+                      error={getFieldError(errors, 'request.timeoutMs')}
                     >
-                      <Plus className="h-3.5 w-3.5" aria-hidden />
-                      {t('monitorForm.addHeader')}
-                    </Button>
+                      <Input type="number" min={1000} step={500} {...register('request.timeoutMs')} />
+                    </Field>
+                    <Field
+                      label={t('monitorForm.maxResponseBytes')}
+                      error={getFieldError(errors, 'request.maxResponseBytes')}
+                    >
+                      <Input type="number" min={1024} step={1024} {...register('request.maxResponseBytes')} />
+                    </Field>
+                    <div className="flex flex-col justify-end gap-2">
+                      <div className="flex items-center justify-between gap-2 text-sm">
+                        <span>{t('monitorForm.followRedirects')}</span>
+                        <Controller
+                          control={control}
+                          name="request.followRedirects"
+                          render={({ field }) => (
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          )}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between gap-2 text-sm">
+                        <span>{t('monitorForm.verifyTls')}</span>
+                        <Controller
+                          control={control}
+                          name="request.verifyTls"
+                          render={({ field }) => (
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          )}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  {headersArray.fields.length === 0 ? (
-                    <p className="text-xs text-[var(--muted-foreground)]">{t('common.none')}</p>
-                  ) : null}
-                  {headersArray.fields.map((field, index) => {
-                    const secret = watch(`request.headers.${index}.secret`);
-                    const value = watch(`request.headers.${index}.value`) ?? '';
-                    return (
+
+                  {/* Headers */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{t('monitorForm.headers')}</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => headersArray.append({ key: '', value: '', secret: false })}
+                      >
+                        <Plus className="h-3.5 w-3.5" aria-hidden />
+                        {t('monitorForm.addHeader')}
+                      </Button>
+                    </div>
+                    {headersArray.fields.length === 0 ? (
+                      <p className="text-xs text-[var(--muted-foreground)]">{t('common.none')}</p>
+                    ) : null}
+                    {headersArray.fields.map((field, index) => {
+                      const secret = watch(`request.headers.${index}.secret`);
+                      const value = watch(`request.headers.${index}.value`) ?? '';
+                      return (
+                        <div
+                          key={field.id}
+                          className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto_auto] sm:items-center"
+                        >
+                          <Input
+                            placeholder={t('monitorForm.headerKey')}
+                            aria-label={t('monitorForm.headerKey')}
+                            {...register(`request.headers.${index}.key`)}
+                          />
+                          {secret ? (
+                            <SecretInput
+                              value={value}
+                              hasStoredValue={value === SECRET_KEEP}
+                              onChange={(next) =>
+                                setValue(`request.headers.${index}.value`, next, { shouldDirty: true })
+                              }
+                              placeholder={t('monitorForm.headerValue')}
+                            />
+                          ) : (
+                            <Input
+                              placeholder={t('monitorForm.headerValue')}
+                              aria-label={t('monitorForm.headerValue')}
+                              {...register(`request.headers.${index}.value`)}
+                            />
+                          )}
+                          <label className="flex items-center gap-1.5 whitespace-nowrap text-xs text-[var(--muted-foreground)]">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-[var(--brand)]"
+                              {...register(`request.headers.${index}.secret`)}
+                            />
+                            {t('monitorForm.headerSecret')}
+                          </label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={t('common.remove')}
+                            onClick={() => headersArray.remove(index)}
+                          >
+                            <Trash2 className="h-4 w-4" aria-hidden />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Query params */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{t('monitorForm.query')}</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => queryArray.append({ key: '', value: '' })}
+                      >
+                        <Plus className="h-3.5 w-3.5" aria-hidden />
+                        {t('monitorForm.addQuery')}
+                      </Button>
+                    </div>
+                    {queryArray.fields.length === 0 ? (
+                      <p className="text-xs text-[var(--muted-foreground)]">{t('common.none')}</p>
+                    ) : null}
+                    {queryArray.fields.map((field, index) => (
                       <div
                         key={field.id}
-                        className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto_auto] sm:items-center"
+                        className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto]"
                       >
                         <Input
-                          placeholder={t('monitorForm.headerKey')}
-                          aria-label={t('monitorForm.headerKey')}
-                          {...register(`request.headers.${index}.key`)}
+                          placeholder={t('monitorForm.queryKey')}
+                          aria-label={t('monitorForm.queryKey')}
+                          {...register(`request.query.${index}.key`)}
                         />
-                        {secret ? (
-                          <SecretInput
-                            value={value}
-                            hasStoredValue={value === SECRET_KEEP}
-                            onChange={(next) =>
-                              setValue(`request.headers.${index}.value`, next, { shouldDirty: true })
-                            }
-                            placeholder={t('monitorForm.headerValue')}
-                          />
-                        ) : (
-                          <Input
-                            placeholder={t('monitorForm.headerValue')}
-                            aria-label={t('monitorForm.headerValue')}
-                            {...register(`request.headers.${index}.value`)}
-                          />
-                        )}
-                        <label className="flex items-center gap-1.5 whitespace-nowrap text-xs text-[var(--muted-foreground)]">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 accent-[var(--brand)]"
-                            {...register(`request.headers.${index}.secret`)}
-                          />
-                          {t('monitorForm.headerSecret')}
-                        </label>
+                        <Input
+                          placeholder={t('monitorForm.queryValue')}
+                          aria-label={t('monitorForm.queryValue')}
+                          {...register(`request.query.${index}.value`)}
+                        />
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon-sm"
                           aria-label={t('common.remove')}
-                          onClick={() => headersArray.remove(index)}
+                          onClick={() => queryArray.remove(index)}
                         >
                           <Trash2 className="h-4 w-4" aria-hidden />
                         </Button>
                       </div>
-                    );
-                  })}
-                </div>
-
-                {/* Query params */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">{t('monitorForm.query')}</p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => queryArray.append({ key: '', value: '' })}
-                    >
-                      <Plus className="h-3.5 w-3.5" aria-hidden />
-                      {t('monitorForm.addQuery')}
-                    </Button>
+                    ))}
                   </div>
-                  {queryArray.fields.length === 0 ? (
-                    <p className="text-xs text-[var(--muted-foreground)]">{t('common.none')}</p>
-                  ) : null}
-                  {queryArray.fields.map((field, index) => (
-                    <div key={field.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto]">
-                      <Input
-                        placeholder={t('monitorForm.queryKey')}
-                        aria-label={t('monitorForm.queryKey')}
-                        {...register(`request.query.${index}.key`)}
-                      />
-                      <Input
-                        placeholder={t('monitorForm.queryValue')}
-                        aria-label={t('monitorForm.queryValue')}
-                        {...register(`request.query.${index}.value`)}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={t('common.remove')}
-                        onClick={() => queryArray.remove(index)}
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
 
-                {/* Body */}
-                <div className="grid gap-3 sm:grid-cols-[180px_1fr] sm:items-start">
-                  <Field label={t('monitorForm.bodyType')}>
-                    <Select
-                      value={bodyType}
-                      onValueChange={(value) =>
-                        setValue(
-                          'request.bodyType',
-                          value as MonitorFormValues['request']['bodyType'],
-                          { shouldDirty: true },
-                        )
-                      }
-                      options={[
-                        { value: 'none', label: t('monitorForm.bodyTypeNone') },
-                        { value: 'json', label: t('monitorForm.bodyTypeJson') },
-                        { value: 'raw', label: t('monitorForm.bodyTypeRaw') },
-                        { value: 'form', label: t('monitorForm.bodyTypeForm') },
-                      ]}
-                    />
-                  </Field>
-                  {bodyType !== 'none' ? (
-                    <Field label={t('monitorForm.body')}>
-                      {bodyType === 'json' ? (
-                        <Controller
-                          control={control}
-                          name="request.body"
-                          render={({ field }) => (
-                            <CodeEditor
-                              value={field.value}
-                              onChange={field.onChange}
-                              language="json"
-                              height="160px"
-                              placeholder={t('monitorForm.bodyPlaceholder')}
-                            />
-                          )}
-                        />
-                      ) : (
-                        <Textarea
-                          rows={4}
-                          placeholder={t('monitorForm.bodyPlaceholder')}
-                          {...register('request.body')}
-                        />
-                      )}
+                  {/* Body */}
+                  <div className="grid gap-3 sm:grid-cols-[180px_1fr] sm:items-start">
+                    <Field label={t('monitorForm.bodyType')}>
+                      <Select
+                        value={bodyType}
+                        onValueChange={(value) =>
+                          setValue(
+                            'request.bodyType',
+                            value as MonitorFormValues['request']['bodyType'],
+                            { shouldDirty: true },
+                          )
+                        }
+                        options={[
+                          { value: 'none', label: t('monitorForm.bodyTypeNone') },
+                          { value: 'json', label: t('monitorForm.bodyTypeJson') },
+                          { value: 'raw', label: t('monitorForm.bodyTypeRaw') },
+                          { value: 'form', label: t('monitorForm.bodyTypeForm') },
+                        ]}
+                      />
                     </Field>
-                  ) : null}
-                </div>
-
-                {/* Auth */}
-                <div className="space-y-3">
-                  <Field label={t('monitorForm.authType')}>
-                    <Select
-                      value={authType}
-                      onValueChange={(value) =>
-                        setValue(
-                          'request.authType',
-                          value as MonitorFormValues['request']['authType'],
-                          { shouldDirty: true },
-                        )
-                      }
-                      options={[
-                        { value: 'none', label: t('monitorForm.authNone') },
-                        { value: 'basic', label: t('monitorForm.authBasic') },
-                        { value: 'bearer', label: t('monitorForm.authBearer') },
-                      ]}
-                    />
-                  </Field>
-                  {authType === 'basic' ? (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Field label={t('monitorForm.username')}>
-                        <Input autoComplete="off" {...register('request.username')} />
+                    {bodyType !== 'none' ? (
+                      <Field label={t('monitorForm.body')}>
+                        {bodyType === 'json' ? (
+                          <Controller
+                            control={control}
+                            name="request.body"
+                            render={({ field }) => (
+                              <CodeEditor
+                                value={field.value}
+                                onChange={field.onChange}
+                                language="json"
+                                height="160px"
+                                placeholder={t('monitorForm.bodyPlaceholder')}
+                              />
+                            )}
+                          />
+                        ) : (
+                          <Textarea
+                            rows={4}
+                            placeholder={t('monitorForm.bodyPlaceholder')}
+                            {...register('request.body')}
+                          />
+                        )}
                       </Field>
-                      <Field label={t('monitorForm.password')}>
+                    ) : null}
+                  </div>
+
+                  {/* Auth */}
+                  <div className="space-y-3">
+                    <Field label={t('monitorForm.authType')}>
+                      <Select
+                        value={authType}
+                        onValueChange={(value) =>
+                          setValue(
+                            'request.authType',
+                            value as MonitorFormValues['request']['authType'],
+                            { shouldDirty: true },
+                          )
+                        }
+                        options={[
+                          { value: 'none', label: t('monitorForm.authNone') },
+                          { value: 'basic', label: t('monitorForm.authBasic') },
+                          { value: 'bearer', label: t('monitorForm.authBearer') },
+                        ]}
+                      />
+                    </Field>
+                    {authType === 'basic' ? (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Field label={t('monitorForm.username')}>
+                          <Input autoComplete="off" {...register('request.username')} />
+                        </Field>
+                        <Field label={t('monitorForm.password')}>
+                          <Controller
+                            control={control}
+                            name="request.password"
+                            render={({ field }) => (
+                              <SecretInput
+                                value={field.value}
+                                hasStoredValue={field.value === SECRET_KEEP}
+                                onChange={field.onChange}
+                                autoComplete="off"
+                              />
+                            )}
+                          />
+                        </Field>
+                      </div>
+                    ) : null}
+                    {authType === 'bearer' ? (
+                      <Field label={t('monitorForm.token')}>
                         <Controller
                           control={control}
-                          name="request.password"
+                          name="request.token"
                           render={({ field }) => (
                             <SecretInput
                               value={field.value}
@@ -598,25 +676,9 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
                           )}
                         />
                       </Field>
-                    </div>
-                  ) : null}
-                  {authType === 'bearer' ? (
-                    <Field label={t('monitorForm.token')}>
-                      <Controller
-                        control={control}
-                        name="request.token"
-                        render={({ field }) => (
-                          <SecretInput
-                            value={field.value}
-                            hasStoredValue={field.value === SECRET_KEEP}
-                            onChange={field.onChange}
-                            autoComplete="off"
-                          />
-                        )}
-                      />
-                    </Field>
-                  ) : null}
-                </div>
+                    ) : null}
+                  </div>
+                </Collapsible>
               </FormSection>
             </TabsContent>
 
@@ -766,7 +828,18 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
                 ) : null}
                 <div className="space-y-3">
                   {rulesArray.fields.map((field, index) => {
-                    const recoveryOperator = watch(`rules.${index}.recoveryOperator`);
+                    const rule = watchedRules?.[index];
+                    const recoveryOperator = rule?.recoveryOperator ?? 'none';
+                    const ruleAdvancedInitialOpen = Boolean(
+                      rule &&
+                        (rule.durationChecks !== '1' ||
+                          rule.cooldownSeconds !== '3600' ||
+                          rule.repeatIntervalSeconds !== '0' ||
+                          rule.recoveryOperator !== 'none'),
+                    );
+                    const ruleAdvancedHasError = RULE_ADVANCED_FIELDS.some((advancedField) =>
+                      Boolean(getFieldError(errors, `rules.${index}.${advancedField}`)),
+                    );
                     return (
                       <div key={field.id} className="space-y-3 rounded-lg border border-[var(--border)] p-3">
                         <div className="flex items-center justify-between gap-2">
@@ -800,7 +873,7 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
                             </Button>
                           </div>
                         </div>
-                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                           <Field
                             label={t('monitorForm.ruleMetric')}
                             error={getFieldError(errors, `rules.${index}.metricKey`)}
@@ -818,7 +891,7 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
                             error={getFieldError(errors, `rules.${index}.operator`)}
                           >
                             <Select
-                              value={watch(`rules.${index}.operator`)}
+                              value={rule?.operator ?? 'lt'}
                               onValueChange={(value) =>
                                 setValue(
                                   `rules.${index}.operator`,
@@ -828,9 +901,6 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
                               }
                               options={operatorOptions}
                             />
-                          </Field>
-                          <Field label={t('monitorForm.durationChecks')}>
-                            <Input type="number" min={1} {...register(`rules.${index}.durationChecks`)} />
                           </Field>
                           <Field
                             label={t('monitorForm.warningValue')}
@@ -856,41 +926,52 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
                               {...register(`rules.${index}.criticalValue`)}
                             />
                           </Field>
-                          <Field label={t('monitorForm.cooldownSeconds')}>
-                            <Input type="number" min={0} {...register(`rules.${index}.cooldownSeconds`)} />
-                          </Field>
-                          <Field label={t('monitorForm.repeatIntervalSeconds')}>
-                            <Input
-                              type="number"
-                              min={0}
-                              {...register(`rules.${index}.repeatIntervalSeconds`)}
-                            />
-                          </Field>
-                          <Field label={t('monitorForm.recoveryOperator')}>
-                            <Select
-                              value={recoveryOperator ?? 'none'}
-                              onValueChange={(value) =>
-                                setValue(
-                                  `rules.${index}.recoveryOperator`,
-                                  value as MonitorFormValues['rules'][number]['recoveryOperator'],
-                                  { shouldDirty: true },
-                                )
-                              }
-                              options={recoveryOperatorOptions}
-                            />
-                          </Field>
-                          <Field label={t('monitorForm.recoveryValue')}>
-                            <Input
-                              type="number"
-                              step="any"
-                              disabled={recoveryOperator === 'none'}
-                              {...register(`rules.${index}.recoveryValue`)}
-                            />
-                          </Field>
-                          <Field label={t('monitorForm.recoveryChecks')}>
-                            <Input type="number" min={1} {...register(`rules.${index}.recoveryChecks`)} />
-                          </Field>
                         </div>
+                        <Collapsible
+                          title={t('common.advanced')}
+                          defaultOpen={ruleAdvancedInitialOpen}
+                          forceOpen={ruleAdvancedHasError}
+                        >
+                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            <Field label={t('monitorForm.durationChecks')}>
+                              <Input type="number" min={1} {...register(`rules.${index}.durationChecks`)} />
+                            </Field>
+                            <Field label={t('monitorForm.cooldownSeconds')}>
+                              <Input type="number" min={0} {...register(`rules.${index}.cooldownSeconds`)} />
+                            </Field>
+                            <Field label={t('monitorForm.repeatIntervalSeconds')}>
+                              <Input
+                                type="number"
+                                min={0}
+                                {...register(`rules.${index}.repeatIntervalSeconds`)}
+                              />
+                            </Field>
+                            <Field label={t('monitorForm.recoveryOperator')}>
+                              <Select
+                                value={recoveryOperator}
+                                onValueChange={(value) =>
+                                  setValue(
+                                    `rules.${index}.recoveryOperator`,
+                                    value as MonitorFormValues['rules'][number]['recoveryOperator'],
+                                    { shouldDirty: true },
+                                  )
+                                }
+                                options={recoveryOperatorOptions}
+                              />
+                            </Field>
+                            <Field label={t('monitorForm.recoveryValue')}>
+                              <Input
+                                type="number"
+                                step="any"
+                                disabled={recoveryOperator === 'none'}
+                                {...register(`rules.${index}.recoveryValue`)}
+                              />
+                            </Field>
+                            <Field label={t('monitorForm.recoveryChecks')}>
+                              <Input type="number" min={1} {...register(`rules.${index}.recoveryChecks`)} />
+                            </Field>
+                          </div>
+                        </Collapsible>
                         {getFieldError(errors, `rules.${index}.warningValue`) ? null : (
                           <p className="text-xs text-[var(--muted-foreground)]">
                             {t('monitorForm.ruleHint')}
@@ -930,7 +1011,7 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
       <div className="mt-4 flex flex-col gap-2">
         <RootError message={getFieldError(errors, 'root')} />
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => navigate('/monitors')}>
+          <Button type="button" variant="outline" onClick={() => navigate('/')}>
             {t('common.cancel')}
           </Button>
           <Button type="submit" loading={saveMutation.isPending}>

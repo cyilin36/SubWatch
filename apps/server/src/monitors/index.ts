@@ -15,7 +15,6 @@ import * as repo from './repository.js';
 import { executeMonitorRun, executePushReport, testMonitorDraft } from './engine.js';
 import { validateRequestConfig } from './http-runner.js';
 import { MonitorScheduler } from './scheduler.js';
-import { MONITOR_PRESETS } from './presets.js';
 
 const idParamsSchema = z.object({ id: idSchema });
 const pushTokenParamsSchema = z.object({ token: z.string().min(8).max(200) });
@@ -42,9 +41,6 @@ export function registerMonitorRoutes(app: FastifyInstance, ctx: ModuleContext, 
   const requireAuth = createRequireAuth(ctx);
 
   app.get('/api/monitors', { preHandler: requireAuth }, async () => repo.listMonitors(ctx));
-
-  // Read-only example configurations for the monitor editor. Never creates data.
-  app.get('/api/monitors/presets', { preHandler: requireAuth }, async () => MONITOR_PRESETS);
 
   app.post('/api/monitors', { preHandler: requireAuth }, async (request, reply) => {
     const input = monitorInputSchema.parse(request.body ?? {});

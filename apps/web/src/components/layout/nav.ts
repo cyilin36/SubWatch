@@ -1,13 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import {
-  Activity,
-  BellRing,
-  CreditCard,
-  LayoutDashboard,
-  LayoutTemplate,
-  Send,
-  Settings,
-} from 'lucide-react';
+import { BellRing, ListChecks, Send, Settings } from 'lucide-react';
 
 export interface NavItem {
   to: string;
@@ -16,19 +8,24 @@ export interface NavItem {
   end?: boolean;
 }
 
+/** Four sidebar entries: the unified home, channels, notification log, settings. */
 export const NAV_ITEMS: NavItem[] = [
-  { to: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard, end: true },
-  { to: '/monitors', labelKey: 'nav.monitors', icon: Activity },
-  { to: '/subscriptions', labelKey: 'nav.subscriptions', icon: CreditCard },
-  { to: '/templates', labelKey: 'nav.templates', icon: LayoutTemplate },
+  { to: '/', labelKey: 'nav.home', icon: ListChecks, end: true },
   { to: '/channels', labelKey: 'nav.channels', icon: Send },
   { to: '/notifications', labelKey: 'nav.notifications', icon: BellRing },
   { to: '/settings', labelKey: 'nav.settings', icon: Settings },
 ];
 
-/** Resolve the nav label for the current pathname (used by the topbar). */
+/** Resolve the topbar label for the current pathname. */
 export function navLabelKey(pathname: string): string {
-  if (pathname === '/') return 'nav.dashboard';
-  const match = NAV_ITEMS.find((item) => item.to !== '/' && pathname.startsWith(item.to));
-  return match?.labelKey ?? 'nav.dashboard';
+  if (pathname === '/') return 'nav.home';
+  if (pathname === '/subscriptions/new') return 'subscriptions.newSubscription';
+  if (pathname.startsWith('/subscriptions')) return 'nav.subscriptions';
+  if (pathname === '/monitors/new') return 'monitors.newMonitor';
+  if (pathname.endsWith('/edit')) return 'monitors.editMonitor';
+  if (pathname.startsWith('/monitors')) return 'nav.monitors';
+  if (pathname.startsWith('/channels')) return 'nav.channels';
+  if (pathname.startsWith('/notifications')) return 'nav.notifications';
+  if (pathname.startsWith('/settings')) return 'nav.settings';
+  return 'nav.home';
 }

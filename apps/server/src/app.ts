@@ -10,7 +10,6 @@ import { APP_VERSION, type AppMeta } from '@subwatch/shared';
 import type { AppModules, CoreContext } from './context.js';
 import { registerAuthRoutes } from './auth/routes.js';
 import { registerSettingsRoutes } from './api/settings.js';
-import { registerDashboardRoutes } from './api/dashboard.js';
 import { AppError, ForbiddenError } from './lib/errors.js';
 
 export async function buildApp(context: CoreContext, modules: AppModules): Promise<FastifyInstance> {
@@ -179,7 +178,6 @@ export async function buildApp(context: CoreContext, modules: AppModules): Promi
   modules.monitors.registerRoutes(app);
   modules.subscriptions.registerRoutes(app);
   await registerSettingsRoutes(app, context, modules);
-  await registerDashboardRoutes(app, context);
 
   if (existsSync(context.config.webDir)) {
     await app.register(fastifyStatic, {

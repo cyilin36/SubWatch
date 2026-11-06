@@ -199,4 +199,97 @@ CREATE INDEX IF NOT EXISTS idx_notifications_status ON notification_queue(status
 CREATE INDEX IF NOT EXISTS idx_notifications_created ON notification_queue(created_at DESC);
 `,
   },
+  {
+    version: 2,
+    name: 'simplify_subscriptions',
+    sql: `
+-- The subscription model is reduced to one simple reminder template: a name, an
+-- optional link, an expiry date, a renewal cycle, reminder offsets and channels.
+-- Custom template fields, start dates, money tracking, linked monitors and the
+-- archive state are dropped. Existing rows are migrated losslessly where possible.
+
+ALTER TABLE subscriptions RENAME TO subscriptions_v1_legacy;
+ALTER TABLE renewals RENAME TO renewals_v1_legacy;
+ALTER TABLE subscription_reminders RENAME TO subscription_reminders_v1_legacy;
+
+-- Index names are global in SQLite and stay attached to the renamed legacy
+-- tables, so free them before creating the new schema's indexes.
+DROP INDEX IF EXISTS idx_subscriptions_expiry;
+DROP INDEX IF EXISTS idx_subscriptions_status;
+DROP INDEX IF EXISTS idx_renewals_subscription;
+DROP INDEX IF EXISTS idx_reminders_due;
+
+CREATE TABLE subscriptions (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  url TEXT,
+  expiry_date TEXT NOT NULL,
+  cycle TEXT NOT NULL DEFAULT 'month',
+  reminder_offsets TEXT NOT NULL DEFAULT '[7,3,1,0]',
+  channel_ids TEXT NOT NULL DEFAULT '[]',
+  notes TEXT NOT NULL DEFAULT '',
+  paused INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX idx_subscriptions_expiry ON subscriptions(expiry_date);
+CREATE INDEX idx_subscriptions_status ON subscriptions(paused, expiry_date);
+
+CREATE TABLE renewals (
+  id TEXT PRIMARY KEY,
+  subscription_id TEXT NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+  from_date TEXT NOT NULL,
+  to_date TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX idx_renewals_subscription ON renewals(subscription_id, created_at DESC);
+
+CREATE TABLE subscription_reminders (
+  id TEXT PRIMARY KEY,
+  subscription_id TEXT NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+  expiry_date TEXT NOT NULL,
+  offset_days INTEGER NOT NULL,
+  scheduled_for TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'suppressed')),
+  notification_id TEXT,
+  sent_at TEXT,
+  UNIQUE (subscription_id, expiry_date, offset_days)
+);
+CREATE INDEX idx_reminders_due ON subscription_reminders(status, scheduled_for);
+
+INSERT INTO subscriptions (id, name, url, expiry_date, cycle, reminder_offsets, channel_ids, notes, paused, created_at, updated_at)
+SELECT
+  id,
+  name,
+  COALESCE(
+    json_extract(fields, '$.renewUrl'),
+    json_extract(fields, '$.consoleUrl'),
+    json_extract(fields, '$.billingUrl'),
+    json_extract(fields, '$.manageUrl'),
+    json_extract(fields, '$.profileUrl'),
+    json_extract(fields, '$.webUrl')
+  ),
+  expiry_date,
+  CASE WHEN cycle IN ('day', 'week', 'month', 'quarter', 'year') THEN cycle ELSE 'month' END,
+  reminder_offsets,
+  channel_ids,
+  notes,
+  paused,
+  created_at,
+  updated_at
+FROM subscriptions_v1_legacy;
+
+INSERT INTO renewals (id, subscription_id, from_date, to_date, created_at)
+SELECT id, subscription_id, from_date, to_date, created_at FROM renewals_v1_legacy;
+
+INSERT INTO subscription_reminders (id, subscription_id, expiry_date, offset_days, scheduled_for, status, notification_id, sent_at)
+SELECT id, subscription_id, expiry_date, offset_days, scheduled_for, status, notification_id, sent_at
+FROM subscription_reminders_v1_legacy;
+
+DROP TABLE subscription_reminders_v1_legacy;
+DROP TABLE renewals_v1_legacy;
+DROP TABLE subscriptions_v1_legacy;
+DROP TABLE templates;
+`,
+  },
 ];

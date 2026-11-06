@@ -9,12 +9,11 @@ import { LanguageMenu, ThemeMenu } from './components/layout/Controls';
 import { Button, FullPageSpinner, TooltipProvider } from './components/ui';
 import { errorMessage } from './lib/utils';
 import { LoginPage, SetupPage } from './pages/AuthPages';
-import { DashboardPage } from './pages/DashboardPage';
+import { HomePage } from './pages/HomePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 // Heavy pages (CodeMirror/Recharts/etc.) are code-split so the initial load
 // stays small; AppLayout renders a spinner while a chunk is fetched.
-const MonitorsPage = lazy(() => import('./pages/MonitorsPage').then((m) => ({ default: m.MonitorsPage })));
 const MonitorNewPage = lazy(() =>
   import('./pages/MonitorNewPage').then((m) => ({ default: m.MonitorNewPage })),
 );
@@ -24,17 +23,11 @@ const MonitorEditPage = lazy(() =>
 const MonitorDetailPage = lazy(() =>
   import('./pages/MonitorDetailPage').then((m) => ({ default: m.MonitorDetailPage })),
 );
-const SubscriptionsPage = lazy(() =>
-  import('./pages/SubscriptionsPage').then((m) => ({ default: m.SubscriptionsPage })),
-);
 const SubscriptionNewPage = lazy(() =>
   import('./pages/SubscriptionNewPage').then((m) => ({ default: m.SubscriptionNewPage })),
 );
 const SubscriptionDetailPage = lazy(() =>
   import('./pages/SubscriptionDetailPage').then((m) => ({ default: m.SubscriptionDetailPage })),
-);
-const TemplatesPage = lazy(() =>
-  import('./pages/TemplatesPage').then((m) => ({ default: m.TemplatesPage })),
 );
 const ChannelsPage = lazy(() =>
   import('./pages/ChannelsPage').then((m) => ({ default: m.ChannelsPage })),
@@ -45,6 +38,12 @@ const NotificationsPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
+
+/**
+ * Legacy routes from the pre-v2 multi-page layout (separate dashboard, monitor
+ * list, subscription list and templates pages). Everything now lives on `/`.
+ */
+const LEGACY_REDIRECTS = ['dashboard', 'monitors', 'subscriptions', 'templates'];
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { authenticated, setupRequired, isLoading } = useAuth();
@@ -106,18 +105,18 @@ function AppRoutes() {
           </RequireAuth>
         }
       >
-        <Route index element={<DashboardPage />} />
-        <Route path="monitors" element={<MonitorsPage />} />
+        <Route index element={<HomePage />} />
+        <Route path="subscriptions/new" element={<SubscriptionNewPage />} />
+        <Route path="subscriptions/:id" element={<SubscriptionDetailPage />} />
         <Route path="monitors/new" element={<MonitorNewPage />} />
         <Route path="monitors/:id" element={<MonitorDetailPage />} />
         <Route path="monitors/:id/edit" element={<MonitorEditPage />} />
-        <Route path="subscriptions" element={<SubscriptionsPage />} />
-        <Route path="subscriptions/new" element={<SubscriptionNewPage />} />
-        <Route path="subscriptions/:id" element={<SubscriptionDetailPage />} />
-        <Route path="templates" element={<TemplatesPage />} />
         <Route path="channels" element={<ChannelsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        {LEGACY_REDIRECTS.map((path) => (
+          <Route key={path} path={path} element={<Navigate to="/" replace />} />
+        ))}
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

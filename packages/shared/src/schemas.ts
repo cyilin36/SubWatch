@@ -2,7 +2,6 @@ import { z } from 'zod';
 import {
   CHANNEL_TYPE_VALUES,
   CYCLE_VALUES,
-  DEFAULT_CURRENCY,
   DEFAULT_LOCALE,
   DEFAULT_REMINDER_OFFSETS,
   DEFAULT_REMINDER_TIME,
@@ -11,7 +10,6 @@ import {
   DEFAULT_MAX_RESPONSE_BYTES,
   DEFAULT_MONITOR_INTERVAL_SECONDS,
   EVENT_TYPES,
-  FIELD_TYPE_VALUES,
   MAX_JS_CODE_BYTES,
   MAX_RESPONSE_BYTES,
   MONITOR_TYPE_VALUES,
@@ -33,8 +31,6 @@ export const reminderOffsetsSchema = z
   .array(z.number().int().min(0).max(3650))
   .max(20)
   .default([...DEFAULT_REMINDER_OFFSETS]);
-export const currencySchema = z.string().regex(/^[A-Z]{3}$/, 'Expected ISO-4217 currency code');
-export const amountCentsSchema = z.number().int().min(0).max(1_000_000_000_000).nullable();
 
 // ---------------------------------------------------------------------------
 // Monitoring
@@ -222,132 +218,37 @@ export const pushPayloadSchema = z.object({
 export const pushTokenRegenerateSchema = z.object({}).default({});
 
 // ---------------------------------------------------------------------------
-// Subscription templates & subscriptions
+// Subscriptions (single built-in "simple reminder" template, no custom fields)
 // ---------------------------------------------------------------------------
 
-export const fieldTypeSchema = z.enum(FIELD_TYPE_VALUES);
+const httpUrlOrEmptySchema = z
+  .string()
+  .max(2000)
+  .default('')
+  .refine((value) => value === '' || /^https?:\/\//.test(value), {
+    message: 'URL must be empty or start with http(s)://',
+  });
 
-export const templateFieldSchema = z.object({
-  key: z
-    .string()
-    .min(1)
-    .max(50)
-    .regex(/^[a-zA-Z_][a-zA-Z0-9_-]*$/, 'Field key must start with a letter or underscore'),
-  label: z.string().min(1).max(100),
-  type: fieldTypeSchema,
-  required: z.boolean().default(false),
-  placeholder: z.string().max(200).default(''),
-  help: z.string().max(500).default(''),
-  options: z
-    .array(z.object({ label: z.string().min(1).max(100), value: z.string().min(1).max(200) }))
-    .max(100)
-    .default([]),
-  defaultValue: z.union([z.string().max(2000), z.number(), z.boolean()]).optional(),
+export const subscriptionInputSchema = z.object({
+  name: z.string().min(1).max(100),
+  url: httpUrlOrEmptySchema,
+  expiryDate: dateOnlySchema,
+  cycle: cycleSchema.default('month'),
+  reminderOffsets: reminderOffsetsSchema,
+  channelIds: idListSchema,
+  notes: z.string().max(2000).default(''),
+  paused: z.boolean().default(false),
 });
 
-export const templateInputSchema = z
-  .object({
-    name: z.string().min(1).max(100),
-    description: z.string().max(500).default(''),
-    icon: z.string().max(100).default(''),
-    color: z.string().max(32).default(''),
-    category: z.string().max(50).default(''),
-    fields: z.array(templateFieldSchema).max(50).default([]),
-    defaultCycle: cycleSchema.default('month'),
-    defaultCycleDays: z.number().int().min(1).max(3650).nullable().default(null),
-    defaultAmountCents: amountCentsSchema.default(null),
-    defaultCurrency: currencySchema.default(DEFAULT_CURRENCY),
-    defaultReminderOffsets: reminderOffsetsSchema,
-  })
-  .superRefine((template, ctx) => {
-    const seen = new Set<string>();
-    template.fields.forEach((field, index) => {
-      if (seen.has(field.key)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['fields', index, 'key'],
-          message: `Duplicate field key: ${field.key}`,
-        });
-      }
-      seen.add(field.key);
-      if (field.type === 'select' && field.options.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['fields', index, 'options'],
-          message: 'Select fields require at least one option',
-        });
-      }
-      if (template.defaultCycle === 'custom_days' && !template.defaultCycleDays) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['defaultCycleDays'],
-          message: 'Custom day cycles require defaultCycleDays',
-        });
-      }
-    });
-  });
-
-export const templateFieldsValuesSchema = z.record(
-  z.union([z.string().max(10_000), z.number(), z.boolean(), z.null()]),
-);
-
-export const subscriptionInputSchema = z
-  .object({
-    name: z.string().min(1).max(100),
-    templateId: idSchema.nullable().default(null),
-    fields: templateFieldsValuesSchema.default({}),
-    startDate: dateOnlySchema,
-    expiryDate: dateOnlySchema,
-    cycle: cycleSchema.default('month'),
-    cycleDays: z.number().int().min(1).max(3650).nullable().default(null),
-    amountCents: amountCentsSchema.default(null),
-    currency: currencySchema.default(DEFAULT_CURRENCY),
-    reminderOffsets: reminderOffsetsSchema,
-    channelIds: idListSchema,
-    linkedMonitorIds: idListSchema,
-    notes: z.string().max(4000).default(''),
-    paused: z.boolean().default(false),
-    archived: z.boolean().default(false),
-  })
-  .superRefine((subscription, ctx) => {
-    if (subscription.expiryDate <= subscription.startDate) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['expiryDate'],
-        message: 'expiryDate must be after startDate',
-      });
-    }
-    if (subscription.cycle === 'custom_days' && !subscription.cycleDays) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['cycleDays'],
-        message: 'Custom day cycles require cycleDays',
-      });
-    }
-  });
-
-export const renewalModeSchema = z.enum(['cycle', 'custom']);
-export const renewalBaseSchema = z.enum(['expiry', 'today']);
-
-export const renewInputSchema = z
-  .object({
-    mode: renewalModeSchema.default('cycle'),
-    base: renewalBaseSchema.default('expiry'),
-    date: dateOnlySchema.optional(),
-    amountCents: amountCentsSchema.optional(),
-    currency: currencySchema.optional(),
-    note: z.string().max(1000).default(''),
-    expectedExpiryDate: dateOnlySchema,
-  })
-  .superRefine((renew, ctx) => {
-    if (renew.mode === 'custom' && !renew.date) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['date'],
-        message: 'Custom renewal mode requires a date',
-      });
-    }
-  });
+/**
+ * One-click renewal. The client normally prefills the computed next expiry date
+ * and leaves it editable; when omitted the server adds one cycle to
+ * max(today, current expiry).
+ */
+export const renewInputSchema = z.object({
+  expectedExpiryDate: dateOnlySchema,
+  date: dateOnlySchema.optional(),
+});
 
 // ---------------------------------------------------------------------------
 // Notification channels
@@ -429,7 +330,6 @@ export const generalSettingsSchema = z.object({
     }),
   defaultChannelIds: idListSchema,
   theme: themeSchema.default('system'),
-  currency: currencySchema.default(DEFAULT_CURRENCY),
 });
 
 export const generalSettingsPatchSchema = generalSettingsSchema.partial();

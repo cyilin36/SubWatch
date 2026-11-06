@@ -35,7 +35,7 @@ export function daysBetween(from: string, to: string): number {
  * Add a subscription cycle to a date-only value. Calendar months clamp to the
  * end of the target month (2026-01-31 + 1 month => 2026-02-28, leap-aware).
  */
-export function addCycle(date: string, cycle: Cycle, customDays?: number | null): string {
+export function addCycle(date: string, cycle: Cycle): string {
   const base = utcDate(date);
   let next: DateTime;
   switch (cycle) {
@@ -53,9 +53,6 @@ export function addCycle(date: string, cycle: Cycle, customDays?: number | null)
       break;
     case 'year':
       next = base.plus({ years: 1 });
-      break;
-    case 'custom_days':
-      next = base.plus({ days: customDays && customDays > 0 ? customDays : 30 });
       break;
     default:
       next = base.plus({ months: 1 });

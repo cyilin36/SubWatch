@@ -100,7 +100,6 @@ const DATA_LABELS: Record<string, Localized> = {
   monitorUrl: { zh: '监控地址', en: 'Monitor URL' },
   subscriptionName: { zh: '订阅', en: 'Subscription' },
   subscriptionId: { zh: '订阅 ID', en: 'Subscription ID' },
-  templateName: { zh: '模板', en: 'Template' },
   channelName: { zh: '频道', en: 'Channel' },
   status: { zh: '状态', en: 'Status' },
   severity: { zh: '级别', en: 'Severity' },
@@ -115,11 +114,8 @@ const DATA_LABELS: Record<string, Localized> = {
   criticalValue: { zh: '严重阈值', en: 'Critical threshold' },
   url: { zh: '地址', en: 'URL' },
   expiryDate: { zh: '到期日', en: 'Expiry date' },
-  startDate: { zh: '开始日期', en: 'Start date' },
   daysLeft: { zh: '剩余天数', en: 'Days left' },
   cycle: { zh: '周期', en: 'Cycle' },
-  amountCents: { zh: '金额', en: 'Amount' },
-  currency: { zh: '币种', en: 'Currency' },
   error: { zh: '错误', en: 'Error' },
 };
 
@@ -206,19 +202,12 @@ function buildDetailEntries(
   data: Record<string, unknown>,
   locale: Locale,
 ): DetailEntry[] {
-  const currency = typeof data.currency === 'string' ? data.currency : '';
   const entries: DetailEntry[] = [];
   for (const [key, rawValue] of Object.entries(data)) {
     if (META_KEYS.has(key)) continue;
     const localized = DATA_LABELS[key];
     const label = localized ? pick(locale, localized) : key;
-    let value: string;
-    if (key === 'amountCents' && typeof rawValue === 'number' && currency) {
-      value = `${(rawValue / 100).toFixed(2)} ${currency}`;
-    } else {
-      value = formatDataValue(rawValue);
-    }
-    entries.push({ key, label, value });
+    entries.push({ key, label, value: formatDataValue(rawValue) });
   }
   return entries;
 }

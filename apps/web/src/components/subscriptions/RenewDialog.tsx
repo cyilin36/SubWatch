@@ -2,22 +2,19 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { addCycle, renewInputSchema, type SubscriptionDto } from '@subwatch/shared';
+import { ArrowRight } from 'lucide-react';
+import { renewInputSchema, type Cycle } from '@subwatch/shared';
 import { api, isApiError } from '../../lib/api';
+import { nextExpiryDate } from '../../lib/subscriptions';
 import { errorMessage, formatDateOnly } from '../../lib/utils';
 import { useAuth } from '../../providers/AuthProvider';
-import { AmountInput, Segmented } from '../common/fields';
-import { Alert, Button, Dialog, Field, Input, Select, Textarea } from '../ui';
-import { CURRENCY_OPTIONS } from '../../lib/presets';
+import { Alert, Button, Dialog, Field, Input } from '../ui';
 
 export interface RenewTarget {
   id: string;
   name: string;
   expiryDate: string;
-  amountCents: number | null;
-  currency: string;
-  cycle?: SubscriptionDto['cycle'];
-  cycleDays?: number | null;
+  cycle: Cycle;
 }
 
 export interface RenewDialogProps {
@@ -26,44 +23,28 @@ export interface RenewDialogProps {
   target: RenewTarget | null;
 }
 
-/** Renewal dialog shared by the dashboard, subscription list and detail pages. */
+/**
+ * One-click renewal: a single editable date prefilled with
+ * max(today, expiry) + cycle. The current expiry is sent along as an
+ * optimistic-concurrency guard (409 when it changed elsewhere).
+ */
 export function RenewDialog({ open, onOpenChange, target }: RenewDialogProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { timezone } = useAuth();
-
-  const [mode, setMode] = useState<'cycle' | 'custom'>('cycle');
-  const [base, setBase] = useState<'expiry' | 'today'>('expiry');
-  const [customDate, setCustomDate] = useState('');
-  const [amountCents, setAmountCents] = useState<number | null>(null);
-  const [currency, setCurrency] = useState('CNY');
-  const [note, setNote] = useState('');
+  const [date, setDate] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !target) return;
-    setMode('cycle');
-    setBase('expiry');
-    setCustomDate(addCycle(target.expiryDate, 'month'));
-    setAmountCents(target.amountCents);
-    setCurrency(target.currency || 'CNY');
-    setNote('');
+    setDate(nextExpiryDate(target.expiryDate, target.cycle, timezone));
     setError(null);
-  }, [open, target]);
+  }, [open, target, timezone]);
 
   const mutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: () => {
       if (!target) throw new Error('No subscription selected');
-      const payload = {
-        mode,
-        base,
-        date: mode === 'custom' ? customDate : undefined,
-        amountCents,
-        currency,
-        note,
-        expectedExpiryDate: target.expiryDate,
-      };
-      const parsed = renewInputSchema.safeParse(payload);
+      const parsed = renewInputSchema.safeParse({ expectedExpiryDate: target.expiryDate, date });
       if (!parsed.success) {
         throw new Error(parsed.error.issues[0]?.message ?? 'Invalid renewal input');
       }
@@ -73,7 +54,6 @@ export function RenewDialog({ open, onOpenChange, target }: RenewDialogProps) {
       toast.success(t('renew.success', { date: subscription.expiryDate }));
       void queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       void queryClient.invalidateQueries({ queryKey: ['subscription', subscription.id] });
-      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       onOpenChange(false);
     },
     onError: (mutationError) => {
@@ -85,11 +65,7 @@ export function RenewDialog({ open, onOpenChange, target }: RenewDialogProps) {
     },
   });
 
-  const cyclePreview = (() => {
-    if (!target?.cycle) return null;
-    const start = base === 'expiry' ? target.expiryDate : new Date().toISOString().slice(0, 10);
-    return addCycle(start, target.cycle, target.cycleDays ?? null);
-  })();
+  const dateMissing = date.trim() === '';
 
   return (
     <Dialog
@@ -104,6 +80,7 @@ export function RenewDialog({ open, onOpenChange, target }: RenewDialogProps) {
           </Button>
           <Button
             loading={mutation.isPending}
+            disabled={dateMissing}
             onClick={() => {
               setError(null);
               mutation.mutate();
@@ -115,80 +92,28 @@ export function RenewDialog({ open, onOpenChange, target }: RenewDialogProps) {
       }
     >
       <div className="space-y-4">
-        <Field label={t('renew.mode')}>
-          <Segmented
-            value={mode}
-            onChange={setMode}
-            options={[
-              { value: 'cycle', label: t('renew.cycleMode') },
-              { value: 'custom', label: t('renew.customMode') },
-            ]}
-          />
-        </Field>
-
-        {mode === 'cycle' ? (
-          <Field label={t('renew.base')} hint={t('renew.previewHint')}>
-            <Segmented
-              value={base}
-              onChange={setBase}
-              options={[
-                { value: 'expiry', label: t('renew.baseExpiry') },
-                { value: 'today', label: t('renew.baseToday') },
-              ]}
-            />
-          </Field>
-        ) : (
-          <Field
-            label={t('renew.newExpiry')}
-            htmlFor="renew-custom-date"
-            error={mode === 'custom' && !customDate ? t('renew.customDateRequired') : undefined}
-            required
-          >
-            <Input
-              id="renew-custom-date"
-              type="date"
-              value={customDate}
-              onChange={(event) => setCustomDate(event.target.value)}
-            />
-          </Field>
-        )}
-
-        {mode === 'cycle' && cyclePreview ? (
-          <p className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-sm">
-            {t('renew.preview')}: <span className="font-medium">{formatDateOnly(cyclePreview)}</span>
-          </p>
-        ) : null}
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label={t('renew.amount')} hint={t('renew.amountHint')}>
-            <AmountInput
-              value={amountCents}
-              onChange={setAmountCents}
-              currency={currency}
-              placeholder="0.00"
-            />
-          </Field>
-          <Field label={t('renew.currency')}>
-            <Select
-              value={currency}
-              onValueChange={setCurrency}
-              options={CURRENCY_OPTIONS.map((code) => ({ value: code, label: code }))}
-            />
-          </Field>
+        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-sm">
+          <span className="text-[var(--muted-foreground)]">{t('renew.current')}</span>
+          <span className="font-medium">{target ? formatDateOnly(target.expiryDate) : '—'}</span>
+          <ArrowRight className="h-3.5 w-3.5 text-[var(--muted-foreground)]" aria-hidden />
+          <span className="font-medium">{dateMissing ? '—' : date}</span>
         </div>
 
-        <Field label={t('renew.note')}>
-          <Textarea
-            rows={2}
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            placeholder={t('renew.notePlaceholder')}
+        <Field
+          label={t('renew.newExpiry')}
+          htmlFor="renew-date"
+          hint={t('renew.hint')}
+          required
+          error={dateMissing ? t('renew.dateRequired') : undefined}
+        >
+          <Input
+            id="renew-date"
+            type="date"
+            value={date}
+            invalid={dateMissing}
+            onChange={(event) => setDate(event.target.value)}
           />
         </Field>
-
-        <p className="text-xs text-[var(--muted-foreground)]">
-          {t('settings.timezone')}: {timezone}
-        </p>
 
         {error ? <Alert tone="danger">{error}</Alert> : null}
       </div>

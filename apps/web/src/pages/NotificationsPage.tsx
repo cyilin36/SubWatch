@@ -60,7 +60,6 @@ export function NotificationsPage() {
     onSuccess: () => {
       toast.success(t('notifications.retrySuccess'));
       void queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
     onError: (error) => toast.error(t('notifications.retryFailed'), { description: errorMessage(error) }),
   });

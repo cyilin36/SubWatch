@@ -4,21 +4,16 @@ import type {
   AuthStatusDto,
   ChannelDto,
   ChannelInput,
-  DashboardDto,
   EmailChannelConfig,
-  GeneralSettings,
   MonitorDto,
   MonitorInput,
   MonitorRunDto,
   MonitorTestResult,
   NotificationDto,
   Paginated,
-  RenewalDto,
   SettingsDto,
   SubscriptionDto,
   SubscriptionInput,
-  TemplateDto,
-  TemplateInput,
   ApiErrorBody,
   MonitorConfig,
   MetricValue,
@@ -69,15 +64,6 @@ export type MonitorCreateResult = MonitorDto & { pushToken?: string };
 export interface ChannelTestResult {
   ok: boolean;
   error?: string | null;
-}
-
-export interface DashboardCalendarItem {
-  id: string;
-  name: string;
-  expiry_date: string;
-  amount_cents: number | null;
-  currency: string;
-  daysLeft: number;
 }
 
 export interface NotificationListParams {
@@ -207,11 +193,6 @@ export const api = {
     changePassword: (body: ChangePasswordInput) => post<{ ok: boolean }>('/auth/password', body),
   },
 
-  dashboard: {
-    get: () => request<DashboardDto>('/dashboard'),
-    calendar: (days = 60) => request<DashboardCalendarItem[]>(`/dashboard/calendar${queryString({ days })}`),
-  },
-
   monitors: {
     list: () => request<MonitorDto[]>('/monitors'),
     get: (id: string) => request<MonitorDto>(`/monitors/${encodeURIComponent(id)}`),
@@ -233,7 +214,8 @@ export const api = {
   },
 
   subscriptions: {
-    list: () => request<SubscriptionDto[]>('/subscriptions'),
+    list: (search?: string) =>
+      request<SubscriptionDto[]>(`/subscriptions${queryString(search ? { search } : undefined)}`),
     get: (id: string) => request<SubscriptionDto>(`/subscriptions/${encodeURIComponent(id)}`),
     create: (input: SubscriptionInput) => post<SubscriptionDto>('/subscriptions', input),
     update: (id: string, input: SubscriptionInput) =>
@@ -243,19 +225,8 @@ export const api = {
       post<SubscriptionDto>(`/subscriptions/${encodeURIComponent(id)}/renew`, input),
     pause: (id: string) => post<SubscriptionDto>(`/subscriptions/${encodeURIComponent(id)}/pause`),
     resume: (id: string) => post<SubscriptionDto>(`/subscriptions/${encodeURIComponent(id)}/resume`),
-    renewals: (id: string) => request<RenewalDto[]>(`/subscriptions/${encodeURIComponent(id)}/renewals`),
-    upcoming: (days = 30) =>
-      request<SubscriptionDto[]>(`/subscriptions/upcoming${queryString({ days })}`),
     testReminder: (id: string) =>
       post<ChannelTestResult>(`/subscriptions/${encodeURIComponent(id)}/test-reminder`),
-  },
-
-  templates: {
-    list: () => request<TemplateDto[]>('/templates'),
-    create: (input: TemplateInput) => post<TemplateDto>('/templates', input),
-    update: (id: string, input: TemplateInput) => put<TemplateDto>(`/templates/${encodeURIComponent(id)}`, input),
-    remove: (id: string) => del<{ ok: boolean }>(`/templates/${encodeURIComponent(id)}`),
-    clone: (id: string) => post<TemplateDto>(`/templates/${encodeURIComponent(id)}/clone`),
   },
 
   channels: {
@@ -281,5 +252,3 @@ export const api = {
       post<ChannelTestResult>('/settings/smtp/test', config ? { config } : {}),
   },
 };
-
-export type { GeneralSettings };
