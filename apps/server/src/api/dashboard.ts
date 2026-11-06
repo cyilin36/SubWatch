@@ -185,11 +185,11 @@ export async function registerDashboardRoutes(app: FastifyInstance, ctx: CoreCon
         expired += 1;
         continue;
       }
-      active += 1;
+      if (status === 'active') active += 1;
+      if (status === 'expiring') expiringCount += 1;
       totalCostCents += monthlyCostCents(row);
       const left = daysLeft(row.expiry_date, timezone);
       if (left <= 30) {
-        if (status === 'expiring') expiringCount += 1;
         expiring.push({
           id: row.id,
           name: row.name,
