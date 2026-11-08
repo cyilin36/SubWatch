@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import {
   daysBetween,
+  formatExpiry,
+  isExpiredAt,
   reminderScheduledFor,
   todayInZone,
   type GeneralSettings,
@@ -17,6 +19,7 @@ export const REMINDER_SCAN_INTERVAL_MS = 30_000;
 interface ReminderStateRow {
   id: string;
   expiry_date: string;
+  expiry_time: string;
   reminder_offsets: string;
   paused: number;
 }
@@ -25,6 +28,7 @@ interface DueReminderRow {
   reminder_id: string;
   subscription_id: string;
   expiry_date: string;
+  expiry_time: string;
   offset_days: number;
   scheduled_for: string;
   name: string;
@@ -113,12 +117,13 @@ export function rebuildAllPendingReminders(ctx: ModuleContext): void {
     run(ctx.db, "DELETE FROM subscription_reminders WHERE status = 'pending'");
     const rows = all<ReminderStateRow>(
       ctx.db,
-      'SELECT id, expiry_date, reminder_offsets, paused FROM subscriptions',
+      'SELECT id, expiry_date, expiry_time, reminder_offsets, paused FROM subscriptions',
     );
     for (const row of rows) {
       insertScheduleRows(ctx.db, general, {
         subscriptionId: row.id,
         expiryDate: row.expiry_date,
+        expiryTime: row.expiry_time,
         reminderOffsets: parseReminderOffsets(row.reminder_offsets),
         paused: Number(row.paused) === 1,
       });
@@ -134,38 +139,43 @@ function buildReminderCopy(
   general: GeneralSettings,
   name: string,
   expiryDate: string,
+  expiryTime: string,
   daysRemaining: number,
   expired: boolean,
 ): { title: string; message: string } {
+  const expiry = formatExpiry(expiryDate, expiryTime);
   if (general.locale === 'en') {
     if (expired) {
-      const overdue = Math.max(1, -daysRemaining);
+      const overdue = -daysRemaining;
       return {
         title: `Subscription expired: ${name}`,
-        message: `Expired on ${expiryDate} (${overdue} day(s) ago)`,
+        message:
+          overdue > 0
+            ? `Expired at ${expiry} (${overdue} day(s) ago)`
+            : `Expired at ${expiry}`,
       };
     }
     if (daysRemaining === 0) {
-      return { title: `Subscription expires today: ${name}`, message: `Expires today (${expiryDate})` };
+      return { title: `Subscription expires today: ${name}`, message: `Expires today (${expiry})` };
     }
     return {
       title: `Subscription expiring soon: ${name}`,
-      message: `${daysRemaining} day(s) left until ${expiryDate}`,
+      message: `${daysRemaining} day(s) left until ${expiry}`,
     };
   }
   if (expired) {
-    const overdue = Math.max(1, -daysRemaining);
+    const overdue = -daysRemaining;
     return {
       title: `订阅已过期：${name}`,
-      message: `已于 ${expiryDate} 到期（已过期 ${overdue} 天）`,
+      message: overdue > 0 ? `已于 ${expiry} 到期（已过期 ${overdue} 天）` : `已于 ${expiry} 到期`,
     };
   }
   if (daysRemaining === 0) {
-    return { title: `订阅今天到期：${name}`, message: `今天到期（${expiryDate}）` };
+    return { title: `订阅今天到期：${name}`, message: `今天到期（${expiry}）` };
   }
   return {
     title: `订阅即将到期：${name}`,
-    message: `还有 ${daysRemaining} 天到期（${expiryDate}）`,
+    message: `还有 ${daysRemaining} 天到期（${expiry}）`,
   };
 }
 
@@ -182,7 +192,7 @@ export function scanDueReminders(ctx: ModuleContext): void {
   const rows = all<DueReminderRow>(
     ctx.db,
     `SELECT r.id AS reminder_id, r.subscription_id, r.expiry_date, r.offset_days, r.scheduled_for,
-            s.name, s.channel_ids, s.paused
+            s.expiry_time, s.name, s.channel_ids, s.paused
        FROM subscription_reminders r
        JOIN subscriptions s ON s.id = r.subscription_id
       WHERE r.status = 'pending' AND r.scheduled_for <= ?
@@ -209,10 +219,17 @@ export function scanDueReminders(ctx: ModuleContext): void {
       continue;
     }
 
-    const expired = chosen.expiry_date < today;
+    const expired = isExpiredAt(chosen.expiry_date, chosen.expiry_time, general.timezone);
     const daysRemaining = daysBetween(today, chosen.expiry_date);
     const eventType: NotificationEventType = expired ? 'subscription.expired' : 'subscription.expiring';
-    const copy = buildReminderCopy(general, chosen.name, chosen.expiry_date, daysRemaining, expired);
+    const copy = buildReminderCopy(
+      general,
+      chosen.name,
+      chosen.expiry_date,
+      chosen.expiry_time,
+      daysRemaining,
+      expired,
+    );
     const payload = {
       title: copy.title,
       message: copy.message,
@@ -220,6 +237,7 @@ export function scanDueReminders(ctx: ModuleContext): void {
       data: {
         subscriptionId: chosen.subscription_id,
         expiryDate: chosen.expiry_date,
+        expiryTime: chosen.expiry_time,
         daysLeft: daysRemaining,
         offsetDays: chosen.offset_days,
       },
@@ -270,12 +288,20 @@ export function enqueueTestReminder(ctx: ModuleContext, subscription: {
   id: string;
   name: string;
   expiryDate: string;
+  expiryTime: string;
   channelIds: string[];
 }): void {
   const general = ctx.settings.getGeneral();
-  const expired = subscription.expiryDate < todayInZone(general.timezone);
+  const expired = isExpiredAt(subscription.expiryDate, subscription.expiryTime, general.timezone);
   const daysRemaining = daysBetween(todayInZone(general.timezone), subscription.expiryDate);
-  const copy = buildReminderCopy(general, subscription.name, subscription.expiryDate, daysRemaining, expired);
+  const copy = buildReminderCopy(
+    general,
+    subscription.name,
+    subscription.expiryDate,
+    subscription.expiryTime,
+    daysRemaining,
+    expired,
+  );
   ctx.notifications.enqueue({
     eventType: 'subscription.test',
     eventKey: `sub-test:${subscription.id}:${Date.now()}:${randomUUID().slice(0, 8)}`,
@@ -287,6 +313,7 @@ export function enqueueTestReminder(ctx: ModuleContext, subscription: {
       data: {
         subscriptionId: subscription.id,
         expiryDate: subscription.expiryDate,
+        expiryTime: subscription.expiryTime,
         daysLeft: daysRemaining,
       },
       appUrl: appUrlFor(ctx, subscription.id),

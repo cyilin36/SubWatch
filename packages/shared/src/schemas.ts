@@ -5,6 +5,7 @@ import {
   DEFAULT_LOCALE,
   DEFAULT_REMINDER_OFFSETS,
   DEFAULT_REMINDER_TIME,
+  DEFAULT_EXPIRY_TIME,
   DEFAULT_TIMEZONE,
   DEFAULT_LOCALE_VALUES,
   DEFAULT_MAX_RESPONSE_BYTES,
@@ -25,6 +26,9 @@ export const operatorSchema = z.enum(OPERATOR_VALUES);
 export const dateOnlySchema = z
   .string()
   .refine(isDateOnly, { message: 'Expected a valid YYYY-MM-DD date' });
+export const timeOfDaySchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected an HH:mm time');
 export const idSchema = z.string().min(1).max(64);
 export const idListSchema = z.array(idSchema).max(100).default([]);
 export const reminderOffsetsSchema = z
@@ -233,6 +237,8 @@ export const subscriptionInputSchema = z.object({
   name: z.string().min(1).max(100),
   url: httpUrlOrEmptySchema,
   expiryDate: dateOnlySchema,
+  /** Minute-precise expiry time of day in the instance timezone. */
+  expiryTime: timeOfDaySchema.default(DEFAULT_EXPIRY_TIME),
   cycle: cycleSchema.default('month'),
   reminderOffsets: reminderOffsetsSchema,
   channelIds: idListSchema,
@@ -319,10 +325,7 @@ export const generalSettingsSchema = z.object({
   appName: z.string().min(1).max(100).default('SubWatch'),
   locale: localeSchema.default(DEFAULT_LOCALE),
   timezone: z.string().min(1).max(100).default(DEFAULT_TIMEZONE),
-  reminderTime: z
-    .string()
-    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected HH:mm')
-    .default(DEFAULT_REMINDER_TIME),
+  reminderTime: timeOfDaySchema.default(DEFAULT_REMINDER_TIME),
   defaultReminderOffsets: reminderOffsetsSchema,
   runRetentionDays: z.number().int().min(1).max(3650).default(30),
   notificationRetentionDays: z.number().int().min(1).max(3650).default(90),

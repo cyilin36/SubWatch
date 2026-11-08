@@ -1,4 +1,9 @@
-import { daysLeft, type GeneralSettings, type SubscriptionStatus } from '@subwatch/shared';
+import {
+  daysLeft,
+  isExpiredAt,
+  type GeneralSettings,
+  type SubscriptionStatus,
+} from '@subwatch/shared';
 
 /**
  * Subscription state needed to build or refresh its reminder schedule.
@@ -8,6 +13,7 @@ import { daysLeft, type GeneralSettings, type SubscriptionStatus } from '@subwat
 export interface SubscriptionReminderState {
   subscriptionId: string;
   expiryDate: string;
+  expiryTime: string;
   reminderOffsets: number[];
   paused: boolean;
 }
@@ -24,13 +30,14 @@ export function resolveEffectiveOffsets(subscriptionOffsets: number[], general: 
 
 /** expiring = within the reminder window (at least 7 days) and not yet expired. */
 export function deriveSubscriptionStatus(
-  state: { paused: boolean; expiryDate: string; reminderOffsets: number[] },
+  state: { paused: boolean; expiryDate: string; expiryTime: string; reminderOffsets: number[] },
   general: GeneralSettings,
   timezone: string,
 ): SubscriptionStatus {
   if (state.paused) return 'paused';
+  // The exact wall-clock expiry (to the minute) decides when it becomes expired.
+  if (isExpiredAt(state.expiryDate, state.expiryTime, timezone)) return 'expired';
   const remaining = daysLeft(state.expiryDate, timezone);
-  if (remaining < 0) return 'expired';
   const offsets = resolveEffectiveOffsets(state.reminderOffsets, general);
   const window = Math.max(7, ...(offsets.length > 0 ? offsets : [0]));
   return remaining <= window ? 'expiring' : 'active';

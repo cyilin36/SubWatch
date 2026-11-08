@@ -10,7 +10,7 @@ import {
   Plus,
   Search,
 } from 'lucide-react';
-import type { MonitorDto, SubscriptionDto } from '@subwatch/shared';
+import { formatExpiry, type MonitorDto, type SubscriptionDto } from '@subwatch/shared';
 import { api } from '../lib/api';
 import { monitorEffectiveStatus } from '../lib/monitors';
 import { useAuth } from '../providers/AuthProvider';
@@ -88,6 +88,9 @@ function DueText({ subscription }: { subscription: SubscriptionDto }) {
       </span>
     );
   }
+  if (subscription.status === 'expired') {
+    return <span className="text-[var(--danger)]">{t('subscriptions.dueTodayExpired')}</span>;
+  }
   if (daysLeft === 0) {
     return <span className="text-[var(--warning)]">{t('subscriptions.dueToday')}</span>;
   }
@@ -147,7 +150,9 @@ function HomeRow({ row, onRenew }: { row: UnifiedRow; onRenew: (target: RenewTar
         <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
           {subscription ? (
             <>
-              <span className="text-[var(--muted-foreground)]">{subscription.expiryDate}</span>
+              <span className="text-[var(--muted-foreground)]">
+                {formatExpiry(subscription.expiryDate, subscription.expiryTime)}
+              </span>
               <DueText subscription={subscription} />
             </>
           ) : row.monitor ? (
@@ -179,6 +184,7 @@ function HomeRow({ row, onRenew }: { row: UnifiedRow; onRenew: (target: RenewTar
               id: subscription.id,
               name: subscription.name,
               expiryDate: subscription.expiryDate,
+              expiryTime: subscription.expiryTime,
               cycle: subscription.cycle,
             })
           }

@@ -69,5 +69,6 @@ curl -s -b cookies.txt "$BASE/api/monitors/<返回的 id>/runs?limit=10"
 
 - API 无版本前缀（`/api/...`），随版本演进；当前版本见 `GET /api/meta`。
 - 所有请求/响应均为 JSON（`Content-Type: application/json`），请求体上限 2 MB。
-- 日期字段为 `YYYY-MM-DD`（按实例时区解释）；时间戳为 ISO 8601 UTC（如 `2026-11-08T03:00:00.000Z`）。
+- 日期字段为 `YYYY-MM-DD`；订阅到期时间另有 `expiryTime`（`HH:mm`），两者都按实例时区解释；
+  时间戳为 ISO 8601 UTC（如 `2026-11-08T03:00:00.000Z`）。
 - 不建议直接读写 SQLite 来做自动化；表结构随迁移变化，请使用 API（见 [storage.md](storage.md)）。

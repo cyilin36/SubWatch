@@ -132,14 +132,16 @@ export interface RenewalDto {
 
 /**
  * A simple reminder / subscription record. The single built-in template means
- * there are no custom template fields here: name, optional link, expiry date,
- * a renewal cycle, reminder offsets and notification channels.
+ * there are no custom template fields here: name, optional link, expiry date
+ * and time (to the minute), a renewal cycle, reminder offsets and channels.
  */
 export interface SubscriptionDto {
   id: string;
   name: string;
   url: string | null;
   expiryDate: string;
+  /** `HH:mm` wall-clock expiry time in the instance timezone. */
+  expiryTime: string;
   cycle: Cycle;
   reminderOffsets: number[];
   channelIds: string[];

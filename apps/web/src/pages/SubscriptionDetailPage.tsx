@@ -16,7 +16,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { subscriptionInputSchema, type SubscriptionDto } from '@subwatch/shared';
+import { formatExpiry, subscriptionInputSchema, type SubscriptionDto } from '@subwatch/shared';
 import { api } from '../lib/api';
 import { applyZodIssues } from '../lib/form';
 import {
@@ -207,7 +207,9 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
             <StatusBadge status={subscription.status} />
           </span>
         }
-        description={`${subscription.expiryDate} · ${t(`cycle.${subscription.cycle}`)}`}
+        description={`${formatExpiry(subscription.expiryDate, subscription.expiryTime)} · ${t(
+          `cycle.${subscription.cycle}`,
+        )}`}
         icon={<CreditCard className="h-5 w-5" />}
         actions={
           editing ? null : (
@@ -228,6 +230,7 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
                     id: subscription.id,
                     name: subscription.name,
                     expiryDate: subscription.expiryDate,
+                    expiryTime: subscription.expiryTime,
                     cycle: subscription.cycle,
                   })
                 }
@@ -290,7 +293,9 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
                   <dt className="text-xs text-[var(--muted-foreground)]">
                     {t('subscriptions.expiryDate')}
                   </dt>
-                  <dd className="mt-0.5 text-sm font-medium">{subscription.expiryDate}</dd>
+                  <dd className="mt-0.5 text-sm font-medium">
+                    {formatExpiry(subscription.expiryDate, subscription.expiryTime)}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-xs text-[var(--muted-foreground)]">
@@ -305,6 +310,8 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
                       <span className="text-[var(--danger)]">
                         {t('subscriptions.daysOverdue', { count: Math.abs(daysLeft) })}
                       </span>
+                    ) : subscription.status === 'expired' ? (
+                      <span className="text-[var(--danger)]">{t('subscriptions.dueTodayExpired')}</span>
                     ) : daysLeft === 0 ? (
                       <span className="text-[var(--warning)]">{t('subscriptions.dueToday')}</span>
                     ) : (

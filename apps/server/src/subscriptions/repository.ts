@@ -9,6 +9,7 @@ export interface SubscriptionRow {
   name: string;
   url: string | null;
   expiry_date: string;
+  expiry_time: string;
   cycle: string;
   reminder_offsets: string;
   channel_ids: string;
@@ -58,7 +59,7 @@ export function mapSubscriptionRow(
   const reminderOffsets = parseReminderOffsets(row.reminder_offsets);
   const paused = fromBool(row.paused);
   const status = deriveSubscriptionStatus(
-    { paused, expiryDate: row.expiry_date, reminderOffsets },
+    { paused, expiryDate: row.expiry_date, expiryTime: row.expiry_time, reminderOffsets },
     general,
     general.timezone,
   );
@@ -67,6 +68,7 @@ export function mapSubscriptionRow(
     name: row.name,
     url: row.url && row.url !== '' ? row.url : null,
     expiryDate: row.expiry_date,
+    expiryTime: row.expiry_time,
     cycle: row.cycle as Cycle,
     reminderOffsets,
     channelIds: parseChannelIds(row.channel_ids),
@@ -104,7 +106,7 @@ export function listSubscriptions(ctx: CoreContext, filters: SubscriptionListFil
   const where = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
   const rows = all<SubscriptionRow>(
     ctx.db,
-    `SELECT * FROM subscriptions${where} ORDER BY expiry_date ASC, created_at ASC`,
+    `SELECT * FROM subscriptions${where} ORDER BY expiry_date ASC, expiry_time ASC, created_at ASC`,
     params,
   );
   return rows.map((row) => mapSubscriptionRow(ctx, row));

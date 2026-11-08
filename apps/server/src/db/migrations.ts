@@ -292,4 +292,15 @@ DROP TABLE subscriptions_v1_legacy;
 DROP TABLE templates;
 `,
   },
+  {
+    version: 3,
+    name: 'subscription_expiry_time',
+    sql: `
+-- Expiry becomes minute-precise. The calendar date stays in expiry_date so the
+-- existing indexes, reminder unique key and renewal history keep working; the
+-- time of day is a separate local wall-clock column. Existing rows keep the old
+-- "expires at the end of the day" semantics.
+ALTER TABLE subscriptions ADD COLUMN expiry_time TEXT NOT NULL DEFAULT '23:59';
+`,
+  },
 ];

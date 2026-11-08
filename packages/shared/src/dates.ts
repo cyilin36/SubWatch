@@ -2,12 +2,18 @@ import { DateTime } from 'luxon';
 import type { Cycle } from './constants.js';
 
 const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_OF_DAY_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 /** True when `value` is a real calendar date in `YYYY-MM-DD` form. */
 export function isDateOnly(value: string): boolean {
   if (!DATE_ONLY_RE.test(value)) return false;
   const dt = DateTime.fromISO(value, { zone: 'utc' });
   return dt.isValid && dt.toISODate() === value;
+}
+
+/** True when `value` is a 24h wall-clock time in `HH:mm` form. */
+export function isTimeOfDay(value: string): boolean {
+  return TIME_OF_DAY_RE.test(value);
 }
 
 function utcDate(value: string): DateTime {
@@ -108,6 +114,28 @@ export function formatDateTime(iso: string, timezone: string, locale: string): s
 /** Format a date-only value; keeps the value unambiguous for both locales. */
 export function formatDateOnly(date: string): string {
   return isDateOnly(date) ? date : String(date);
+}
+
+/** Human-facing expiry label, e.g. `2027-01-09 18:30`. */
+export function formatExpiry(expiryDate: string, expiryTime: string): string {
+  return `${expiryDate} ${expiryTime}`;
+}
+
+/**
+ * Wall-clock instant of a subscription expiry (date + HH:mm) in the given
+ * timezone. Expiry times are stored as local wall-clock values on purpose, so
+ * the same date+time means the same local moment regardless of DST arithmetic.
+ */
+export function expiryInstant(expiryDate: string, expiryTime: string, timezone: string): DateTime {
+  if (!isTimeOfDay(expiryTime)) throw new Error(`Invalid expiry time: ${expiryTime}`);
+  const local = DateTime.fromISO(`${expiryDate}T${expiryTime}`, { zone: timezone });
+  if (!local.isValid) throw new Error(`Invalid expiry: ${expiryDate} ${expiryTime}`);
+  return local;
+}
+
+/** True once the local expiry instant (in the app timezone) has been reached. */
+export function isExpiredAt(expiryDate: string, expiryTime: string, timezone: string): boolean {
+  return DateTime.now().setZone(timezone) >= expiryInstant(expiryDate, expiryTime, timezone);
 }
 
 /** Last N calendar dates (oldest first) ending today in the given timezone. */

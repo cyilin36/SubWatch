@@ -28,8 +28,8 @@ import {
 } from './reminders.js';
 import type { SubscriptionReminderState } from './status.js';
 
-const SUBSCRIPTION_COLUMNS = `id, name, url, expiry_date, cycle, reminder_offsets, channel_ids, notes,
-  paused, created_at, updated_at`;
+const SUBSCRIPTION_COLUMNS = `id, name, url, expiry_date, expiry_time, cycle, reminder_offsets,
+  channel_ids, notes, paused, created_at, updated_at`;
 
 function requireSubscriptionRow(ctx: ModuleContext, id: string): SubscriptionRow {
   const row = getSubscriptionRow(ctx, id);
@@ -46,6 +46,7 @@ function reminderStateFor(row: SubscriptionRow): SubscriptionReminderState {
   return {
     subscriptionId: row.id,
     expiryDate: row.expiry_date,
+    expiryTime: row.expiry_time,
     reminderOffsets: parseReminderOffsets(row.reminder_offsets),
     paused: Number(row.paused) === 1,
   };
@@ -81,12 +82,13 @@ export function registerSubscriptionRoutes(app: FastifyInstance, ctx: ModuleCont
     withTransaction(ctx.db, () => {
       run(
         ctx.db,
-        `INSERT INTO subscriptions (${SUBSCRIPTION_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO subscriptions (${SUBSCRIPTION_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           body.name,
           storedUrl(body.url),
           body.expiryDate,
+          body.expiryTime,
           body.cycle,
           toJson(body.reminderOffsets),
           toJson(body.channelIds),
@@ -99,6 +101,7 @@ export function registerSubscriptionRoutes(app: FastifyInstance, ctx: ModuleCont
       rebuildPendingReminders(ctx.db, general, {
         subscriptionId: id,
         expiryDate: body.expiryDate,
+        expiryTime: body.expiryTime,
         reminderOffsets: body.reminderOffsets,
         paused: body.paused,
       });
@@ -117,13 +120,14 @@ export function registerSubscriptionRoutes(app: FastifyInstance, ctx: ModuleCont
       run(
         ctx.db,
         `UPDATE subscriptions SET
-           name = ?, url = ?, expiry_date = ?, cycle = ?, reminder_offsets = ?, channel_ids = ?,
-           notes = ?, paused = ?, updated_at = ?
+           name = ?, url = ?, expiry_date = ?, expiry_time = ?, cycle = ?, reminder_offsets = ?,
+           channel_ids = ?, notes = ?, paused = ?, updated_at = ?
          WHERE id = ?`,
         [
           body.name,
           storedUrl(body.url),
           body.expiryDate,
+          body.expiryTime,
           body.cycle,
           toJson(body.reminderOffsets),
           toJson(body.channelIds),
@@ -136,6 +140,7 @@ export function registerSubscriptionRoutes(app: FastifyInstance, ctx: ModuleCont
       rebuildPendingReminders(ctx.db, general, {
         subscriptionId: id,
         expiryDate: body.expiryDate,
+        expiryTime: body.expiryTime,
         reminderOffsets: body.reminderOffsets,
         paused: body.paused,
       });
@@ -241,6 +246,7 @@ export function registerSubscriptionRoutes(app: FastifyInstance, ctx: ModuleCont
         id: existing.id,
         name: existing.name,
         expiryDate: existing.expiry_date,
+        expiryTime: existing.expiry_time,
         channelIds: channelIdsFor(existing),
       });
       return { ok: true };

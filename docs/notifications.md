@@ -81,12 +81,13 @@ X-SubWatch-Signature: sha256=<hex>
   "source": "subwatch",
   "event": "subscription.expiring",
   "title": "订阅即将到期：VPS 续费",
-  "message": "还有 3 天到期（2026-11-11）",
+  "message": "还有 3 天到期（2026-11-11 09:00）",
   "severity": "warning",
   "timestamp": "2026-11-08T03:00:00.000Z",
   "data": {
     "subscriptionId": "...",
     "expiryDate": "2026-11-11",
+    "expiryTime": "09:00",
     "daysLeft": 3,
     "offsetDays": 3
   },
@@ -184,10 +185,10 @@ def verify(raw_body: bytes, signature: str, secret: str) -> bool:
 | `monitor.down` | 连续失败达到阈值 / Push 超时 | `monitorId`, `monitorName`, `state`, `severity`, `status`, `consecutiveFailures`, `failureThreshold`, `error`, `since` |
 | `monitor.recovered` | 监控恢复 | `monitorId`, `monitorName`, `state`, `severity`, `status` |
 | `monitor.test` | 预留（当前 WebUI 的「试运行」不发送通知） | — |
-| `subscription.expiring` | 到期前提前提醒 | `subscriptionId`, `expiryDate`, `daysLeft`, `offsetDays` |
-| `subscription.expired` | 已过期 | `subscriptionId`, `expiryDate`, `daysLeft`, `offsetDays` |
+| `subscription.expiring` | 到期前提前提醒 | `subscriptionId`, `expiryDate`, `expiryTime`, `daysLeft`, `offsetDays` |
+| `subscription.expired` | 已过期 | `subscriptionId`, `expiryDate`, `expiryTime`, `daysLeft`, `offsetDays` |
 | `subscription.renewed` | 续期成功 | `subscriptionId`, `fromDate`, `toDate`, `expiryDate` |
-| `subscription.test` | 手动「测试提醒」 | `subscriptionId`, `expiryDate`, `daysLeft` |
+| `subscription.test` | 手动「测试提醒」 | `subscriptionId`, `expiryDate`, `expiryTime`, `daysLeft` |
 | `channel.test` | 渠道/ SMTP 测试发送 | 无（或测试标识） |
 
 ## 内置 Webhook 预设

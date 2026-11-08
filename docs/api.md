@@ -145,6 +145,7 @@ curl -s -c cookies.txt \
   "name": "VPS 续费",
   "url": "https://console.example.com/renew",
   "expiryDate": "2027-01-09",
+  "expiryTime": "18:30",
   "cycle": "month",
   "reminderOffsets": [7, 3, 1, 0],
   "channelIds": [],
@@ -158,7 +159,8 @@ curl -s -c cookies.txt \
 }
 ```
 
-- `status`：`active` / `expiring` / `expired` / `paused`。
+- `expiryDate` + `expiryTime`：到期日期与到期时间（`HH:mm`，按实例时区解释，精确到分钟）；`expiryTime` 默认 `23:59`，表示当天结束。
+- `status`：`active` / `expiring` / `expired` / `paused`；`expired` 从到期时刻（日期 + 时间）那一分钟起算。
 - `renewals` 只在 `GET /api/subscriptions/:id` 返回；列表接口不返回。
 - `cycle`：`day` / `week` / `month` / `quarter` / `year`。
 
@@ -359,7 +361,8 @@ curl -s -c cookies.txt \
 |---|---|---|
 | `name` | string(1..100) 必填 | 名称（如「VPS 续费」「吃药提醒」） |
 | `url` | string ≤2000，默认 `""` | 可选，续费/跳转链接；空串存为 `null` |
-| `expiryDate` | `YYYY-MM-DD` 必填 | 到期/提醒日期 |
+| `expiryDate` | `YYYY-MM-DD` 必填 | 到期日期 |
+| `expiryTime` | `HH:mm`，默认 `23:59` | 到期时间（实例时区，精确到分钟）；`23:59` = 当天结束 |
 | `cycle` | `day`/`week`/`month`/`quarter`/`year`，默认 `month` | 点击「续期」时的顺延周期 |
 | `reminderOffsets` | int[]（0..3650，≤20 个），默认 `[7,3,1,0]` | 提前多少天提醒；空数组时使用设置里的默认值 |
 | `channelIds` | string[]（≤100） | 通知频道；空 = 默认频道 |
@@ -367,6 +370,8 @@ curl -s -c cookies.txt \
 | `paused` | bool，默认 false | 暂停后不排提醒 |
 
 响应 `201` + SubscriptionDto。
+
+`PUT /api/subscriptions/:id` 是全量更新：`expiryTime` 省略时会重置为默认 `23:59`，客户端应始终回传当前值。
 
 ### 其它订阅端点
 
@@ -392,8 +397,9 @@ curl -s -c cookies.txt \
 
 ### 状态与提醒语义
 
-- `status` 推导：`paused` → `expired`（已过到期日）→ `expiring`（剩余天数 ≤ max(7, 最大提醒偏移)）→ `active`。
-- 提醒在「到期日 - 提前天数」的当天、按设置里的 `reminderTime`（默认 09:00，实例时区）触发。
+- `status` 推导：`paused` → `expired`（已到/已过到期时刻）→ `expiring`（剩余天数 ≤ max(7, 最大提醒偏移)）→ `active`。
+- 到期时刻 = `expiryDate` + `expiryTime`（实例时区，精确到分钟）；到期当天在到期时刻之前仍算 `expiring`。
+- 提醒在「到期日 - 提前天数」的当天、按设置里的 `reminderTime`（默认 09:00，实例时区）触发；`expiryTime` 只影响到期状态与展示，不改变提醒的发送时刻。
 - 服务停机错过多个提醒时，恢复后只发最紧急的一条，其余标记为已抑制，避免轰炸。
 - 修改到期日/暂停会重建该订阅的待发提醒；已发送过的提醒记录不会重复发送。
 

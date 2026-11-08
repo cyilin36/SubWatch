@@ -114,6 +114,7 @@ const DATA_LABELS: Record<string, Localized> = {
   criticalValue: { zh: '严重阈值', en: 'Critical threshold' },
   url: { zh: '地址', en: 'URL' },
   expiryDate: { zh: '到期日', en: 'Expiry date' },
+  expiryTime: { zh: '到期时间', en: 'Expiry time' },
   daysLeft: { zh: '剩余天数', en: 'Days left' },
   cycle: { zh: '周期', en: 'Cycle' },
   error: { zh: '错误', en: 'Error' },

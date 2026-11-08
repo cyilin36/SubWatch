@@ -1,4 +1,11 @@
-import { addCycle, todayInZone, type Cycle, type SubscriptionDto, type SubscriptionInput } from '@subwatch/shared';
+import {
+  addCycle,
+  DEFAULT_EXPIRY_TIME,
+  todayInZone,
+  type Cycle,
+  type SubscriptionDto,
+  type SubscriptionInput,
+} from '@subwatch/shared';
 
 /**
  * Editable subscription form values. Every field is present (no zod defaults
@@ -9,6 +16,7 @@ export interface SubscriptionFormValues {
   name: string;
   url: string;
   expiryDate: string;
+  expiryTime: string;
   cycle: Cycle;
   reminderOffsets: number[];
   channelIds: string[];
@@ -25,6 +33,7 @@ export function blankSubscriptionFormValues(
     name: '',
     url: '',
     expiryDate: addCycle(todayInZone(timezone), 'month'),
+    expiryTime: DEFAULT_EXPIRY_TIME,
     cycle: 'month',
     reminderOffsets: [...defaultReminderOffsets],
     channelIds: [],
@@ -39,6 +48,7 @@ export function subscriptionToFormValues(subscription: SubscriptionDto): Subscri
     name: subscription.name,
     url: subscription.url ?? '',
     expiryDate: subscription.expiryDate,
+    expiryTime: subscription.expiryTime,
     cycle: subscription.cycle,
     reminderOffsets: [...subscription.reminderOffsets],
     channelIds: [...subscription.channelIds],
@@ -53,6 +63,7 @@ export function subscriptionFormToInput(values: SubscriptionFormValues): Subscri
     name: values.name,
     url: values.url.trim(),
     expiryDate: values.expiryDate,
+    expiryTime: values.expiryTime,
     cycle: values.cycle,
     reminderOffsets: [...values.reminderOffsets],
     channelIds: [...values.channelIds],

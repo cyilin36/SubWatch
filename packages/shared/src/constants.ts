@@ -8,6 +8,8 @@ export const SECRET_KEEP = '__SUBWATCH_KEEP__';
 
 export const DEFAULT_TIMEZONE = 'Asia/Shanghai';
 export const DEFAULT_REMINDER_TIME = '09:00';
+/** Expiry without an explicit time means "end of the expiry day". */
+export const DEFAULT_EXPIRY_TIME = '23:59';
 export const DEFAULT_REMINDER_OFFSETS: readonly number[] = [7, 3, 1, 0];
 export const DEFAULT_LOCALE = 'zh-CN';
 export const DEFAULT_LOCALE_VALUES = ['zh-CN', 'en'] as const;

@@ -10,14 +10,14 @@ data/
 ├── .secret-key            # AES-256-GCM 主密钥，权限 0600
 ├── .lock                  # 进程锁（防止同一数据目录被多个实例使用）
 └── backups/
-    └── pre-migration-v2-<时间>.db   # 自动迁移前快照（最多保留 5 份）
+    └── pre-migration-v<版本>-<时间>.db   # 自动迁移前快照（最多保留 5 份）
 ```
 
 - **备份必须包含整个 `data/`，尤其是 `.secret-key`**；否则 SMTP 密码、Webhook 签名密钥、监控加密 Header、Push Token 等无法解密。
 - 恢复时停服务后整体替换 `data/` 即可，注意保持目录权限。
 - SQLite 开启 `WAL`、`foreign_keys=ON`、`busy_timeout=5000`、`synchronous=NORMAL`。
 
-## SQLite 表结构（v2）
+## SQLite 表结构（当前版本）
 
 > 迁移版本记录在 `schema_migrations`。表结构可能随版本继续演进；自动化请优先用 API，不建议直接依赖列名写库。
 
@@ -57,14 +57,15 @@ data/
 
 ### subscriptions
 
-订阅/提醒（v2 精简后）。
+订阅/提醒（v2 精简 + v3 到期时间）。
 
 | 列 | 说明 |
 |---|---|
 | `id` | 主键 |
 | `name` | 名称 |
 | `url` | 可选续费/跳转链接 |
-| `expiry_date` | 到期日 `YYYY-MM-DD` |
+| `expiry_date` | 到期日期 `YYYY-MM-DD` |
+| `expiry_time` | 到期时间 `HH:mm`（实例时区，默认 `23:59`） |
 | `cycle` | 续期周期 `day/week/month/quarter/year` |
 | `reminder_offsets` | JSON 数组，提前提醒天数 |
 | `channel_ids` | JSON 数组 |
@@ -72,7 +73,7 @@ data/
 | `paused` | 0/1 |
 | `created_at` / `updated_at` | 时间戳 |
 
-索引：`expiry_date`；`(paused, expiry_date)`。
+索引：`expiry_date`；`(paused, expiry_date)`。到期状态由 `expiry_date` + `expiry_time` 计算。
 
 ### renewals
 
@@ -211,6 +212,8 @@ data/
 - v2 迁移要点（从旧版升级）：删除 `templates` 表；`subscriptions` 去掉模板/金额/起始日期/归档等列，
   旧模板里的续费链接（`renewUrl`/`consoleUrl`/`billingUrl`/`manageUrl`/`profileUrl`/`webUrl`）会提取为 `url`；
   `custom_days` 周期归一为 `month`；续期历史与提醒历史保留。
+- v3 迁移要点：`subscriptions` 增加 `expiry_time`（`HH:mm`，默认 `23:59`）；旧数据保持“当天结束到期”的语义，
+  到期状态从按日期判断改为按分钟判断，提醒计划表不变。
 
 ## 运维提示
 

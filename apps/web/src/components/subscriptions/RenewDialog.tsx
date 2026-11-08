@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ArrowRight } from 'lucide-react';
-import { renewInputSchema, type Cycle } from '@subwatch/shared';
+import { formatExpiry, renewInputSchema, type Cycle } from '@subwatch/shared';
 import { api, isApiError } from '../../lib/api';
 import { nextExpiryDate } from '../../lib/subscriptions';
-import { errorMessage, formatDateOnly } from '../../lib/utils';
+import { errorMessage } from '../../lib/utils';
 import { useAuth } from '../../providers/AuthProvider';
 import { Alert, Button, Dialog, Field, Input } from '../ui';
 
@@ -14,6 +14,7 @@ export interface RenewTarget {
   id: string;
   name: string;
   expiryDate: string;
+  expiryTime: string;
   cycle: Cycle;
 }
 
@@ -51,7 +52,9 @@ export function RenewDialog({ open, onOpenChange, target }: RenewDialogProps) {
       return api.subscriptions.renew(target.id, parsed.data);
     },
     onSuccess: (subscription) => {
-      toast.success(t('renew.success', { date: subscription.expiryDate }));
+      toast.success(
+        t('renew.success', { date: formatExpiry(subscription.expiryDate, subscription.expiryTime) }),
+      );
       void queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       void queryClient.invalidateQueries({ queryKey: ['subscription', subscription.id] });
       onOpenChange(false);
@@ -94,9 +97,13 @@ export function RenewDialog({ open, onOpenChange, target }: RenewDialogProps) {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2 rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-sm">
           <span className="text-[var(--muted-foreground)]">{t('renew.current')}</span>
-          <span className="font-medium">{target ? formatDateOnly(target.expiryDate) : '—'}</span>
+          <span className="font-medium">
+            {target ? formatExpiry(target.expiryDate, target.expiryTime) : '—'}
+          </span>
           <ArrowRight className="h-3.5 w-3.5 text-[var(--muted-foreground)]" aria-hidden />
-          <span className="font-medium">{dateMissing ? '—' : date}</span>
+          <span className="font-medium">
+            {dateMissing || !target ? '—' : formatExpiry(date, target.expiryTime)}
+          </span>
         </div>
 
         <Field

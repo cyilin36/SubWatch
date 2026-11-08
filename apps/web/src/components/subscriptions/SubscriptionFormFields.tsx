@@ -17,9 +17,10 @@ export interface SubscriptionFormFieldsProps {
 const QUICK_MONTHS = [1, 3, 6, 12] as const;
 
 /**
- * The complete subscription form body. Deliberately tiny: name, expiry date,
- * optional link, renewal cycle, reminder offsets, channels and notes. There is
- * no template picker, no custom fields, no amount/currency.
+ * The complete subscription form body. Deliberately tiny: name, expiry date and
+ * minute-precise expiry time, optional link, renewal cycle, reminder offsets,
+ * channels and notes. There is no template picker, no custom fields, no
+ * amount/currency.
  */
 export function SubscriptionFormFields({ form, channels, timezone }: SubscriptionFormFieldsProps) {
   const { t } = useTranslation();
@@ -48,6 +49,7 @@ export function SubscriptionFormFields({ form, channels, timezone }: Subscriptio
             label={t('common.name')}
             htmlFor="subscription-name"
             error={getFieldError(errors, 'name')}
+            className="sm:col-span-2"
             required
           >
             <Input
@@ -62,7 +64,6 @@ export function SubscriptionFormFields({ form, channels, timezone }: Subscriptio
           <Field
             label={t('subscriptionForm.expiryDate')}
             htmlFor="subscription-expiry"
-            hint={t('subscriptionForm.dateHint')}
             error={getFieldError(errors, 'expiryDate')}
             required
           >
@@ -71,6 +72,22 @@ export function SubscriptionFormFields({ form, channels, timezone }: Subscriptio
               type="date"
               invalid={Boolean(getFieldError(errors, 'expiryDate'))}
               {...register('expiryDate')}
+            />
+          </Field>
+
+          <Field
+            label={t('subscriptionForm.expiryTime')}
+            htmlFor="subscription-expiry-time"
+            hint={t('subscriptionForm.timeHint')}
+            error={getFieldError(errors, 'expiryTime')}
+            required
+          >
+            <Input
+              id="subscription-expiry-time"
+              type="time"
+              step={60}
+              invalid={Boolean(getFieldError(errors, 'expiryTime'))}
+              {...register('expiryTime')}
             />
           </Field>
 
