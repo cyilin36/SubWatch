@@ -14,8 +14,11 @@ import {
 } from 'lucide-react';
 import type { z } from 'zod';
 import {
+  SECRET_KEEP,
   changePasswordSchema,
+  emailChannelConfigSchema,
   generalSettingsSchema,
+  type EmailChannelConfig,
   type SettingsDto,
 } from '@subwatch/shared';
 import { api } from '../lib/api';
@@ -147,8 +150,43 @@ export function SettingsPage() {
     onError: (error) => toast.error(t('settings.saveFailed'), { description: errorMessage(error) }),
   });
 
+  /** Build a test config from the current (possibly unsaved) SMTP form values. */
+  const buildSmtpTestConfig = (): EmailChannelConfig | null => {
+    const port = Number(smtp.port);
+    if (!smtp.host.trim() || !smtp.from.trim() || smtp.to.length === 0) {
+      toast.error(t('errors.validation'), {
+        description: `${t('channels.host')} / ${t('channels.from')} / ${t('channels.to')}`,
+      });
+      return null;
+    }
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      toast.error(t('errors.validation'), { description: t('channels.port') });
+      return null;
+    }
+    const parsed = emailChannelConfigSchema.safeParse({
+      host: smtp.host.trim(),
+      port,
+      secure: smtp.secure,
+      requireTls: smtp.requireTls,
+      rejectUnauthorized: smtp.rejectUnauthorized,
+      user: smtp.user,
+      // When the user leaves the password untouched, let the server use the stored one.
+      password: smtp.password === '' && settings?.smtp?.passwordSet ? SECRET_KEEP : smtp.password,
+      from: smtp.from.trim(),
+      fromName: smtp.fromName,
+      to: smtp.to,
+    });
+    if (!parsed.success) {
+      toast.error(t('errors.validation'), {
+        description: parsed.error.issues[0]?.message ?? undefined,
+      });
+      return null;
+    }
+    return parsed.data;
+  };
+
   const testSmtpMutation = useMutation({
-    mutationFn: () => api.settings.testSmtp(),
+    mutationFn: (config: EmailChannelConfig) => api.settings.testSmtp(config),
     onSuccess: (result) => {
       if (result.ok) toast.success(t('settings.testSmtpSuccess'));
       else toast.error(t('settings.testSmtpFailed'), { description: result.error ?? undefined });
@@ -513,8 +551,10 @@ export function SettingsPage() {
                 type="button"
                 variant="outline"
                 loading={testSmtpMutation.isPending}
-                disabled={!settings.smtp}
-                onClick={() => testSmtpMutation.mutate()}
+                onClick={() => {
+                  const config = buildSmtpTestConfig();
+                  if (config) testSmtpMutation.mutate(config);
+                }}
               >
                 {t('settings.testSmtp')}
               </Button>

@@ -235,7 +235,7 @@ export const api = {
     update: (id: string, input: ChannelInput) => put<ChannelDto>(`/channels/${encodeURIComponent(id)}`, input),
     remove: (id: string) => del<{ ok: boolean }>(`/channels/${encodeURIComponent(id)}`),
     test: (id: string) => post<ChannelTestResult>(`/channels/${encodeURIComponent(id)}/test`),
-    testConfig: (input: { type: string; config: Record<string, unknown> }) =>
+    testConfig: (input: { type: string; config: Record<string, unknown>; id?: string }) =>
       post<ChannelTestResult>('/channels/test', input),
   },
 

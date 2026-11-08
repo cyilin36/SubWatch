@@ -302,6 +302,11 @@ export const channelTypeSchema = z.enum(CHANNEL_TYPE_VALUES);
 export const channelTestSchema = z.object({
   type: channelTypeSchema,
   config: z.record(z.unknown()),
+  /**
+   * Existing channel id: lets the server resolve masked `SECRET_KEEP` fields from
+   * storage so an unsaved edit can be test-sent without re-entering secrets.
+   */
+  id: idSchema.optional(),
 });
 
 // ---------------------------------------------------------------------------

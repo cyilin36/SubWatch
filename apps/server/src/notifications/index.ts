@@ -25,6 +25,7 @@ import {
   getChannel,
   getNotificationDto,
   listChannels,
+  mergeSecretConfig,
   listNotifications,
   retryNotification,
   toChannelDto,
@@ -108,6 +109,25 @@ function parseOrBadRequest<T>(
   if (!parsed.success) {
     // Match the global ZodError handler contract ({ error: { code: 'validation_error' } }).
     throw new AppError(400, 'validation_error', message, parsed.error.flatten());
+  }
+  return parsed.data;
+}
+
+/** Parse a draft config but keep `SECRET_KEEP` sentinels for later resolution. */
+function parseDraftConfigWithSentinels(
+  type: ChannelType,
+  raw: Record<string, unknown>,
+): EmailChannelConfig | WebhookChannelConfig {
+  if (type === 'email') {
+    const parsed = emailChannelConfigSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new BadRequestError('Invalid email channel config', parsed.error.flatten());
+    }
+    return parsed.data;
+  }
+  const parsed = webhookChannelConfigSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new BadRequestError('Invalid webhook channel config', parsed.error.flatten());
   }
   return parsed.data;
 }
@@ -198,7 +218,18 @@ export function createNotificationModule(ctx: CoreContext): NotificationModule {
         { preHandler: requireAuth, config: { rateLimit: { max: 20, timeWindow: '5 minutes' } } },
         async (request) => {
           const body = parseOrBadRequest(channelTestSchema, request.body ?? {}, 'Invalid channel test payload');
-          const result = await testChannelConfig(ctx, body.type, body.config);
+          let config = body.config;
+          if (body.id) {
+            // Testing an unsaved edit: fill masked sentinels from the stored channel.
+            const existing = getChannel(ctx.db, ctx.secretBox, body.id);
+            if (!existing) throw new NotFoundError('Notification channel not found');
+            if (existing.type !== body.type) {
+              throw new BadRequestError('Channel type does not match the stored channel');
+            }
+            const incoming = parseDraftConfigWithSentinels(body.type, body.config);
+            config = mergeSecretConfig(body.type, incoming, existing.config);
+          }
+          const result = await testChannelConfig(ctx, body.type, config);
           return { ok: result.ok, error: result.error ?? null };
         },
       );

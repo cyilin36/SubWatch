@@ -172,8 +172,9 @@ function ChannelDialog({
     onError: (error) => toast.error(t('errors.saveFailed'), { description: errorMessage(error) }),
   });
 
-  const testMutation = useMutation({
-    mutationFn: () => api.channels.test(channel!.id),
+  const testDraftMutation = useMutation({
+    mutationFn: (input: { type: 'email' | 'webhook'; config: Record<string, unknown> }) =>
+      api.channels.testConfig({ ...input, id: channel?.id }),
     onSuccess: (result) => {
       if (result.ok) toast.success(t('channels.testSuccess'));
       else toast.error(t('channels.testFailed'), { description: result.error ?? undefined });
@@ -196,11 +197,13 @@ function ChannelDialog({
     }
   };
 
-  const onSubmit = form.handleSubmit((values) => {
-    if (!values.name.trim()) {
-      form.setError('name', { type: 'required', message: t('validation.required') });
-      return;
-    }
+  /** Validate the current form values and turn them into a channel config. */
+  const buildChannelConfig = (
+    values: ChannelFormValues,
+  ):
+    | { type: 'email'; config: EmailChannelConfig }
+    | { type: 'webhook'; config: WebhookChannelConfig }
+    | null => {
     if (values.type === 'email') {
       const parsed = emailChannelConfigSchema.safeParse({
         host: values.email.host,
@@ -216,11 +219,9 @@ function ChannelDialog({
       });
       if (!parsed.success) {
         applyEmailErrors(parsed.error);
-        toast.error(t('errors.validation'));
-        return;
+        return null;
       }
-      saveMutation.mutate({ name: values.name, enabled: values.enabled, type: 'email', config: parsed.data });
-      return;
+      return { type: 'email', config: parsed.data };
     }
 
     const parsed = webhookChannelConfigSchema.safeParse({
@@ -234,16 +235,33 @@ function ChannelDialog({
     });
     if (!parsed.success) {
       applyWebhookErrors(parsed.error);
+      return null;
+    }
+    return { type: 'webhook', config: parsed.data };
+  };
+
+  const onSubmit = form.handleSubmit((values) => {
+    if (!values.name.trim()) {
+      form.setError('name', { type: 'required', message: t('validation.required') });
+      return;
+    }
+    const built = buildChannelConfig(values);
+    if (!built) {
       toast.error(t('errors.validation'));
       return;
     }
-    saveMutation.mutate({
-      name: values.name,
-      enabled: values.enabled,
-      type: 'webhook',
-      config: parsed.data,
-    });
+    saveMutation.mutate({ name: values.name, enabled: values.enabled, ...built });
   });
+
+  /** Test-send using the values currently in the form, without saving first. */
+  const onTest = () => {
+    const built = buildChannelConfig(form.getValues());
+    if (!built) {
+      toast.error(t('errors.validation'));
+      return;
+    }
+    testDraftMutation.mutate(built);
+  };
 
   const applyPreset = (presetIdValue: string) => {
     setPresetId(presetIdValue);
@@ -269,16 +287,15 @@ function ChannelDialog({
       size="lg"
       footer={
         <>
-          {channel ? (
-            <Button
-              variant="outline"
-              loading={testMutation.isPending}
-              onClick={() => testMutation.mutate()}
-            >
-              <Send className="h-4 w-4" aria-hidden />
-              {t('channels.test')}
-            </Button>
-          ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            loading={testDraftMutation.isPending}
+            onClick={onTest}
+          >
+            <Send className="h-4 w-4" aria-hidden />
+            {t('channels.test')}
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saveMutation.isPending}>
             {t('common.cancel')}
           </Button>
@@ -572,6 +589,7 @@ function ChannelDialog({
             </div>
           </div>
         )}
+        <p className="text-xs text-[var(--muted-foreground)]">{t('channels.testHint')}</p>
       </form>
     </Dialog>
   );

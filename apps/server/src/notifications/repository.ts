@@ -203,7 +203,7 @@ function prepareNewConfig(
   };
 }
 
-function mergeSecretConfig(
+export function mergeSecretConfig(
   type: ChannelType,
   incoming: EmailChannelConfig | WebhookChannelConfig,
   existing: Record<string, unknown>,
