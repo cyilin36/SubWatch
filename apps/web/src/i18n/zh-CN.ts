@@ -441,6 +441,7 @@ const zhCN = {
       feishu: '飞书',
       bark: 'Bark',
       ntfy: 'ntfy',
+      astrbotPushLite: 'AstrBot push_lite',
     },
     presetHints: {
       general: '通用 JSON POST，包含事件、标题、消息与深链。',
@@ -452,6 +453,8 @@ const zhCN = {
       feishu: '把 <TOKEN> 替换为飞书机器人 Hook Token。',
       bark: '把 <DEVICE_KEY> 替换为 Bark 设备 Key。',
       ntfy: '把 <TOPIC> 替换为 ntfy 主题；Header Title 为通知标题。',
+      astrbotPushLite:
+        '把 URL 换成 AstrBot 的 push_lite API 地址（默认端口 9966，路径 /send）；Header 里的 Bearer Token 换成插件配置的 API token（属敏感信息，会加密存储）；umo 用 AstrBot 里 /sid 指令查看后替换。',
     },
     configSummary: '配置',
     testSaved: '测试已保存的配置',

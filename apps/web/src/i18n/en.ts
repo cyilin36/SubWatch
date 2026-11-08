@@ -441,6 +441,7 @@ const en = {
       feishu: 'Feishu',
       bark: 'Bark',
       ntfy: 'ntfy',
+      astrbotPushLite: 'AstrBot push_lite',
     },
     presetHints: {
       general: 'Generic JSON POST with event, title, message and deep link.',
@@ -452,6 +453,8 @@ const en = {
       feishu: 'Replace <TOKEN> with your Feishu bot hook token.',
       bark: 'Replace <DEVICE_KEY> with your Bark device key.',
       ntfy: 'Replace <TOPIC> with your ntfy topic; the Title header carries the title.',
+      astrbotPushLite:
+        'Replace the URL with the AstrBot push_lite API endpoint (default port 9966, path /send); put the plugin API token in the Bearer header (stored encrypted); replace umo with the value shown by the /sid command in AstrBot.',
     },
     configSummary: 'Configuration',
     testSaved: 'Test the saved configuration',

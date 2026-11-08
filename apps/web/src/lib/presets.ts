@@ -216,6 +216,20 @@ export const WEBHOOK_PRESETS: WebhookPreset[] = [
     headers: [],
   },
   {
+    id: 'astrbot-push-lite',
+    labelKey: 'channels.presets.astrbotPushLite',
+    hintKey: 'channels.presetHints.astrbotPushLite',
+    urlExample: 'http://<astrbot-host>:9966/send',
+    method: 'POST',
+    contentType: 'application/json',
+    bodyTemplate: `{
+  "content": "{{title}}\\n{{message}}",
+  "umo": "<UMO, run /sid in AstrBot>",
+  "message_type": "text"
+}`,
+    headers: [{ key: 'Authorization', value: 'Bearer <API_TOKEN>', secret: true }],
+  },
+  {
     id: 'ntfy',
     labelKey: 'channels.presets.ntfy',
     hintKey: 'channels.presetHints.ntfy',

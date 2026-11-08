@@ -7,7 +7,7 @@
 - **类似 Homepage 的自定义监控**：HTTP 请求 + 声明式 JSON 提取 + 受限 JS 表达式；任意服务都能自己接入，没有内置服务预设。
 - **推送监控兜底**：外部脚本/CLI 通过一次性 Token 上报指标，容器内不执行任意命令。
 - **到期提醒**：按 7/3/1/0 天（可配置）提醒，服务停机错过的提醒会在恢复后合并发送，不重复轰炸。
-- **通知渠道**：SMTP 邮件、通用 Webhook（HMAC 签名）以及 Discord/Slack/Telegram/企业微信/钉钉/飞书/Bark/ntfy 预设。
+- **通知渠道**：SMTP 邮件、通用 Webhook（HMAC 签名）以及 Discord/Slack/Telegram/企业微信/钉钉/飞书/Bark/ntfy/AstrBot push_lite 预设。
 - **中英双语 WebUI**、深/浅色主题、响应式布局。
 - **部署简单**：单进程 + SQLite，支持 Docker Compose 或 Node 直接运行。
 
@@ -213,6 +213,15 @@ Body 模板可用变量：`{{event}}`、`{{title}}`、`{{message}}`、`{{severit
 ```
 X-SubWatch-Signature: sha256=<hex hmac of raw body>
 ```
+
+### AstrBot push_lite
+
+内置 **AstrBot push_lite** 预设，可把提醒推送到 AstrBot 的 QQ/群聊等会话。使用步骤：
+
+1. 在 AstrBot 安装并启用 [astrbot_plugin_push_lite](https://github.com/Raven95676/astrbot_plugin_push_lite)，记下插件配置里的 `API token` 与 API 监听端口（默认 `9966`）。
+2. 在 AstrBot 里用 `/sid` 查看目标会话的 `umo`。
+3. 在 SubWatch「通知渠道 → 新建频道 → Webhook」选择该预设，把 URL 改成 `http://<AstrBot 地址>:9966/send`，
+   在 `Authorization` Header 填入 `Bearer <API token>`，Body 模板里把 `<UMO ...>` 换成第 2 步的值，保存后点「测试发送」验证。
 
 发送失败会按 1m/5m/15m/1h/6h 退避重试，最多 6 次；通知日志页可查看状态并手动重试。相同事件/频道通过唯一键去重。
 
