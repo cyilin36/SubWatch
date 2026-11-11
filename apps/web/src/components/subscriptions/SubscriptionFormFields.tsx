@@ -3,6 +3,7 @@ import { Controller, type UseFormReturn } from 'react-hook-form';
 import type { ChannelDto } from '@subwatch/shared';
 import { Button, Field, Input, Select, Textarea } from '../ui';
 import { FormSection, MultiCheckbox, OffsetsInput } from '../common/fields';
+import { TemplateFields } from '../templates/TemplateFields';
 import { CYCLE_OPTIONS } from '../../lib/presets';
 import { getFieldError } from '../../lib/form';
 import { addMonthsToDate, todayInZone } from '../../lib/utils';
@@ -30,6 +31,8 @@ export function SubscriptionFormFields({ form, channels, timezone }: Subscriptio
   const cycle = watch('cycle') ?? 'month';
   const reminderOffsets = watch('reminderOffsets') ?? [];
   const selectedChannels = watch('channelIds') ?? [];
+  const templateFieldDefs = watch('fieldDefs') ?? [];
+  const templateFieldValues = watch('fields') ?? {};
 
   const setQuickDate = (months: number) => {
     setValue('expiryDate', addMonthsToDate(todayInZone(timezone), months), { shouldDirty: true });
@@ -139,6 +142,22 @@ export function SubscriptionFormFields({ form, channels, timezone }: Subscriptio
           </Field>
         </div>
       </FormSection>
+
+      {templateFieldDefs.length > 0 ? (
+        <FormSection
+          title={t('subscriptionForm.fieldsTitle')}
+          description={t('subscriptionForm.fieldsHint')}
+        >
+          <TemplateFields
+            fields={templateFieldDefs}
+            values={templateFieldValues}
+            idPrefix="subscription-fields"
+            onChange={(key, value) =>
+              setValue('fields', { ...templateFieldValues, [key]: value }, { shouldDirty: true })
+            }
+          />
+        </FormSection>
+      ) : null}
 
       <FormSection
         title={t('subscriptionForm.reminders')}

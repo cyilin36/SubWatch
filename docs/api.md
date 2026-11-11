@@ -52,6 +52,7 @@ curl -s -c cookies.txt \
 | `POST /api/auth/setup` | 5 次/分钟 |
 | `POST /api/monitors/test` | 20 次/分钟 |
 | `POST /api/monitors/:id/run` | 30 次/分钟 |
+| `POST /api/templates/:id/render` | 60 次/分钟 |
 | `POST /api/channels/test`、`POST /api/channels/:id/test` | 20 次/5 分钟 |
 | `POST /api/settings/smtp/test` | 10 次/5 分钟 |
 | `POST /api/push/:token` | 120 次/分钟 |
@@ -108,6 +109,8 @@ curl -s -c cookies.txt \
   "nextRunAt": "2026-11-08T03:05:00.000Z",
   "consecutiveFailures": 0,
   "pushTokenPrefix": null,
+  "templateId": null,
+  "templateName": null,
   "rules": [ { "...": "RuleDto" } ],
   "createdAt": "2026-11-01T00:00:00.000Z",
   "updatedAt": "2026-11-01T00:00:00.000Z"
@@ -118,6 +121,8 @@ curl -s -c cookies.txt \
 - `lastStatus`：`unknown`（从未运行） / `up` / `warning` / `critical` / `down`。
   API 不返回 `paused`；停用的监控用 `enabled=false` 表示（WebUI 会显示为「已暂停」）。
 - `pushTokenPrefix`：仅 push 监控有值；**明文 Token 只在创建/轮换时返回一次**。
+- `templateId` / `templateName`：创建自用户模板时的来源快照；模板删除后 `templateId` 为 `null`，名称保留。
+  仅创建时写入，更新请求中的 `templateId` 被忽略。
 - `rules` 的字段见 [RuleDto](#ruledto)。
 
 ### RuleDto
@@ -153,6 +158,10 @@ curl -s -c cookies.txt \
   "paused": false,
   "status": "active",
   "daysLeft": 62,
+  "templateId": null,
+  "templateName": null,
+  "fieldDefs": [],
+  "fields": {},
   "renewals": [ { "id": "…", "subscriptionId": "…", "fromDate": "2026-12-09", "toDate": "2027-01-09", "createdAt": "…" } ],
   "createdAt": "2026-11-01T00:00:00.000Z",
   "updatedAt": "2026-11-01T00:00:00.000Z"
@@ -162,6 +171,9 @@ curl -s -c cookies.txt \
 - `expiryDate` + `expiryTime`：到期日期与到期时间（`HH:mm`，按实例时区解释，精确到分钟）；`expiryTime` 默认 `23:59`，表示当天结束。
 - `status`：`active` / `expiring` / `expired` / `paused`；`expired` 从到期时刻（日期 + 时间）那一分钟起算。
 - `renewals` 只在 `GET /api/subscriptions/:id` 返回；列表接口不返回。
+- `templateId` / `templateName`：创建自用户订阅模板时的来源；模板删除后 `templateId` 为 `null`，名称保留。
+- `fieldDefs`：创建时的模板字段定义快照，模板后续修改或删除不影响该快照。
+- `fields`：模板参数值。`secret` 类型字段在 API 中固定为 `__SUBWATCH_KEEP__`，数据库中以密文存储。
 - `cycle`：`day` / `week` / `month` / `quarter` / `year`。
 
 ### ChannelDto
@@ -248,6 +260,7 @@ curl -s -c cookies.txt \
 | 监控 | `GET/POST /api/monitors`、`GET/PUT/DELETE /api/monitors/:id`、`POST /api/monitors/:id/run`、`POST /api/monitors/test`、`GET /api/monitors/:id/runs`、`GET /api/monitors/:id/metrics`、`POST /api/monitors/:id/push-token/rotate` | 见[监控 API](#监控-api) |
 | Push | `POST /api/push/:token` | 公开（Token 鉴权） |
 | 订阅 | `GET/POST /api/subscriptions`、`GET/PUT/DELETE /api/subscriptions/:id`、`POST /api/subscriptions/:id/renew`、`POST /api/subscriptions/:id/pause`、`POST /api/subscriptions/:id/resume`、`POST /api/subscriptions/:id/test-reminder` | 见[订阅 API](#订阅-api) |
+| 模板 | `GET/POST /api/templates`、`GET/PUT/DELETE /api/templates/:id`、`POST /api/templates/:id/render`、`GET /api/templates/:id/export`、`POST /api/templates/import` | 见[模板 API](#模板-api) |
 | 通知渠道 | `GET/POST /api/channels`、`PUT/DELETE /api/channels/:id`、`POST /api/channels/:id/test`、`POST /api/channels/test` | 见[通知渠道 API](#通知渠道-api) |
 | 通知记录 | `GET /api/notifications`、`POST /api/notifications/:id/retry` | 见[通知记录 API](#通知记录-api) |
 | 设置 | `GET/PATCH /api/settings`、`POST /api/settings/smtp/test`、`GET /api/settings/version` | 见[设置 API](#设置与元信息-api) |
@@ -272,6 +285,7 @@ curl -s -c cookies.txt \
 | `tags` | string[]（≤20 个，每个 ≤50） | 标签 |
 | `enabled` | bool，默认 true | 是否启用 |
 | `rules` | RuleInput[]（≤50） | 阈值规则 |
+| `templateId` | string \| null，可选 | 创建自用户监控模板时传模板 id；服务端校验模板 `kind` 并快照 `templateName` |
 
 响应 `201` + MonitorDto；push 监控的响应会多一个 `pushToken` 字段（明文只出现这一次）。
 
@@ -368,10 +382,16 @@ curl -s -c cookies.txt \
 | `channelIds` | string[]（≤100） | 通知频道；空 = 默认频道 |
 | `notes` | string ≤2000，默认 `""` | 备注 |
 | `paused` | bool，默认 false | 暂停后不排提醒 |
+| `templateId` | string \| null，可选 | 创建自用户订阅模板时传模板 id；服务端校验模板 `kind` 并快照字段定义 |
+| `fields` | object，可选 | 模板参数值；带 `templateId` 时按模板字段校验并加密保存，不带模板却传非空 `fields` 返回 `400` |
 
 响应 `201` + SubscriptionDto。
 
-`PUT /api/subscriptions/:id` 是全量更新：`expiryTime` 省略时会重置为默认 `23:59`，客户端应始终回传当前值。
+`PUT /api/subscriptions/:id` 是全量更新：`expiryTime` 省略时会重置为默认 `23:59`，客户端应始终回传当前值。模板相关语义：
+
+- `templateId` 创建后不可修改；传入与当前不同的值返回 `400`，省略表示保持。
+- `fields` 省略时保留已存参数值；提交时 `secret` 字段传 `__SUBWATCH_KEEP__` 表示保持旧值。
+- 无模板的订阅提交非空 `fields` 返回 `400`；`templateName`、`fieldDefs`、`fields` 均为服务端维护的只读快照。
 
 ### 其它订阅端点
 
@@ -402,6 +422,139 @@ curl -s -c cookies.txt \
 - 提醒在「到期日 - 提前天数」的当天、按设置里的 `reminderTime`（默认 09:00，实例时区）触发；`expiryTime` 只影响到期状态与展示，不改变提醒的发送时刻。
 - 服务停机错过多个提醒时，恢复后只发最紧急的一条，其余标记为已抑制，避免轰炸。
 - 修改到期日/暂停会重建该订阅的待发提醒；已发送过的提醒记录不会重复发送。
+
+---
+
+## 模板 API
+
+用户自定义模板用于复用订阅/监控配置。模板定义、占位符规则、完整示例与安全语义见[用户自定义模板](templates.md)。
+
+### 模板摘要与详情
+
+`GET /api/templates?kind=subscription|monitor` 返回摘要列表：
+
+```json
+[
+  {
+    "id": "9c1f…",
+    "kind": "subscription",
+    "name": "VPS 续费模板",
+    "description": "按服务名生成续费提醒",
+    "icon": "🖥️",
+    "color": "#3366ff",
+    "category": "基础设施",
+    "fieldCount": 6,
+    "usageCount": 2,
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  }
+]
+```
+
+- `fieldCount`：字段数量；`usageCount`：当前引用该模板的订阅（订阅模板）或监控（监控模板）数量。
+- 不带 `kind` 时返回全部模板，按 `kind`、`name` 排序。
+
+`GET /api/templates/:id` 返回完整 `TemplateDto`：
+
+```json
+{
+  "id": "9c1f…",
+  "kind": "subscription",
+  "name": "VPS 续费模板",
+  "description": "按服务名生成续费提醒",
+  "icon": "🖥️",
+  "color": "#3366ff",
+  "category": "基础设施",
+  "fields": [
+    { "key": "service", "label": "服务名", "type": "text", "required": true }
+  ],
+  "payload": { "name": "{{service}} 续费" },
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z"
+}
+```
+
+### 端点
+
+| 方法与路径 | 说明 |
+|---|---|
+| `GET /api/templates?kind=` | 模板摘要列表（见上） |
+| `POST /api/templates` | 创建，请求体为 `TemplateInput`，`201` + `TemplateDto` |
+| `GET /api/templates/:id` | 模板详情 |
+| `PUT /api/templates/:id` | 全量更新；`kind` 不可修改（否则 `400 bad_request`） |
+| `DELETE /api/templates/:id` | 删除，`204` 无正文；订阅/监控的模板快照保留 |
+| `POST /api/templates/:id/render` | 渲染，见下；限流 60 次/分钟 |
+| `GET /api/templates/:id/export` | 导出信封 |
+| `POST /api/templates/import` | 导入信封，创建新模板，`201` |
+
+`TemplateInput` 字段：`kind`、`name`、`description`、`icon`、`color`、`category`、`fields`、`payload`。
+`POST /api/templates` 不校验渲染后的目标实体 schema，渲染校验发生在 `render` 接口。
+
+### 渲染 `POST /api/templates/:id/render`
+
+请求体：
+
+```json
+{
+  "values": {
+    "service": "vps",
+    "seats": "7",
+    "extra": "{\"region\":\"cn\"}"
+  }
+}
+```
+
+- `values` 可省略（等同 `{}`）；按模板字段做类型转换、默认值补齐、必填与约束校验。
+- `number` 接受数字字符串，`switch` 接受布尔值或 `"true"`/`"false"`，`json` 接受 JSON 字符串或已解析值。
+
+响应 `200`：
+
+```json
+{
+  "kind": "subscription",
+  "values": { "service": "vps", "seats": 7, "extra": { "region": "cn" } },
+  "payload": {
+    "name": "vps 续费",
+    "notes": "account=bob, plan=yearly, seats=7"
+  }
+}
+```
+
+- `values` 为类型化后的参数值（含默认值）。
+- `payload` 为通过目标 schema 校验的草稿：订阅模板为 `SubscriptionInput` 的子集，监控模板为完整 `MonitorInput`（不含 `templateId`）。
+- 监控模板中的 `secret` 参数会以明文出现在渲染结果中，仅通过本登录接口返回。
+
+错误：
+
+| HTTP | `code` | 说明 |
+|---|---|---|
+| 400 | `bad_request` | 参数校验失败，`details.fieldErrors` 为 `{字段: [消息]}`；渲染后 payload 不合法时 `details.issues` 为 `error.flatten()` |
+| 404 | `not_found` | 模板不存在 |
+| 429 | `too_many_requests` | 超过 60 次/分钟 |
+
+### 导出 `GET /api/templates/:id/export`
+
+```json
+{
+  "format": "subwatch-template",
+  "version": 1,
+  "exportedAt": "2026-01-01T00:00:00.000Z",
+  "template": {
+    "kind": "subscription",
+    "name": "VPS 续费模板",
+    "description": "",
+    "icon": "🖥️",
+    "color": "#3366ff",
+    "category": "基础设施",
+    "fields": [],
+    "payload": {}
+  }
+}
+```
+
+### 导入 `POST /api/templates/import`
+
+请求体为上述信封。服务端按 `templateInputSchema` 校验并创建新模板（生成新 `id`），响应 `201` + `TemplateDto`。
+`format`、`version` 不匹配或 `template` 非法时返回 `400 validation_error`；`exportedAt` 仅作参考。
 
 ---
 
@@ -527,4 +680,7 @@ Webhook 渠道 `config`：
 | Webhook `method` | `POST`、`PUT`、`PATCH` |
 | Notification `status` | `pending`、`sent`、`failed`、`skipped_no_channel` |
 | 通知事件 `eventType` | 见[事件表](notifications.md#事件类型) |
+| 模板 `kind` | `subscription`、`monitor` |
+| 模板字段 `type` | `text`、`textarea`、`url`、`number`、`date`、`time`、`select`、`switch`、`secret`、`json` |
+| 模板导出 `format` | `subwatch-template`（`version` 固定为 `1`） |
 | 敏感值哨兵 | `__SUBWATCH_KEEP__` |

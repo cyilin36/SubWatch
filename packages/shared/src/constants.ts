@@ -66,3 +66,30 @@ export const JS_EVAL_TIMEOUT_MS = 1_000;
 
 export const DEFAULT_MONITOR_INTERVAL_SECONDS = 300;
 export const MIN_MONITOR_INTERVAL_SECONDS = 30;
+
+// ---------------------------------------------------------------------------
+// User-defined templates (subscriptions and monitors)
+// ---------------------------------------------------------------------------
+
+export const TEMPLATE_KIND_VALUES = ['subscription', 'monitor'] as const;
+export type TemplateKind = (typeof TEMPLATE_KIND_VALUES)[number];
+
+export const TEMPLATE_FIELD_TYPE_VALUES = [
+  'text',
+  'textarea',
+  'url',
+  'number',
+  'date',
+  'time',
+  'select',
+  'switch',
+  'secret',
+  'json',
+] as const;
+export type TemplateFieldType = (typeof TEMPLATE_FIELD_TYPE_VALUES)[number];
+
+export const MAX_TEMPLATE_FIELDS = 50;
+export const MAX_TEMPLATE_PAYLOAD_BYTES = 100_000;
+export const MAX_TEMPLATE_FIELD_VALUE_CHARS = 10_000;
+export const TEMPLATE_EXPORT_FORMAT = 'subwatch-template';
+export const TEMPLATE_EXPORT_VERSION = 1;

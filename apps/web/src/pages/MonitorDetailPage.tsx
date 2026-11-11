@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import {
   Activity,
   ArrowLeft,
   KeyRound,
+  LayoutTemplate,
   Pencil,
   Play,
   RefreshCcw,
@@ -254,6 +255,27 @@ export function MonitorDetailPage() {
                   <dd className="mt-0.5 text-sm font-medium">{monitor.rules.length}</dd>
                 </div>
               </dl>
+              {monitor.templateName ? (
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-3 text-xs">
+                  <LayoutTemplate className="h-3.5 w-3.5 text-[var(--brand)]" aria-hidden />
+                  <span className="text-[var(--muted-foreground)]">
+                    {t('monitorDetail.templateSource')}
+                  </span>
+                  {monitor.templateId ? (
+                    <Link
+                      to={`/templates/${monitor.templateId}`}
+                      className="font-medium text-[var(--brand)] hover:underline"
+                    >
+                      {monitor.templateName}
+                    </Link>
+                  ) : (
+                    <span className="font-medium">{monitor.templateName}</span>
+                  )}
+                  {!monitor.templateId ? (
+                    <Badge tone="warning">{t('monitorDetail.templateDeleted')}</Badge>
+                  ) : null}
+                </div>
+              ) : null}
               {monitor.tags.length > 0 ? (
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {monitor.tags.map((tag) => (

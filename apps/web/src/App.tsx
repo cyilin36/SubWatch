@@ -38,12 +38,18 @@ const NotificationsPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
+const TemplatesPage = lazy(() =>
+  import('./pages/TemplatesPage').then((m) => ({ default: m.TemplatesPage })),
+);
+const TemplateEditorPage = lazy(() =>
+  import('./pages/TemplateEditorPage').then((m) => ({ default: m.TemplateEditorPage })),
+);
 
 /**
  * Legacy routes from the pre-v2 multi-page layout (separate dashboard, monitor
- * list, subscription list and templates pages). Everything now lives on `/`.
+ * list and subscription list pages). Everything now lives on `/`.
  */
-const LEGACY_REDIRECTS = ['dashboard', 'monitors', 'subscriptions', 'templates'];
+const LEGACY_REDIRECTS = ['dashboard', 'monitors', 'subscriptions'];
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { authenticated, setupRequired, isLoading } = useAuth();
@@ -112,6 +118,9 @@ function AppRoutes() {
         <Route path="monitors/:id" element={<MonitorDetailPage />} />
         <Route path="monitors/:id/edit" element={<MonitorEditPage />} />
         <Route path="channels" element={<ChannelsPage />} />
+        <Route path="templates" element={<TemplatesPage />} />
+        <Route path="templates/new" element={<TemplateEditorPage />} />
+        <Route path="templates/:id" element={<TemplateEditorPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         {LEGACY_REDIRECTS.map((path) => (

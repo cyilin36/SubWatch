@@ -303,4 +303,42 @@ DROP TABLE templates;
 ALTER TABLE subscriptions ADD COLUMN expiry_time TEXT NOT NULL DEFAULT '23:59';
 `,
   },
+  {
+    version: 4,
+    name: 'user_templates',
+    sql: `
+-- User-defined templates: reusable blueprints for creating subscriptions and
+-- monitors. v2 removed the old built-in template catalogue; these templates are
+-- purely user-authored, carry typed parameter definitions and a payload with
+-- {{placeholders}}. Nothing is seeded here.
+CREATE TABLE templates (
+  id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL CHECK (kind IN ('subscription', 'monitor')),
+  name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  icon TEXT NOT NULL DEFAULT '',
+  color TEXT NOT NULL DEFAULT '',
+  category TEXT NOT NULL DEFAULT '',
+  fields TEXT NOT NULL DEFAULT '[]',
+  payload TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX idx_templates_kind ON templates(kind, name);
+
+-- Subscription field values are encrypted JSON; field_defs is the definition
+-- snapshot taken from the template at creation time so deleting or editing the
+-- template never breaks existing subscriptions. template_name is a snapshot too.
+ALTER TABLE subscriptions ADD COLUMN template_id TEXT REFERENCES templates(id) ON DELETE SET NULL;
+ALTER TABLE subscriptions ADD COLUMN template_name TEXT;
+ALTER TABLE subscriptions ADD COLUMN field_defs TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE subscriptions ADD COLUMN fields TEXT NOT NULL DEFAULT '';
+CREATE INDEX idx_subscriptions_template ON subscriptions(template_id);
+
+-- Monitors keep only the provenance of the template that produced them.
+ALTER TABLE monitors ADD COLUMN template_id TEXT REFERENCES templates(id) ON DELETE SET NULL;
+ALTER TABLE monitors ADD COLUMN template_name TEXT;
+CREATE INDEX idx_monitors_template ON monitors(template_id);
+`,
+  },
 ];

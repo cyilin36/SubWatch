@@ -45,6 +45,8 @@ export interface MonitorRow {
   next_run_at: string | null;
   push_token_hash: string | null;
   push_token_prefix: string | null;
+  template_id: string | null;
+  template_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -353,6 +355,8 @@ function toMonitorDto(ctx: CoreContext, row: MonitorRow, rules: RuleDto[]): Moni
     consecutiveFailures: Number(row.consecutive_failures),
     pushTokenPrefix: row.push_token_prefix,
     rules,
+    templateId: row.template_id ?? null,
+    templateName: row.template_name ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -407,7 +411,11 @@ export interface CreatedMonitor {
   pushToken?: string;
 }
 
-export function createMonitor(ctx: CoreContext, input: MonitorInput): CreatedMonitor {
+export function createMonitor(
+  ctx: CoreContext,
+  input: MonitorInput,
+  templateName: string | null = null,
+): CreatedMonitor {
   const id = randomUUID();
   const timestamp = nowIso();
   const type: MonitorType = input.config.type;
@@ -422,8 +430,8 @@ export function createMonitor(ctx: CoreContext, input: MonitorInput): CreatedMon
          id, name, description, type, config, interval_seconds, failure_threshold, stale_after_seconds,
          channel_ids, tags, enabled, last_status, last_metrics, last_checked_at, last_error,
          last_notified_at, consecutive_failures, next_run_at, push_token_hash, push_token_prefix,
-         created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unknown', '{}', NULL, NULL, NULL, 0, ?, ?, ?, ?, ?)`,
+         template_id, template_name, created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unknown', '{}', NULL, NULL, NULL, 0, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         input.name,
@@ -439,6 +447,8 @@ export function createMonitor(ctx: CoreContext, input: MonitorInput): CreatedMon
         nextRunAt,
         push?.hash ?? null,
         push?.prefix ?? null,
+        input.templateId ?? null,
+        templateName,
         timestamp,
         timestamp,
       ],

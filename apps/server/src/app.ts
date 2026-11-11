@@ -10,6 +10,7 @@ import { APP_VERSION, type AppMeta } from '@subwatch/shared';
 import type { AppModules, CoreContext } from './context.js';
 import { registerAuthRoutes } from './auth/routes.js';
 import { registerSettingsRoutes } from './api/settings.js';
+import { registerTemplateRoutes } from './templates/index.js';
 import { AppError, ForbiddenError } from './lib/errors.js';
 
 export async function buildApp(context: CoreContext, modules: AppModules): Promise<FastifyInstance> {
@@ -174,6 +175,7 @@ export async function buildApp(context: CoreContext, modules: AppModules): Promi
   });
 
   await registerAuthRoutes(app, context);
+  registerTemplateRoutes(app, context);
   modules.notifications.registerRoutes(app);
   modules.monitors.registerRoutes(app);
   modules.subscriptions.registerRoutes(app);

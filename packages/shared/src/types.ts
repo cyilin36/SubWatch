@@ -10,6 +10,7 @@ import type {
   Operator,
   RunTrigger,
   SubscriptionStatus,
+  TemplateKind,
 } from './constants.js';
 import type {
   channelInputSchema,
@@ -24,6 +25,7 @@ import type {
   subscriptionInputSchema,
   webhookChannelConfigSchema,
 } from './schemas.js';
+import type { TemplateField } from './templates.js';
 
 // Re-export constants-derived types used widely by the UI.
 export type { Theme } from './constants.js';
@@ -83,6 +85,8 @@ export interface MonitorDto {
   consecutiveFailures: number;
   pushTokenPrefix: string | null;
   rules: RuleDto[];
+  templateId: string | null;
+  templateName: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -149,7 +153,45 @@ export interface SubscriptionDto {
   paused: boolean;
   status: SubscriptionStatus;
   daysLeft: number;
+  /** Template the subscription was created from, if any. */
+  templateId: string | null;
+  /** Snapshot of the template name so the UI still works after the template is deleted. */
+  templateName: string | null;
+  /** Snapshot of the template field definitions used by this subscription. */
+  fieldDefs: TemplateField[];
+  /** Values for `fieldDefs`; secret values are masked with SECRET_KEEP. */
+  fields: Record<string, unknown>;
   renewals?: RenewalDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Lightweight template row used by lists and pickers. */
+export interface TemplateSummaryDto {
+  id: string;
+  kind: TemplateKind;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  category: string;
+  fieldCount: number;
+  /** Number of subscriptions/monitors currently referencing this template. */
+  usageCount: number;
+  updatedAt: string;
+}
+
+/** Full template including its field definitions and payload. */
+export interface TemplateDto {
+  id: string;
+  kind: TemplateKind;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  category: string;
+  fields: TemplateField[];
+  payload: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }

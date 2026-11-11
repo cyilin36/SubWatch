@@ -7,6 +7,7 @@
 - [自定义监控编程指南](monitoring.md)：HTTP 拉模式、JSON 路径提取、受限 JS 提取器、阈值规则状态机、Push 上报
 - [通知与 Webhook 集成](notifications.md)：邮件/Webhook 渠道、事件 payload、模板变量、HMAC 签名、重试队列、通知记录
 - [数据与档案结构](storage.md)：数据目录、SQLite 表结构、迁移/备份/保留策略
+- [用户自定义模板](templates.md)：订阅/监控模板的参数类型、占位符、渲染、导入导出与安全语义
 
 ## 三种接入方式
 
@@ -15,6 +16,9 @@
 | HTTP 拉模式 | 目标服务有 HTTP API，返回 JSON（或可由 JS 计算） | `POST /api/monitors` |
 | Push 推模式 | 目标服务只能用 CLI/脚本取数，或机器无法被反向访问 | `POST /api/push/:token` |
 | 通知回传 | 把 SubWatch 的提醒接到自己的系统（IM Bot、自建服务等） | Webhook 通知渠道 |
+
+以上三种方式都可用「模板」复用配置：在 WebUI 中为订阅或监控定义参数化模板，新建时选择模板并填写参数，
+服务端渲染后预填表单，详见[用户自定义模板](templates.md)。
 
 ## 5 分钟上手（curl）
 
