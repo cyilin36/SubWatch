@@ -2,6 +2,7 @@
   "name": "subwatch",
   "version": "0.1.0",
   "private": true,
+  "license": "GPL-3.0-only",
   "type": "module",
   "description": "Self-hosted subscription tracker, custom quota monitor and reminder with webhook/email notifications",
   "engines": {

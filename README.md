@@ -64,3 +64,7 @@ API、自定义监控编程、通知对接、数据库结构都在 **[docs/](doc
 - [自定义监控编程指南](docs/monitoring.md)
 - [通知与 Webhook 集成](docs/notifications.md)
 - [数据与档案结构](docs/storage.md)
+
+## 许可证
+
+[GPL-3.0](LICENSE)：可自由使用、修改、部署；但分发修改后的作品时必须同样以 GPL-3.0 开源。
