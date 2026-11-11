@@ -27,6 +27,9 @@ node_modules/
 *.log
 *.pid
 
+# Internal governance / agent notes: kept locally, never published.
+/AGENTS.md
+
 # Development, tests, design, research and generated artifacts
 /dev/
 /tests/
