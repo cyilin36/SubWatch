@@ -9,7 +9,6 @@ import {
   KeyRound,
   LayoutTemplate,
   Pencil,
-  Play,
   RefreshCcw,
   Trash2,
 } from 'lucide-react';
@@ -110,21 +109,6 @@ export function MonitorDetailPage() {
     void queryClient.invalidateQueries({ queryKey: ['monitors'] });
   };
 
-  const runMutation = useMutation({
-    mutationFn: () => api.monitors.run(id),
-    onSuccess: () => {
-      if (monitor?.enabled) {
-        toast.success(t('monitorDetail.runSuccess'));
-      } else {
-        toast.success(t('monitorDetail.runSuccess'), {
-          description: t('monitorDetail.runPausedHint'),
-        });
-      }
-      invalidate();
-    },
-    onError: (error) => toast.error(errorMessage(error)),
-  });
-
   const toggleMutation = useMutation({
     mutationFn: (enabled: boolean) =>
       api.monitors.update(id, { ...monitorInputFromDto(monitor!), enabled }),
@@ -195,10 +179,6 @@ export function MonitorDetailPage() {
             <Button variant="outline" size="sm" onClick={() => navigate('/')}>
               <ArrowLeft className="h-4 w-4" aria-hidden />
               {t('common.back')}
-            </Button>
-            <Button variant="outline" size="sm" loading={runMutation.isPending} onClick={() => runMutation.mutate()}>
-              {!runMutation.isPending ? <Play className="h-4 w-4" aria-hidden /> : null}
-              {t('common.runNow')}
             </Button>
             <Button variant="outline" size="sm" onClick={() => navigate(`/monitors/${id}/edit`)}>
               <Pencil className="h-4 w-4" aria-hidden />
