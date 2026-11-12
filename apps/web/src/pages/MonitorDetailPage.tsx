@@ -113,7 +113,13 @@ export function MonitorDetailPage() {
   const runMutation = useMutation({
     mutationFn: () => api.monitors.run(id),
     onSuccess: () => {
-      toast.success(t('monitorDetail.runSuccess'));
+      if (monitor?.enabled) {
+        toast.success(t('monitorDetail.runSuccess'));
+      } else {
+        toast.success(t('monitorDetail.runSuccess'), {
+          description: t('monitorDetail.runPausedHint'),
+        });
+      }
       invalidate();
     },
     onError: (error) => toast.error(errorMessage(error)),

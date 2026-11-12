@@ -452,6 +452,7 @@ const en = {
     deleteSuccess: 'Monitor deleted',
     rotateSuccess: 'Push token rotated',
     runSuccess: 'Monitor executed',
+    runPausedHint: 'The monitor is paused; this was a manual run. Enable it to keep running on its interval.',
     enabledToast: 'Monitor enabled',
     disabledToast: 'Monitor paused',
     descriptionEmpty: 'No description',

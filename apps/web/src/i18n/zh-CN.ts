@@ -452,6 +452,7 @@ const zhCN = {
     deleteSuccess: '监控已删除',
     rotateSuccess: 'Push Token 已轮换',
     runSuccess: '监控已运行',
+    runPausedHint: '监控处于暂停状态，本次为手动运行；启用后会按间隔自动运行。',
     enabledToast: '监控已启用',
     disabledToast: '监控已暂停',
     descriptionEmpty: '无描述',

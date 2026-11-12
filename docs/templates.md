@@ -116,7 +116,7 @@
       }
     },
     "intervalSeconds": 300,
-    "enabled": false,
+    "enabled": true,
     "rules": [
       {
         "metricKey": "used",
