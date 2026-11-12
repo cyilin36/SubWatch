@@ -34,13 +34,25 @@ export interface TemplateApplyCardProps {
   appliedTemplate: TemplateDto | null;
   onApply: (template: TemplateDto, result: TemplateRenderResultDto) => void;
   onClear: () => void;
+  /**
+   * Reports the template currently selected in the picker (null when none).
+   * New-record pages use it to hide the generic entity form until the payload
+   * has been applied, so the form is never mistaken for extra manual input.
+   */
+  onSelectionChange?: (templateId: string | null) => void;
 }
 
 /**
  * "Create from template" card shown above the new subscription / monitor forms:
  * pick a template, fill its parameters, then render the payload into the form.
  */
-export function TemplateApplyCard({ kind, appliedTemplate, onApply, onClear }: TemplateApplyCardProps) {
+export function TemplateApplyCard({
+  kind,
+  appliedTemplate,
+  onApply,
+  onClear,
+  onSelectionChange,
+}: TemplateApplyCardProps) {
   const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState<string>(NO_TEMPLATE);
   const [values, setValues] = useState<Record<string, unknown>>({});
@@ -71,6 +83,11 @@ export function TemplateApplyCard({ kind, appliedTemplate, onApply, onClear }: T
     if (!template) return;
     setValues(initialTemplateParameterValues(template.fields));
     renderMutation.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [template?.id]);
+
+  useEffect(() => {
+    onSelectionChange?.(template?.id ?? null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [template?.id]);
 

@@ -258,6 +258,13 @@ const zhCN = {
       applied: '已应用模板「{{name}}」',
       appliedLabel: '已应用模板：{{name}}',
       appliedHint: '可在表单中继续修改；取消应用会恢复默认值。',
+      pendingTitle: '等待应用模板',
+      pendingHint: {
+        subscription: '填写上方参数并点击「应用模板」，订阅信息会自动填充到下方表单。',
+        monitor: '填写上方参数并点击「应用模板」，监控配置会自动生成并填入下方表单。',
+      },
+      pendingSkip: '不想使用模板？在「选择模板」中选择「不使用模板」即可手动填写。',
+      prefilledHint: '已由模板填充，可直接创建，也可按需修改。',
       clear: '取消应用',
       failed: '应用模板失败',
     },

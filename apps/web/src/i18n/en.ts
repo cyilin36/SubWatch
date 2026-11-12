@@ -258,6 +258,13 @@ const en = {
       applied: 'Applied template "{{name}}"',
       appliedLabel: 'Applied template: {{name}}',
       appliedHint: 'You can keep editing the form; clearing restores the defaults.',
+      pendingTitle: 'Waiting for the template',
+      pendingHint: {
+        subscription: 'Fill in the parameters above and click "Apply template"; the subscription fields below are filled automatically.',
+        monitor: 'Fill in the parameters above and click "Apply template"; the monitor configuration is generated and filled into the form below.',
+      },
+      pendingSkip: 'Prefer manual setup? Choose "No template" in the selector.',
+      prefilledHint: 'Filled from the template. You can create it as-is or adjust it first.',
       clear: 'Clear template',
       failed: 'Failed to apply template',
     },

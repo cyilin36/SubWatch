@@ -24,6 +24,7 @@ import { useAuth } from '../providers/AuthProvider';
 import { Button, Card, ErrorState, PageHeader } from '../components/ui';
 import { SubscriptionFormFields } from '../components/subscriptions/SubscriptionFormFields';
 import { TemplateApplyCard } from '../components/templates/TemplateApplyCard';
+import { TemplatePendingCard } from '../components/templates/TemplatePendingCard';
 
 /** Create a simple reminder subscription: name + date + optional link/notes. */
 export function SubscriptionNewPage() {
@@ -41,6 +42,8 @@ export function SubscriptionNewPage() {
   });
 
   const [appliedTemplate, setAppliedTemplate] = useState<TemplateDto | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const pendingTemplate = selectedTemplateId !== null && appliedTemplate === null;
 
   const handleApplyTemplate = (template: TemplateDto, result: TemplateRenderResultDto) => {
     if (result.kind !== 'subscription') return;
@@ -111,33 +114,43 @@ export function SubscriptionNewPage() {
           appliedTemplate={appliedTemplate}
           onApply={handleApplyTemplate}
           onClear={handleClearTemplate}
+          onSelectionChange={setSelectedTemplateId}
         />
       </div>
 
-      {channelsQuery.isError ? (
+      {pendingTemplate ? (
+        <TemplatePendingCard kind="subscription" />
+      ) : channelsQuery.isError ? (
         <ErrorState error={channelsQuery.error} onRetry={() => void channelsQuery.refetch()} />
       ) : (
-        <form
-          onSubmit={(event) => {
-            void onSubmit(event);
-          }}
-          noValidate
-          className="space-y-4"
-        >
-          <SubscriptionFormFields
-            form={form}
-            channels={channelsQuery.data ?? []}
-            timezone={timezone}
-          />
-          <Card className="flex flex-wrap items-center justify-end gap-2 p-3">
-            <Button type="button" variant="outline" onClick={() => navigate('/')}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" loading={createMutation.isPending}>
-              {createMutation.isPending ? t('subscriptionForm.submitting') : t('subscriptionForm.submit')}
-            </Button>
-          </Card>
-        </form>
+        <>
+          {appliedTemplate ? (
+            <p className="mb-3 text-sm text-[var(--muted-foreground)]">
+              {t('templates.apply.prefilledHint')}
+            </p>
+          ) : null}
+          <form
+            onSubmit={(event) => {
+              void onSubmit(event);
+            }}
+            noValidate
+            className="space-y-4"
+          >
+            <SubscriptionFormFields
+              form={form}
+              channels={channelsQuery.data ?? []}
+              timezone={timezone}
+            />
+            <Card className="flex flex-wrap items-center justify-end gap-2 p-3">
+              <Button type="button" variant="outline" onClick={() => navigate('/')}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" loading={createMutation.isPending}>
+                {createMutation.isPending ? t('subscriptionForm.submitting') : t('subscriptionForm.submit')}
+              </Button>
+            </Card>
+          </form>
+        </>
       )}
     </div>
   );
