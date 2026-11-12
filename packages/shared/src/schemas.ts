@@ -199,6 +199,8 @@ export const monitorInputSchema = z.object({
   tags: z.array(z.string().min(1).max(50)).max(20).default([]),
   enabled: z.boolean().default(true),
   rules: z.array(ruleInputSchema).max(50).default([]),
+  /** Set when the monitor was created from a user-defined template. */
+  templateId: idSchema.nullable().optional(),
 });
 
 export const monitorTestSchema = z.object({
@@ -244,6 +246,13 @@ export const subscriptionInputSchema = z.object({
   channelIds: idListSchema,
   notes: z.string().max(2000).default(''),
   paused: z.boolean().default(false),
+  /** Set when the subscription was created from a user-defined template. */
+  templateId: idSchema.nullable().optional(),
+  /**
+   * Values for the template's typed fields. Required when the template declares
+   * required fields; omitted on update keeps the stored values.
+   */
+  fields: z.record(z.unknown()).optional(),
 });
 
 /**

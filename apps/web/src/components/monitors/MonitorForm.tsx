@@ -38,6 +38,7 @@ import {
   blankMetricRow,
   blankRuleRow,
   buildMonitorInput,
+  monitorInputToFormValues,
   monitorToFormValues,
   blankMonitorFormValues,
   tabForFormPath,
@@ -76,18 +77,27 @@ const RULE_ADVANCED_FIELDS = [
 export interface MonitorFormProps {
   mode: 'create' | 'edit';
   monitor?: MonitorDto;
+  /** Initial values rendered from a user template (create mode only). */
+  initialInput?: MonitorInput;
+  /** Template the monitor was created from; only sent in create mode. */
+  templateId?: string | null;
   onSaved: (result: MonitorDto & { pushToken?: string }) => void;
 }
 
-export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
+export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }: MonitorFormProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<MonitorFormTab>('basic');
 
   const defaultValues = useMemo(
-    () => (monitor ? monitorToFormValues(monitor) : blankMonitorFormValues()),
-    [monitor],
+    () =>
+      initialInput
+        ? monitorInputToFormValues(initialInput)
+        : monitor
+          ? monitorToFormValues(monitor)
+          : blankMonitorFormValues(),
+    [monitor, initialInput],
   );
 
   const form = useForm<MonitorFormValues>({ defaultValues, mode: 'onSubmit' });
@@ -199,7 +209,10 @@ export function MonitorForm({ mode, monitor, onSaved }: MonitorFormProps) {
       toast.error(t('errors.validation'));
       return;
     }
-    saveMutation.mutate(built.input);
+    // Template provenance is recorded on creation only; edits keep the original.
+    saveMutation.mutate(
+      mode === 'create' && templateId ? { ...built.input, templateId } : built.input,
+    );
   });
 
   const handleTest = () => {

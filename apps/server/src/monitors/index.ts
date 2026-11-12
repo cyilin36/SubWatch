@@ -11,6 +11,7 @@ import {
 import type { ModuleContext, MonitorModule } from '../context.js';
 import { createRequireAuth } from '../auth/guard.js';
 import { BadRequestError, NotFoundError } from '../lib/errors.js';
+import { getTemplateById } from '../templates/repository.js';
 import * as repo from './repository.js';
 import { executeMonitorRun, executePushReport, testMonitorDraft } from './engine.js';
 import { validateRequestConfig } from './http-runner.js';
@@ -46,7 +47,15 @@ export function registerMonitorRoutes(app: FastifyInstance, ctx: ModuleContext, 
     const input = monitorInputSchema.parse(request.body ?? {});
     const configError = validateRequestConfig(input.config);
     if (configError) throw new BadRequestError(configError);
-    const created = repo.createMonitor(ctx, input);
+    let templateName: string | null = null;
+    if (input.templateId) {
+      const template = getTemplateById(ctx, input.templateId);
+      if (!template || template.kind !== 'monitor') {
+        throw new BadRequestError('Template not found or is not a monitor template');
+      }
+      templateName = template.name;
+    }
+    const created = repo.createMonitor(ctx, input, templateName);
     if (input.enabled) scheduler.kick();
     reply.code(201);
     return created.pushToken ? { ...created.dto, pushToken: created.pushToken } : created.dto;

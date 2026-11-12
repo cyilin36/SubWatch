@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ import {
   BellRing,
   CreditCard,
   ExternalLink,
+  LayoutTemplate,
   Pause,
   Pencil,
   Play,
@@ -49,6 +50,7 @@ import {
 } from '../components/ui';
 import { RenewDialog, type RenewTarget } from '../components/subscriptions/RenewDialog';
 import { SubscriptionFormFields } from '../components/subscriptions/SubscriptionFormFields';
+import { TemplateFieldsView } from '../components/templates/TemplateFieldsView';
 
 export function SubscriptionDetailPage() {
   const { t } = useTranslation();
@@ -391,6 +393,46 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
               ) : null}
             </CardContent>
           </Card>
+
+          {subscription.templateName || subscription.templateId || subscription.fieldDefs.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LayoutTemplate className="h-4 w-4 text-[var(--brand)]" aria-hidden />
+                  {t('subscriptions.templateInfo')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-xs text-[var(--muted-foreground)]">
+                    {t('subscriptions.templateName')}
+                  </p>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm font-medium">
+                    {subscription.templateId ? (
+                      <Link
+                        to={`/templates/${subscription.templateId}`}
+                        className="text-[var(--brand)] hover:underline"
+                      >
+                        {subscription.templateName ?? subscription.templateId}
+                      </Link>
+                    ) : (
+                      <span>{subscription.templateName ?? t('common.none')}</span>
+                    )}
+                    {!subscription.templateId && subscription.templateName ? (
+                      <Badge tone="warning">{t('subscriptions.templateDeleted')}</Badge>
+                    ) : null}
+                  </p>
+                </div>
+                {subscription.fieldDefs.length > 0 ? (
+                  <TemplateFieldsView fields={subscription.fieldDefs} values={subscription.fields} />
+                ) : (
+                  <p className="text-sm text-[var(--muted-foreground)]">
+                    {t('subscriptions.noTemplateFields')}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
 
           <Card>
             <CardHeader>

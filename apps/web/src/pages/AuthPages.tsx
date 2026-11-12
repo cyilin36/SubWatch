@@ -66,6 +66,20 @@ export function LoginPage() {
               void onSubmit(event);
             }}
           >
+            {/* SubWatch has a single admin account. Password managers such as
+                Bitwarden only associate and fill a saved login when a username
+                field is present, so expose a visually hidden one. */}
+            <input
+              type="text"
+              id="login-username"
+              name="username"
+              autoComplete="username"
+              value="admin"
+              readOnly
+              tabIndex={-1}
+              aria-hidden="true"
+              className="sr-only"
+            />
             <Field
               label={t('auth.password')}
               htmlFor="login-password"
@@ -135,6 +149,17 @@ export function SetupPage() {
               void onSubmit(event);
             }}
           >
+            <input
+              type="text"
+              id="setup-username"
+              name="username"
+              autoComplete="username"
+              value="admin"
+              readOnly
+              tabIndex={-1}
+              aria-hidden="true"
+              className="sr-only"
+            />
             <Field
               label={t('auth.password')}
               htmlFor="setup-password"

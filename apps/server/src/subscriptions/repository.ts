@@ -1,6 +1,13 @@
-import { daysLeft, type Cycle, type RenewalDto, type SubscriptionDto } from '@subwatch/shared';
+import {
+  daysLeft,
+  maskTemplateValues,
+  type Cycle,
+  type RenewalDto,
+  type SubscriptionDto,
+  type TemplateField,
+} from '@subwatch/shared';
 import type { CoreContext } from '../context.js';
-import { all, fromBool, one, run } from '../db/helpers.js';
+import { all, fromBool, one, parseJson, run } from '../db/helpers.js';
 import { parseChannelIds, parseReminderOffsets } from './parse.js';
 import { deriveSubscriptionStatus } from './status.js';
 
@@ -15,6 +22,10 @@ export interface SubscriptionRow {
   channel_ids: string;
   notes: string;
   paused: number;
+  template_id: string | null;
+  template_name: string | null;
+  field_defs: string;
+  fields: string;
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +56,31 @@ export function listRenewals(ctx: CoreContext, subscriptionId: string): RenewalD
   ).map(mapRenewalRow);
 }
 
+export function parseTemplateFieldDefs(raw: string | null | undefined): TemplateField[] {
+  return parseJson<TemplateField[]>(raw, []);
+}
+
+/**
+ * Decrypted template field values, secrets included. Used internally so an
+ * update can restore SECRET_KEEP sentinels; API DTOs must use the masked copy.
+ */
+export function readRawTemplateFieldValues(
+  ctx: CoreContext,
+  row: SubscriptionRow,
+): Record<string, unknown> {
+  if (!row.fields) return {};
+  try {
+    const value = ctx.secretBox.decryptJson<unknown>(row.fields);
+    return value !== null && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
+  } catch (error) {
+    ctx.logger.error({ err: error, subscriptionId: row.id }, 'failed to decrypt subscription fields');
+    return {};
+  }
+}
+
+
 /**
  * Map one stored subscription to its DTO. Renewals are deliberately opt-in so
  * the list endpoint does not pay for one query per subscription; only the
@@ -63,6 +99,7 @@ export function mapSubscriptionRow(
     general,
     general.timezone,
   );
+  const fieldDefs = parseTemplateFieldDefs(row.field_defs);
   const dto: SubscriptionDto = {
     id: row.id,
     name: row.name,
@@ -76,6 +113,10 @@ export function mapSubscriptionRow(
     paused,
     status,
     daysLeft: daysLeft(row.expiry_date, general.timezone),
+    templateId: row.template_id ?? null,
+    templateName: row.template_name ?? null,
+    fieldDefs,
+    fields: maskTemplateValues(fieldDefs, readRawTemplateFieldValues(ctx, row)),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

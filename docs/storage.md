@@ -55,9 +55,24 @@ data/
 | `enabled` | 0/1 |
 | `created_at` / `updated_at` | 时间戳 |
 
+### templates
+
+用户自定义模板（v4）。模板是订阅/监控的创建蓝图，本身不产生业务实体。
+
+| 列 | 说明 |
+|---|---|
+| `id` | 主键 |
+| `kind` | `subscription` / `monitor` |
+| `name` / `description` / `icon` / `color` / `category` | 展示信息 |
+| `fields` | `TemplateField[]` JSON，参数定义 |
+| `payload` | 渲染草稿 JSON，可含 `{{参数}}` 占位符 |
+| `created_at` / `updated_at` | 时间戳 |
+
+索引：`(kind, name)`。
+
 ### subscriptions
 
-订阅/提醒（v2 精简 + v3 到期时间）。
+订阅/提醒（v2 精简 + v3 到期时间 + v4 模板快照）。
 
 | 列 | 说明 |
 |---|---|
@@ -71,9 +86,14 @@ data/
 | `channel_ids` | JSON 数组 |
 | `notes` | 备注 |
 | `paused` | 0/1 |
+| `template_id` | 创建来源模板，外键 → `templates`；模板删除时置 `NULL` |
+| `template_name` | 创建时的模板名快照（模板删除后仍保留） |
+| `field_defs` | 模板字段定义快照 JSON，默认 `[]` |
+| `fields` | 整体加密的模板参数值 JSON 密文，默认空串 |
 | `created_at` / `updated_at` | 时间戳 |
 
-索引：`expiry_date`；`(paused, expiry_date)`。到期状态由 `expiry_date` + `expiry_time` 计算。
+索引：`expiry_date`；`(paused, expiry_date)`；`template_id`。到期状态由 `expiry_date` + `expiry_time` 计算。
+`fields` 解密后含完整参数值，但 API 只返回 `secret` 字段的掩码 `__SUBWATCH_KEEP__`；`field_defs` 与 `template_name` 只在创建时快照，模板后续修改或删除都不影响已存订阅。
 
 ### renewals
 
@@ -124,9 +144,11 @@ data/
 | `consecutive_failures` | 连续失败次数 |
 | `next_run_at` | 下次计划运行时间（HTTP） |
 | `push_token_hash` / `push_token_prefix` | Push Token 哈希/展示前缀 |
+| `template_id` | 创建来源模板，外键 → `templates`；模板删除时置 `NULL` |
+| `template_name` | 创建时的模板名快照（仅用于展示） |
 | `created_at` / `updated_at` | 时间戳 |
 
-索引：`(enabled, next_run_at)`、`push_token_hash`。
+索引：`(enabled, next_run_at)`、`push_token_hash`、`template_id`。模板参数不单独存储，渲染结果即 `config`。
 
 ### monitor_rules
 
@@ -214,6 +236,10 @@ data/
   `custom_days` 周期归一为 `month`；续期历史与提醒历史保留。
 - v3 迁移要点：`subscriptions` 增加 `expiry_time`（`HH:mm`，默认 `23:59`）；旧数据保持“当天结束到期”的语义，
   到期状态从按日期判断改为按分钟判断，提醒计划表不变。
+- v4 迁移要点：新增用户模板表 `templates`（v2 删除的是旧内置模板目录，二者无数据继承）；`subscriptions` 增加
+  `template_id`（外键 → `templates`，`ON DELETE SET NULL`）、`template_name`、`field_defs`、`fields`；
+  `monitors` 增加 `template_id`、`template_name`。既有订阅/监控的模板列为空值，不做数据回填。
+  删除模板只会清空引用行的 `template_id`，模板名与字段/参数快照保留。
 
 ## 运维提示
 

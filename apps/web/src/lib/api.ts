@@ -18,12 +18,26 @@ import type {
   MonitorConfig,
   MetricValue,
   RuleInput,
+  TemplateDto,
+  TemplateKind,
+  TemplateRenderResultDto,
+  TemplateSummaryDto,
 } from '@subwatch/shared';
-import type { changePasswordSchema, renewInputSchema, settingsUpdateSchema } from '@subwatch/shared';
+import type {
+  changePasswordSchema,
+  renewInputSchema,
+  settingsUpdateSchema,
+  templateExportEnvelopeSchema,
+  templateInputSchema,
+} from '@subwatch/shared';
 
 export type RenewInput = z.input<typeof renewInputSchema>;
 export type SettingsPatch = z.input<typeof settingsUpdateSchema>;
 export type ChangePasswordInput = z.input<typeof changePasswordSchema>;
+/** Template create/update body; schema defaults fill omitted optional attributes. */
+export type TemplateInput = z.input<typeof templateInputSchema>;
+/** Shareable template envelope returned by the export endpoint. */
+export type TemplateExportEnvelope = z.input<typeof templateExportEnvelopeSchema>;
 
 export interface MonitorTestInput {
   config: MonitorConfig;
@@ -227,6 +241,21 @@ export const api = {
     resume: (id: string) => post<SubscriptionDto>(`/subscriptions/${encodeURIComponent(id)}/resume`),
     testReminder: (id: string) =>
       post<ChannelTestResult>(`/subscriptions/${encodeURIComponent(id)}/test-reminder`),
+  },
+
+  templates: {
+    list: (kind?: TemplateKind) => request<TemplateSummaryDto[]>(`/templates${queryString({ kind })}`),
+    get: (id: string) => request<TemplateDto>(`/templates/${encodeURIComponent(id)}`),
+    create: (input: TemplateInput) => post<TemplateDto>('/templates', input),
+    update: (id: string, input: TemplateInput) =>
+      put<TemplateDto>(`/templates/${encodeURIComponent(id)}`, input),
+    remove: (id: string) => del<undefined>(`/templates/${encodeURIComponent(id)}`),
+    render: (id: string, values: Record<string, unknown>) =>
+      post<TemplateRenderResultDto>(`/templates/${encodeURIComponent(id)}/render`, { values }),
+    export: (id: string) =>
+      request<TemplateExportEnvelope>(`/templates/${encodeURIComponent(id)}/export`),
+    import: (envelope: TemplateExportEnvelope) =>
+      post<TemplateDto>('/templates/import', envelope),
   },
 
   channels: {

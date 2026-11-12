@@ -5,12 +5,17 @@ import {
   type Cycle,
   type SubscriptionDto,
   type SubscriptionInput,
+  type TemplateField,
 } from '@subwatch/shared';
 
 /**
  * Editable subscription form values. Every field is present (no zod defaults
  * here) so the form inputs stay controlled; `subscriptionInputSchema` is applied
  * to the values right before submitting.
+ *
+ * `templateId` / `fieldDefs` / `fields` carry the user-defined template snapshot:
+ * the definitions come from the template that was applied (or from the DTO when
+ * editing), the values include the typed parameters and are submitted as-is.
  */
 export interface SubscriptionFormValues {
   name: string;
@@ -22,6 +27,9 @@ export interface SubscriptionFormValues {
   channelIds: string[];
   notes: string;
   paused: boolean;
+  templateId: string | null;
+  fieldDefs: TemplateField[];
+  fields: Record<string, unknown>;
 }
 
 /** Default values for a brand-new subscription: today + one month, settings offsets. */
@@ -39,6 +47,9 @@ export function blankSubscriptionFormValues(
     channelIds: [],
     notes: '',
     paused: false,
+    templateId: null,
+    fieldDefs: [],
+    fields: {},
   };
 }
 
@@ -54,6 +65,9 @@ export function subscriptionToFormValues(subscription: SubscriptionDto): Subscri
     channelIds: [...subscription.channelIds],
     notes: subscription.notes,
     paused: subscription.paused,
+    templateId: subscription.templateId,
+    fieldDefs: subscription.fieldDefs.map((field) => ({ ...field })),
+    fields: { ...subscription.fields },
   };
 }
 
@@ -69,6 +83,8 @@ export function subscriptionFormToInput(values: SubscriptionFormValues): Subscri
     channelIds: [...values.channelIds],
     notes: values.notes,
     paused: values.paused,
+    templateId: values.templateId,
+    fields: { ...values.fields },
   };
 }
 

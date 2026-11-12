@@ -145,20 +145,21 @@ function numberString(value: number | null | undefined): string {
   return value === null || value === undefined ? '' : String(value);
 }
 
-export function monitorToFormValues(monitor: MonitorDto): MonitorFormValues {
+/** Map a monitor input (DTO or a rendered template payload) to editable form values. */
+export function monitorInputToFormValues(input: MonitorInput): MonitorFormValues {
   const base = blankMonitorFormValues();
   const values: MonitorFormValues = {
     ...base,
-    name: monitor.name,
-    description: monitor.description,
-    type: monitor.type,
-    intervalSeconds: String(monitor.intervalSeconds),
-    failureThreshold: String(monitor.failureThreshold),
-    staleAfterSeconds: String(monitor.staleAfterSeconds),
-    channelIds: [...monitor.channelIds],
-    tags: [...monitor.tags],
-    enabled: monitor.enabled,
-    rules: monitor.rules.map((rule) => ({
+    name: input.name,
+    description: input.description,
+    type: input.config.type,
+    intervalSeconds: String(input.intervalSeconds),
+    failureThreshold: String(input.failureThreshold),
+    staleAfterSeconds: String(input.staleAfterSeconds),
+    channelIds: [...input.channelIds],
+    tags: [...input.tags],
+    enabled: input.enabled,
+    rules: input.rules.map((rule) => ({
       id: rule.id,
       metricKey: rule.metricKey,
       label: rule.label,
@@ -176,7 +177,7 @@ export function monitorToFormValues(monitor: MonitorDto): MonitorFormValues {
     })),
   };
 
-  const config: MonitorConfig = monitor.config;
+  const config: MonitorConfig = input.config;
   if (config.type === 'http') {
     const request = config.request;
     values.request = {
@@ -211,6 +212,11 @@ export function monitorToFormValues(monitor: MonitorDto): MonitorFormValues {
     }
   }
   return values;
+}
+
+/** Map an existing monitor DTO to editable form values. */
+export function monitorToFormValues(monitor: MonitorDto): MonitorFormValues {
+  return monitorInputToFormValues(monitor);
 }
 
 function trimOrNull(value: string): number | null {

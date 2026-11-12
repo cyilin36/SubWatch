@@ -2,16 +2,21 @@ import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import {
   addCycle,
+  coerceTemplateValues,
   renewInputSchema,
+  restoreMaskedTemplateValues,
   subscriptionInputSchema,
   todayInZone,
   type Cycle,
   type SubscriptionDto,
+  type SubscriptionInput,
+  type TemplateField,
 } from '@subwatch/shared';
 import type { ModuleContext } from '../context.js';
 import { createRequireAuth } from '../auth/guard.js';
 import { nowIso, run, toJson, withTransaction } from '../db/helpers.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../lib/errors.js';
+import { getTemplateById } from '../templates/repository.js';
 import { parseChannelIds, parseReminderOffsets } from './parse.js';
 import {
   deleteSubscription,
@@ -19,6 +24,8 @@ import {
   listRenewals,
   listSubscriptions,
   mapSubscriptionRow,
+  parseTemplateFieldDefs,
+  readRawTemplateFieldValues,
   type SubscriptionRow,
 } from './repository.js';
 import {
@@ -29,7 +36,85 @@ import {
 import type { SubscriptionReminderState } from './status.js';
 
 const SUBSCRIPTION_COLUMNS = `id, name, url, expiry_date, expiry_time, cycle, reminder_offsets,
-  channel_ids, notes, paused, created_at, updated_at`;
+  channel_ids, notes, paused, template_id, template_name, field_defs, fields, created_at, updated_at`;
+
+interface ResolvedTemplateFields {
+  templateId: string | null;
+  templateName: string | null;
+  fieldDefs: TemplateField[];
+  encryptedFields: string;
+}
+
+/** Resolve and validate the template snapshot for a new subscription. */
+function resolveCreateTemplateFields(
+  ctx: ModuleContext,
+  body: SubscriptionInput,
+): ResolvedTemplateFields {
+  const templateId = body.templateId ?? null;
+  const incomingFields = body.fields ?? {};
+
+  if (!templateId) {
+    if (Object.keys(incomingFields).length > 0) {
+      throw new BadRequestError('Template fields require a templateId');
+    }
+    return { templateId: null, templateName: null, fieldDefs: [], encryptedFields: '' };
+  }
+
+  const template = getTemplateById(ctx, templateId);
+  if (!template || template.kind !== 'subscription') {
+    throw new BadRequestError('Template not found or is not a subscription template');
+  }
+  const coerced = coerceTemplateValues(template.fields, incomingFields);
+  if (!coerced.success) {
+    throw new BadRequestError('Template field values are invalid', {
+      issues: coerced.error.flatten(),
+    });
+  }
+  return {
+    templateId,
+    templateName: template.name,
+    fieldDefs: template.fields,
+    // Empty string is the canonical "no fields" representation; templates with
+    // zero fields still record their name/snapshot but no encrypted value blob.
+    encryptedFields:
+      template.fields.length === 0 ? '' : ctx.secretBox.encryptJson(coerced.values),
+  };
+}
+
+/**
+ * Validate template fields on update. Omitting `fields` keeps the stored values;
+ * the template id itself cannot be changed after creation.
+ */
+function resolveUpdateTemplateFields(
+  ctx: ModuleContext,
+  existing: SubscriptionRow,
+  body: SubscriptionInput,
+): string {
+  const existingId = existing.template_id ?? null;
+  if (body.templateId !== undefined && (body.templateId ?? null) !== existingId) {
+    throw new BadRequestError('templateId cannot be changed after creation');
+  }
+  if (body.fields === undefined) return existing.fields;
+
+  const fieldDefs = parseTemplateFieldDefs(existing.field_defs);
+  if (fieldDefs.length === 0) {
+    if (Object.keys(body.fields).length > 0) {
+      throw new BadRequestError('This subscription has no template fields');
+    }
+    return '';
+  }
+
+  const previous = readRawTemplateFieldValues(ctx, existing);
+  const restored = restoreMaskedTemplateValues(fieldDefs, body.fields, previous);
+  const coerced = coerceTemplateValues(fieldDefs, restored);
+  if (!coerced.success) {
+    throw new BadRequestError('Template field values are invalid', {
+      issues: coerced.error.flatten(),
+    });
+  }
+  return ctx.secretBox.encryptJson(coerced.values);
+}
+
 
 function requireSubscriptionRow(ctx: ModuleContext, id: string): SubscriptionRow {
   const row = getSubscriptionRow(ctx, id);
@@ -79,10 +164,11 @@ export function registerSubscriptionRoutes(app: FastifyInstance, ctx: ModuleCont
     const id = randomUUID();
     const now = nowIso();
     const general = ctx.settings.getGeneral();
+    const template = resolveCreateTemplateFields(ctx, body);
     withTransaction(ctx.db, () => {
       run(
         ctx.db,
-        `INSERT INTO subscriptions (${SUBSCRIPTION_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO subscriptions (${SUBSCRIPTION_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           body.name,
@@ -94,6 +180,10 @@ export function registerSubscriptionRoutes(app: FastifyInstance, ctx: ModuleCont
           toJson(body.channelIds),
           body.notes,
           body.paused ? 1 : 0,
+          template.templateId,
+          template.templateName,
+          toJson(template.fieldDefs),
+          template.encryptedFields,
           now,
           now,
         ],
@@ -112,16 +202,17 @@ export function registerSubscriptionRoutes(app: FastifyInstance, ctx: ModuleCont
 
   app.put('/api/subscriptions/:id', { preHandler: requireAuth }, async (request): Promise<SubscriptionDto> => {
     const { id } = request.params as { id: string };
-    requireSubscriptionRow(ctx, id);
+    const existing = requireSubscriptionRow(ctx, id);
     const body = subscriptionInputSchema.parse(request.body ?? {});
     const now = nowIso();
     const general = ctx.settings.getGeneral();
+    const encryptedFields = resolveUpdateTemplateFields(ctx, existing, body);
     withTransaction(ctx.db, () => {
       run(
         ctx.db,
         `UPDATE subscriptions SET
            name = ?, url = ?, expiry_date = ?, expiry_time = ?, cycle = ?, reminder_offsets = ?,
-           channel_ids = ?, notes = ?, paused = ?, updated_at = ?
+           channel_ids = ?, notes = ?, paused = ?, fields = ?, updated_at = ?
          WHERE id = ?`,
         [
           body.name,
@@ -133,6 +224,7 @@ export function registerSubscriptionRoutes(app: FastifyInstance, ctx: ModuleCont
           toJson(body.channelIds),
           body.notes,
           body.paused ? 1 : 0,
+          encryptedFields,
           now,
           id,
         ],
