@@ -115,7 +115,7 @@ export function TemplateApplyCard({
                 <p className="truncate text-body font-medium text-white">
                   {t('templates.apply.appliedLabel', { name: appliedTemplate.name })}
                 </p>
-                <p className="truncate text-xs text-moon-steel">{t('templates.apply.appliedHint')}</p>
+                <p className="truncate text-xs text-moonlight">{t('templates.apply.appliedHint')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -166,7 +166,7 @@ export function TemplateApplyCard({
             {template ? (
               <>
                 {template.description ? (
-                  <p className="text-xs text-moon-steel">{template.description}</p>
+                  <p className="text-xs text-moonlight">{template.description}</p>
                 ) : null}
                 {template.fields.length > 0 ? (
                   <TemplateFields
@@ -177,7 +177,7 @@ export function TemplateApplyCard({
                     idPrefix={`template-apply-${kind}`}
                   />
                 ) : (
-                  <p className="text-xs text-moon-steel">{t('templates.apply.noParameters')}</p>
+                  <p className="text-xs text-moonlight">{t('templates.apply.noParameters')}</p>
                 )}
 
                 {errorSummary ? (

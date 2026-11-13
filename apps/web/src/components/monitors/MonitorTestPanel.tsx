@@ -109,12 +109,12 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
               </Badge>
               <Badge tone={statusTone(result.status)}>{t(`status.${result.status}`)}</Badge>
               {result.httpStatus !== null && result.httpStatus !== undefined ? (
-                <span className="text-xs text-moon-steel">
+                <span className="text-xs text-moonlight">
                   {t('monitorForm.httpStatus')}{' '}
                   <strong className="font-medium text-white">{result.httpStatus}</strong>
                 </span>
               ) : null}
-              <span className="text-xs text-moon-steel">
+              <span className="text-xs text-moonlight">
                 {t('monitorForm.duration')}{' '}
                 <strong className="font-medium text-white">{formatMs(result.durationMs)}</strong>
               </span>
@@ -134,7 +134,7 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
                 <div className="grid grid-cols-2 gap-2">
                   {metricEntries.map(([key, metric]) => (
                     <div key={key} className="glass-flat min-w-0 px-3 py-2">
-                      <p className="truncate text-xs text-moon-steel">{metric.label || key}</p>
+                      <p className="truncate text-xs text-moonlight">{metric.label || key}</p>
                       <p className="mt-0.5 truncate text-sm font-medium text-white">
                         {formatMetricValue(metric)}
                       </p>
@@ -160,7 +160,7 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
                       </Badge>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-white">{evaluation.metricKey}</p>
-                        <p className="truncate text-xs text-moon-steel">
+                        <p className="truncate text-xs text-moonlight">
                           {evaluation.message || formatMetricValue(evaluation.value)}
                         </p>
                       </div>
@@ -176,7 +176,7 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
               mono
             >
               {result.logs.length === 0 ? (
-                <p className="text-moon-steel">{t('monitorForm.noLogs')}</p>
+                <p className="text-moonlight/80">{t('monitorForm.noLogs')}</p>
               ) : (
                 result.logs.map((line, index) => (
                   <p key={index} className="whitespace-pre-wrap break-words">

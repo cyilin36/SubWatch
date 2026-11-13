@@ -324,7 +324,7 @@ export function MonitorDetailPage() {
                       </TD>
                       <TD className="hidden sm:table-cell">{run.httpStatus ?? '—'}</TD>
                       <TD className="hidden md:table-cell">{formatMs(run.durationMs)}</TD>
-                      <TD className="hidden text-xs text-moon-steel lg:table-cell">
+                      <TD className="hidden text-xs text-moonlight lg:table-cell">
                         {t(`trigger.${run.trigger}`)}
                       </TD>
                       <TD className="max-w-[220px]">
@@ -351,7 +351,7 @@ export function MonitorDetailPage() {
                 {t('monitorDetail.statusLabel')}
               </h2>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="text-xs text-moon-steel">{t('common.enabled')}</span>
+                <span className="text-xs text-moonlight">{t('common.enabled')}</span>
                 <Switch
                   checked={monitor.enabled}
                   onCheckedChange={(checked) => toggleMutation.mutate(checked)}
@@ -397,7 +397,7 @@ export function MonitorDetailPage() {
             {monitor.templateName ? (
               <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-white/10 pt-4 text-xs">
                 <LayoutTemplate className="h-3.5 w-3.5 text-moonlight" aria-hidden />
-                <span className="text-moon-steel">{t('monitorDetail.templateSource')}</span>
+                <span className="text-moonlight/80">{t('monitorDetail.templateSource')}</span>
                 {monitor.templateId ? (
                   <Link
                     to={`/templates/${monitor.templateId}`}
@@ -425,7 +425,7 @@ export function MonitorDetailPage() {
             ) : null}
 
             {monitor.lastError && !monitor.enabled ? (
-              <p className="mt-3 text-xs text-moon-steel">{t('monitorDetail.enabledHint')}</p>
+              <p className="mt-3 text-xs text-moonlight">{t('monitorDetail.enabledHint')}</p>
             ) : null}
 
             {monitor.config.type === 'http' ? (
@@ -465,12 +465,12 @@ export function MonitorDetailPage() {
                         {rule.enabled ? t('common.enabled') : t('common.disabled')}
                       </Badge>
                     </div>
-                    <p className="mt-1 break-words text-xs text-moon-steel">
+                    <p className="mt-1 break-words text-xs text-moonlight">
                       {rule.metricKey} {OPERATOR_SYMBOLS[rule.operator] ?? rule.operator}{' '}
                       {rule.criticalValue ?? rule.warningValue ?? '—'}
                       {rule.unit ? ` ${rule.unit}` : ''}
                     </p>
-                    <p className="text-xs text-moon-steel">
+                    <p className="text-xs text-moonlight">
                       {t('severity.warning')} {rule.warningValue ?? '—'} / {t('severity.critical')}{' '}
                       {rule.criticalValue ?? '—'} · ×{rule.durationChecks}
                     </p>
@@ -487,7 +487,7 @@ export function MonitorDetailPage() {
                 <KeyRound className="h-4 w-4 text-moonlight" aria-hidden />
                 {t('monitorDetail.pushToken')}
               </h2>
-              <p className="mt-2 text-xs text-moon-steel">{t('monitorDetail.pushTokenHint')}</p>
+              <p className="mt-2 text-xs text-moonlight">{t('monitorDetail.pushTokenHint')}</p>
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <CodeWell className="min-w-0 flex-1">
                   <code className="block truncate">

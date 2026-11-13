@@ -41,13 +41,13 @@ export function Select({
         aria-invalid={invalid || undefined}
         className={cn(
           'field flex h-11 items-center justify-between gap-2 px-4 text-left',
-          'data-[placeholder]:text-moon-steel',
+          'data-[placeholder]:text-moonlight/80',
           className,
         )}
       >
         <SelectPrimitive.Value placeholder={placeholder} />
         <SelectPrimitive.Icon asChild>
-          <ChevronDown className="h-4 w-4 shrink-0 text-moon-steel" aria-hidden />
+          <ChevronDown className="h-4 w-4 shrink-0 text-moonlight/80" aria-hidden />
         </SelectPrimitive.Icon>
       </SelectPrimitive.Trigger>
       <SelectPrimitive.Portal>

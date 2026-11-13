@@ -125,7 +125,7 @@ export function MultiCheckbox({
             <span className="min-w-0">
               <span className="block truncate font-medium text-white">{item.label}</span>
               {item.description ? (
-                <span className="block truncate text-xs text-moon-steel">{item.description}</span>
+                <span className="block truncate text-xs text-moonlight">{item.description}</span>
               ) : null}
             </span>
           </label>
@@ -212,7 +212,7 @@ export function OffsetsInput({
           {t('common.add')}
         </Button>
         {value.length > 0 ? (
-          <span className="text-xs text-moon-steel">{[...value].sort((a, b) => b - a).join(', ')}</span>
+          <span className="text-xs text-moonlight">{[...value].sort((a, b) => b - a).join(', ')}</span>
         ) : null}
       </div>
     </div>
@@ -282,7 +282,7 @@ export function Pagination({
   const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-2">
-      <p className="text-xs tracking-[0.08em] text-moon-steel">
+      <p className="text-xs tracking-[0.08em] text-moonlight/80">
         {t('common.total', { total })} · {t('common.pageInfo', { page: Math.min(page + 1, Math.max(pages, 1)), pages: Math.max(pages, 1) })}
       </p>
       <div className="flex items-center gap-2">

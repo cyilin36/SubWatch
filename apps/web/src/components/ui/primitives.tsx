@@ -226,7 +226,7 @@ export function StatTile({ label, value, hint, accent = false, tone, className }
       >
         {value}
       </p>
-      {hint ? <p className="mt-2 text-xs text-moon-steel">{hint}</p> : null}
+      {hint ? <p className="mt-2 text-xs text-moonlight">{hint}</p> : null}
     </div>
   );
 }
@@ -431,7 +431,7 @@ export function Field({ label, htmlFor, error, hint, required, children, classNa
           {message}
         </p>
       ) : null}
-      {hint && !message ? <p className="text-xs text-moon-steel">{hint}</p> : null}
+      {hint && !message ? <p className="text-xs text-moonlight">{hint}</p> : null}
     </div>
   );
 }

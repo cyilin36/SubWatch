@@ -16,7 +16,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
       <div className="relative flex flex-1 items-center justify-center px-4 pb-24">
         <div className="w-full max-w-[27rem]">{children}</div>
       </div>
-      <p className="relative pb-8 text-center text-[11px] tracking-[0.14em] text-moon-steel uppercase">
+      <p className="relative pb-8 text-center text-[11px] tracking-[0.14em] text-moonlight/80 uppercase">
         {appName}
       </p>
     </div>

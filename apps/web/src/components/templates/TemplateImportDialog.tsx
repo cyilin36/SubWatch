@@ -150,7 +150,7 @@ export function TemplateImportDialog({ open, onOpenChange, onImported }: Templat
             <FileJson className="h-4 w-4" aria-hidden />
             {t('templates.import.chooseFile')}
           </Button>
-          {fileName ? <span className="truncate text-xs text-moon-steel">{fileName}</span> : null}
+          {fileName ? <span className="truncate text-xs text-moonlight">{fileName}</span> : null}
         </div>
 
         <Textarea
@@ -171,7 +171,7 @@ export function TemplateImportDialog({ open, onOpenChange, onImported }: Templat
           <div className="glass-flat flex flex-wrap items-center gap-2 px-4 py-3 text-sm">
             <span className="font-medium text-white">{preview.name}</span>
             <Badge tone="info">{t(`templates.kind.${preview.kind}`)}</Badge>
-            <span className="text-xs text-moon-steel">
+            <span className="text-xs text-moonlight">
               {t('templates.list.fieldCount', { count: preview.fieldCount })}
             </span>
           </div>

@@ -29,7 +29,7 @@ export function AppLayout() {
           <Outlet />
         </Suspense>
       </main>
-      <footer className="relative mx-auto w-full max-w-[1280px] px-4 pb-8 text-center text-[11px] tracking-[0.14em] text-moon-steel uppercase sm:px-6 lg:px-8">
+      <footer className="relative mx-auto w-full max-w-[1280px] px-4 pb-8 text-center text-[11px] tracking-[0.14em] text-moonlight/80 uppercase sm:px-6 lg:px-8">
         {t('app.name')} · {t('app.tagline')}
       </footer>
     </div>

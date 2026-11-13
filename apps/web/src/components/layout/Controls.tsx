@@ -58,7 +58,7 @@ export function LayoutBrand({ appName }: { appName: string }) {
       <BrandMark />
       <div className="min-w-0">
         <p className="truncate text-body font-medium leading-tight text-white">{appName}</p>
-        <p className="truncate text-[11px] tracking-[0.14em] text-moon-steel uppercase">{t('app.tagline')}</p>
+        <p className="truncate text-[11px] tracking-[0.14em] text-moonlight/80 uppercase">{t('app.tagline')}</p>
       </div>
     </div>
   );

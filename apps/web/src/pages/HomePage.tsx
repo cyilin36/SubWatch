@@ -65,7 +65,7 @@ function monitorRank(status: string): number {
 /** Thin moon-steel dot between two pieces of secondary information. */
 function MetaDot() {
   return (
-    <span className="text-moon-steel/60" aria-hidden>
+    <span className="text-moonlight/40" aria-hidden>
       ·
     </span>
   );
@@ -75,7 +75,7 @@ function MetaDot() {
 function DueText({ subscription }: { subscription: SubscriptionDto }) {
   const { t } = useTranslation();
   if (subscription.paused || subscription.status === 'paused') {
-    return <span className="text-moon-steel">{t('subscriptions.statusPaused')}</span>;
+    return <span className="text-moonlight/80">{t('subscriptions.statusPaused')}</span>;
   }
   const daysLeft = subscription.daysLeft;
   if (daysLeft < 0) {
@@ -108,7 +108,7 @@ function SubscriptionMeta({ subscription }: { subscription: SubscriptionDto }) {
       <MetaDot />
       <DueText subscription={subscription} />
       <MetaDot />
-      <span className="text-moon-steel">{t(`cycle.${subscription.cycle}`)}</span>
+      <span className="text-moonlight/80">{t(`cycle.${subscription.cycle}`)}</span>
     </span>
   );
 }
@@ -124,12 +124,12 @@ function MonitorMeta({ monitor }: { monitor: MonitorDto }) {
           key={key}
           className="inline-flex max-w-[10rem] items-center gap-1 rounded-pill border border-white/10 bg-white/5 px-2.5 py-0.5"
         >
-          <span className="truncate text-moon-steel">{metric.label || key}</span>
+          <span className="truncate text-moonlight/80">{metric.label || key}</span>
           <span className="font-medium text-white/90">{formatMetricValue(metric)}</span>
         </span>
       ))}
       {metrics.length > 0 ? <MetaDot /> : null}
-      <span className="text-moon-steel">
+      <span className="text-moonlight/80">
         {t('home.lastChecked')}
         <span className="text-moonlight">
           {': '}
@@ -181,7 +181,7 @@ function HomeRow({ row, onRenew }: { row: UnifiedRow; onRenew: (target: RenewTar
             rel="noopener noreferrer"
             title={subscription.url}
             aria-label={t('home.openLink')}
-            className="rounded-full p-2 text-moon-steel transition-colors duration-500 ease-glass hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            className="rounded-full p-2 text-moonlight/80 transition-colors duration-500 ease-glass hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
             <ExternalLink className="h-4 w-4" aria-hidden />
           </a>
@@ -206,7 +206,7 @@ function HomeRow({ row, onRenew }: { row: UnifiedRow; onRenew: (target: RenewTar
           </Button>
         ) : null}
 
-        <ChevronRight className="hidden h-4 w-4 text-moon-steel sm:block" aria-hidden />
+        <ChevronRight className="hidden h-4 w-4 text-moonlight/80 sm:block" aria-hidden />
       </div>
     </li>
   );
@@ -394,7 +394,7 @@ export function HomePage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="relative w-full sm:max-w-xs">
                 <Search
-                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-moon-steel"
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-moonlight/80"
                   aria-hidden
                 />
                 <Input
@@ -415,7 +415,7 @@ export function HomePage() {
                 ]}
               />
               <p
-                className="text-xs tracking-[0.08em] text-moon-steel tabular-nums sm:ml-auto"
+                className="text-xs tracking-[0.08em] text-moonlight/80 tabular-nums sm:ml-auto"
                 role="status"
               >
                 {t('common.total', { total: visibleRows.length })}

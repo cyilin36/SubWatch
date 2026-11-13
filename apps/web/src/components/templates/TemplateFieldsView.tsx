@@ -37,7 +37,7 @@ export function TemplateFieldsView({ fields, values, className }: TemplateFields
             const value = values[field.key];
             let content: React.ReactNode;
             if (value === undefined || value === null || value === '') {
-              content = <span className="text-moon-steel">{t('common.none')}</span>;
+              content = <span className="text-moonlight/80">{t('common.none')}</span>;
             } else if (field.type === 'secret') {
               content = <span className="font-mono">••••••</span>;
             } else if (field.type === 'switch') {
@@ -63,7 +63,7 @@ export function TemplateFieldsView({ fields, values, className }: TemplateFields
               <TR key={field.key}>
                 <TD className="max-w-[180px]">
                   <span className="block truncate font-medium text-white">{field.label || field.key}</span>
-                  <span className="block truncate font-mono text-xs text-moon-steel">{field.key}</span>
+                  <span className="block truncate font-mono text-xs text-moonlight">{field.key}</span>
                 </TD>
                 <TD>{content}</TD>
               </TR>

@@ -60,7 +60,7 @@ export function Collapsible({
         />
         <span className="min-w-0 flex-1">{title}</span>
         {hint ? (
-          <span className="hidden min-w-0 truncate text-xs font-normal normal-case tracking-normal text-moon-steel sm:inline">
+          <span className="hidden min-w-0 truncate text-xs font-normal normal-case tracking-normal text-moonlight sm:inline">
             {hint}
           </span>
         ) : null}

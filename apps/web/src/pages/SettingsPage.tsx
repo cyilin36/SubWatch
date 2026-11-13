@@ -411,7 +411,7 @@ export function SettingsPage() {
                   }
                   emptyText={t('settings.noChannels')}
                 />
-                <p className="mt-2 text-xs text-moon-steel">{t('settings.defaultChannelIdsHint')}</p>
+                <p className="mt-2 text-xs text-moonlight">{t('settings.defaultChannelIdsHint')}</p>
               </div>
             </FormSection>
 
@@ -536,7 +536,7 @@ export function SettingsPage() {
                   {t('channels.rejectUnauthorized')}
                 </label>
               </div>
-              <p className="text-xs text-moon-steel">{t('settings.smtpTestHint')}</p>
+              <p className="text-xs text-moonlight">{t('settings.smtpTestHint')}</p>
             </FormSection>
 
             <FormActions>
@@ -627,14 +627,14 @@ export function SettingsPage() {
               <CardContent className="space-y-3 text-body">
                 <p className="text-moonlight">{t('settings.aboutText')}</p>
                 <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 pt-3">
-                  <dt className="text-xs text-moon-steel">{t('settings.apiVersion')}</dt>
+                  <dt className="text-xs text-moonlight">{t('settings.apiVersion')}</dt>
                   <dd className="text-right font-mono text-xs text-white">{settings.version}</dd>
-                  <dt className="text-xs text-moon-steel">{t('settings.uiVersion')}</dt>
+                  <dt className="text-xs text-moonlight">{t('settings.uiVersion')}</dt>
                   <dd className="text-right font-mono text-xs text-white">{settings.version}</dd>
-                  <dt className="text-xs text-moon-steel">{t('settings.timezone')}</dt>
+                  <dt className="text-xs text-moonlight">{t('settings.timezone')}</dt>
                   <dd className="text-right text-xs text-white">{timezone}</dd>
                 </dl>
-                <p className="pt-2 text-xs text-moon-steel">{t('settings.aboutHint')}</p>
+                <p className="pt-2 text-xs text-moonlight">{t('settings.aboutHint')}</p>
               </CardContent>
             </Card>
 
@@ -663,13 +663,13 @@ export function SettingsPage() {
                   )}
                 </div>
                 <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 pt-3">
-                  <dt className="text-xs text-moon-steel">{t('settings.apiVersion')}</dt>
+                  <dt className="text-xs text-moonlight">{t('settings.apiVersion')}</dt>
                   <dd className="text-right font-mono text-xs text-white">{healthQuery.data?.version ?? settings.version}</dd>
-                  <dt className="text-xs text-moon-steel">{t('settings.health')}</dt>
+                  <dt className="text-xs text-moonlight">{t('settings.health')}</dt>
                   <dd className="text-right text-xs text-white">
                     {healthQuery.data?.ok ? t('settings.healthy') : t('settings.unhealthy')}
                   </dd>
-                  <dt className="text-xs text-moon-steel">{t('common.updatedAt')}</dt>
+                  <dt className="text-xs text-moonlight">{t('common.updatedAt')}</dt>
                   <dd className="text-right text-xs text-white">
                     {healthQuery.dataUpdatedAt
                       ? formatDateTime(new Date(healthQuery.dataUpdatedAt).toISOString(), timezone, 'en')

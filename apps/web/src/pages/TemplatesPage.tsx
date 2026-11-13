@@ -100,10 +100,10 @@ function TemplateCard({
       </div>
 
       <div className="flex-1 px-5 pb-3">
-        <p className="line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-moon-steel">
+        <p className="line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-moonlight/80">
           {template.description || t('templates.list.noDescription')}
         </p>
-        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-moon-steel">
+        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-moonlight">
           <span>{t('templates.list.fieldCount', { count: template.fieldCount })}</span>
           <span>{t('templates.list.usageCount', { count: template.usageCount })}</span>
           <span>{formatDateTime(template.updatedAt, timezone, locale)}</span>
@@ -282,7 +282,7 @@ export function TemplatesPage() {
         ))}
       </Tabs>
 
-      <p className="mt-6 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-moon-steel">
+      <p className="mt-6 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-moonlight">
         <FileJson className="h-3.5 w-3.5" aria-hidden />
         {t('templates.list.hint')}
         <Link
@@ -328,7 +328,7 @@ export function TemplatesPage() {
             onChange={setCreateKind}
             options={KINDS.map((entry) => ({ value: entry, label: t(templateKindLabelKey(entry)) }))}
           />
-          <p className="text-xs text-moon-steel">{t('templates.list.kindFixedHint')}</p>
+          <p className="text-xs text-moonlight">{t('templates.list.kindFixedHint')}</p>
         </div>
       </Dialog>
 

@@ -381,11 +381,11 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
               <FormSection description={t('templates.editor.fields.hint')}>
                 {fields.length === 0 ? (
                   <div className="glass-flat flex flex-col items-center px-6 py-8 text-center">
-                    <LayoutTemplate className="h-6 w-6 text-moon-steel" aria-hidden />
+                    <LayoutTemplate className="h-6 w-6 text-moonlight/80" aria-hidden />
                     <p className="mt-3 text-body font-medium text-white/85">
                       {t('templates.editor.fields.empty')}
                     </p>
-                    <p className="mt-1 text-xs text-moon-steel">{t('templates.editor.fields.emptyHint')}</p>
+                    <p className="mt-1 text-xs text-moonlight">{t('templates.editor.fields.emptyHint')}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -422,7 +422,7 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <span className="type-label">{t('templates.editor.payload.placeholders')}</span>
                     {draftRefs.length === 0 ? (
-                      <span className="text-xs text-moon-steel">
+                      <span className="text-xs text-moonlight">
                         {t('templates.editor.payload.noPlaceholders')}
                       </span>
                     ) : (
@@ -834,7 +834,7 @@ function TemplateTestRenderPanel({ template }: { template?: TemplateDto }) {
     return (
       <div className="glass-flat p-5">
         <p className="text-body font-medium text-white">{t('templates.editor.testPanel.title')}</p>
-        <p className="mt-1.5 text-xs text-moon-steel">{t('templates.editor.testPanel.unsavedHint')}</p>
+        <p className="mt-1.5 text-xs text-moonlight">{t('templates.editor.testPanel.unsavedHint')}</p>
       </div>
     );
   }
@@ -844,7 +844,7 @@ function TemplateTestRenderPanel({ template }: { template?: TemplateDto }) {
   return (
     <div className="glass-flat p-5">
       <p className="text-body font-medium text-white">{t('templates.editor.testPanel.title')}</p>
-      <p className="mt-1 text-xs text-moon-steel">{t('templates.editor.testPanel.hint')}</p>
+      <p className="mt-1 text-xs text-moonlight">{t('templates.editor.testPanel.hint')}</p>
 
       <div className="mt-4">
         <TemplateFields
@@ -890,7 +890,7 @@ function TemplateTestRenderPanel({ template }: { template?: TemplateDto }) {
           </Tabs>
         </div>
       ) : (
-        <p className="mt-4 text-xs text-moon-steel">{t('templates.editor.testPanel.empty')}</p>
+        <p className="mt-4 text-xs text-moonlight">{t('templates.editor.testPanel.empty')}</p>
       )}
     </div>
   );

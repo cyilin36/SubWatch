@@ -21,15 +21,15 @@ import { Select } from '../ui';
  */
 const SERIES_COLORS = [
   'var(--color-moonlight)',
-  'var(--color-champagne)',
   'var(--color-success)',
+  'var(--color-warning)',
+  'var(--color-danger)',
   'var(--color-info)',
-  'var(--color-moon-steel)',
 ];
 
-const GRID_STROKE = 'var(--color-moon-steel)';
-const AXIS_STROKE = 'var(--color-moon-steel)';
-const TICK_FILL = 'var(--color-moon-steel)';
+const GRID_STROKE = 'rgb(255 255 255 / 0.08)';
+const AXIS_STROKE = 'rgb(124 156 196 / 0.55)';
+const TICK_FILL = 'rgb(124 156 196 / 0.85)';
 
 export interface MetricChartProps {
   series: MetricSeries;

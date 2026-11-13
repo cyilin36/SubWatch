@@ -70,7 +70,7 @@ export function PushTokenDialog({ open, token, title, hint, onOpenChange, onDone
           </pre>
           <div className="flex flex-wrap items-center gap-3">
             <CopyButton value={curl} />
-            <p className="min-w-0 text-xs text-moon-steel">{t('monitorForm.pushUrlHint')}</p>
+            <p className="min-w-0 text-xs text-moonlight">{t('monitorForm.pushUrlHint')}</p>
           </div>
         </div>
       </div>

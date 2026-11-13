@@ -355,7 +355,7 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
                           <span className="truncate">{subscription.url}</span>
                         </a>
                       ) : (
-                        <span className="text-moon-steel">{t('subscriptions.noLink')}</span>
+                        <span className="text-moonlight/80">{t('subscriptions.noLink')}</span>
                       )}
                     </dd>
                   </div>
@@ -381,7 +381,7 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
                   <p className="type-label">{t('subscriptionForm.reminderOffsets')}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {reminderOffsets.length === 0 ? (
-                      <span className="text-body text-moon-steel">{t('common.none')}</span>
+                      <span className="text-body text-moonlight/80">{t('common.none')}</span>
                     ) : (
                       reminderOffsets.map((offset) => (
                         <Badge key={offset} tone="info">
@@ -395,7 +395,7 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
                   <p className="type-label">{t('subscriptions.channels')}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {channelNames.length === 0 ? (
-                      <span className="text-body text-moon-steel">{t('subscriptions.defaultChannels')}</span>
+                      <span className="text-body text-moonlight/80">{t('subscriptions.defaultChannels')}</span>
                     ) : (
                       channelNames.map((name) => (
                         <Badge key={name} tone="muted">
@@ -439,7 +439,7 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
                 {subscription.fieldDefs.length > 0 ? (
                   <TemplateFieldsView fields={subscription.fieldDefs} values={subscription.fields} />
                 ) : (
-                  <p className="text-body text-moon-steel">{t('subscriptions.noTemplateFields')}</p>
+                  <p className="text-body text-moonlight/80">{t('subscriptions.noTemplateFields')}</p>
                 )}
               </CardContent>
             </Card>
@@ -452,7 +452,7 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
             <CardContent className="pt-0">
               {renewals.length === 0 ? (
                 <div className="glass-flat flex flex-col items-center px-6 py-10 text-center">
-                  <History className="h-6 w-6 text-moon-steel" aria-hidden />
+                  <History className="h-6 w-6 text-moonlight/80" aria-hidden />
                   <p className="mt-3 text-body text-moonlight">{t('subscriptions.noRenewals')}</p>
                 </div>
               ) : (

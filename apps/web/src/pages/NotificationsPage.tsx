@@ -176,7 +176,7 @@ export function NotificationsPage() {
                         <p className="text-body font-medium text-white">
                           {t(`event.${notification.eventType}`)}
                         </p>
-                        <p className="mt-0.5 truncate text-xs text-moon-steel">
+                        <p className="mt-0.5 truncate text-xs text-moonlight">
                           {notification.eventKey}
                         </p>
                       </div>
@@ -256,7 +256,7 @@ export function NotificationsPage() {
                         </TD>
                         <TD>
                           <p className="text-body text-white">{t(`event.${notification.eventType}`)}</p>
-                          <p className="max-w-[220px] truncate text-xs text-moon-steel">
+                          <p className="max-w-[220px] truncate text-xs text-moonlight">
                             {notification.eventKey}
                           </p>
                         </TD>

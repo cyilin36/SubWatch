@@ -100,7 +100,7 @@ export function RenewDialog({ open, onOpenChange, target }: RenewDialogProps) {
           <span className="font-medium text-white">
             {target ? formatExpiry(target.expiryDate, target.expiryTime) : '—'}
           </span>
-          <ArrowRight className="h-4 w-4 text-moon-steel" aria-hidden />
+          <ArrowRight className="h-4 w-4 text-moonlight/80" aria-hidden />
           <span className="font-medium text-white">
             {dateMissing || !target ? '—' : formatExpiry(date, target.expiryTime)}
           </span>

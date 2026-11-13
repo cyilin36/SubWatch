@@ -17,7 +17,7 @@ export function TemplatePendingCard({ kind }: { kind: TemplateKind }) {
       description={
         <>
           <span className="block">{t(`templates.apply.pendingHint.${kind}`)}</span>
-          <span className="mt-2 block text-xs text-moon-steel">{t('templates.apply.pendingSkip')}</span>
+          <span className="mt-2 block text-xs text-moonlight">{t('templates.apply.pendingSkip')}</span>
         </>
       }
     />

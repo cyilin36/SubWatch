@@ -320,7 +320,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                   <div className="glass-flat flex items-center justify-between gap-3 px-4 py-3">
                     <div>
                       <p className="text-sm font-medium">{t('common.enabled')}</p>
-                      <p className="text-xs text-moon-steel">
+                      <p className="text-xs text-moonlight">
                         {t('monitorDetail.enabledHint')}
                       </p>
                     </div>
@@ -340,7 +340,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                     onChange={(next) => setValue('channelIds', next, { shouldDirty: true })}
                     emptyText={t('channels.noChannelsHint')}
                   />
-                  <p className="text-xs text-moon-steel">{t('monitors.channelsHint')}</p>
+                  <p className="text-xs text-moonlight">{t('monitors.channelsHint')}</p>
                 </div>
 
                 <Collapsible
@@ -489,7 +489,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                       </Button>
                     </div>
                     {headersArray.fields.length === 0 ? (
-                      <p className="text-xs text-moon-steel">{t('common.none')}</p>
+                      <p className="text-xs text-moonlight">{t('common.none')}</p>
                     ) : null}
                     {headersArray.fields.map((field, index) => {
                       const secret = watch(`request.headers.${index}.secret`);
@@ -520,7 +520,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                               {...register(`request.headers.${index}.value`)}
                             />
                           )}
-                          <label className="flex items-center gap-1.5 whitespace-nowrap text-xs text-moon-steel">
+                          <label className="flex items-center gap-1.5 whitespace-nowrap text-xs text-moonlight">
                             <input
                               type="checkbox"
                               className="h-4 w-4 accent-moonlight"
@@ -557,7 +557,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                       </Button>
                     </div>
                     {queryArray.fields.length === 0 ? (
-                      <p className="text-xs text-moon-steel">{t('common.none')}</p>
+                      <p className="text-xs text-moonlight">{t('common.none')}</p>
                     ) : null}
                     {queryArray.fields.map((field, index) => (
                       <div
@@ -708,7 +708,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
 
                 {extractMode === 'json' ? (
                   <>
-                    <p className="text-xs text-moon-steel">{t('monitorForm.pathHint')}</p>
+                    <p className="text-xs text-moonlight">{t('monitorForm.pathHint')}</p>
                     <datalist id={METRIC_KEYS_DATALIST_ID}>
                       {metricKeyOptions.map((option) => (
                         <option key={option.key} value={option.key}>
@@ -812,7 +812,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                         <Wand2 className="h-3.5 w-3.5" aria-hidden />
                         {t('monitorForm.insertExample')}
                       </Button>
-                      <p className="text-xs text-moon-steel">{t('monitorForm.codeHint')}</p>
+                      <p className="text-xs text-moonlight">{t('monitorForm.codeHint')}</p>
                     </div>
                     <Collapsible title={t('monitorForm.codeExampleLabel')}>
                       <pre className="overflow-auto font-mono text-xs leading-relaxed text-white/80">
@@ -861,7 +861,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                               control={control}
                               name={`rules.${index}.enabled`}
                               render={({ field: enabledField }) => (
-                                <label className="flex items-center gap-1.5 text-xs text-moon-steel">
+                                <label className="flex items-center gap-1.5 text-xs text-moonlight">
                                   <Switch
                                     checked={enabledField.value}
                                     onCheckedChange={enabledField.onChange}
@@ -983,7 +983,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                           </div>
                         </Collapsible>
                         {getFieldError(errors, `rules.${index}.warningValue`) ? null : (
-                          <p className="text-xs text-moon-steel">
+                          <p className="text-xs text-moonlight">
                             {t('monitorForm.ruleHint')}
                           </p>
                         )}
@@ -1000,7 +1000,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                   <Plus className="h-3.5 w-3.5" aria-hidden />
                   {t('monitorForm.addRule')}
                 </Button>
-                <p className="text-xs text-moon-steel">{t('monitorForm.thresholdHint')}</p>
+                <p className="text-xs text-moonlight">{t('monitorForm.thresholdHint')}</p>
               </FormSection>
             </TabsContent>
           </Tabs>

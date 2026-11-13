@@ -422,7 +422,7 @@ function ChannelDialog({
                 {t('channels.rejectUnauthorized')}
               </label>
             </div>
-            <p className="text-xs text-moon-steel">{t('channels.emailTestHint')}</p>
+            <p className="text-xs text-moonlight">{t('channels.emailTestHint')}</p>
           </div>
         ) : (
           <div className="glass-flat space-y-4 rounded-btn p-4 sm:p-5">
@@ -533,9 +533,9 @@ function ChannelDialog({
                   {t('channels.addHeader')}
                 </Button>
               </div>
-              <p className="text-xs text-moon-steel">{t('channels.headersHint')}</p>
+              <p className="text-xs text-moonlight">{t('channels.headersHint')}</p>
               {headersArray.fields.length === 0 ? (
-                <p className="text-xs text-moon-steel">{t('common.none')}</p>
+                <p className="text-xs text-moonlight">{t('common.none')}</p>
               ) : null}
               {headersArray.fields.map((field, index) => {
                 const secret = form.watch(`webhook.headers.${index}.secret`);
@@ -589,7 +589,7 @@ function ChannelDialog({
             </div>
           </div>
         )}
-        <p className="text-xs text-moon-steel">{t('channels.testHint')}</p>
+        <p className="text-xs text-moonlight">{t('channels.testHint')}</p>
       </form>
     </Dialog>
   );

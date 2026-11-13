@@ -178,7 +178,7 @@ export function SubscriptionFormFields({ form, channels, timezone }: Subscriptio
             onChange={(next) => setValue('channelIds', next, { shouldDirty: true })}
             emptyText={t('channels.noChannelsHint')}
           />
-          <p className="mt-2 text-xs text-moon-steel">{t('subscriptionForm.channelsHint')}</p>
+          <p className="mt-2 text-xs text-moonlight">{t('subscriptionForm.channelsHint')}</p>
         </div>
       </FormSection>
 
