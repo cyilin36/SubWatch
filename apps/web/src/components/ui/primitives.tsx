@@ -321,7 +321,7 @@ export function PageHeader({ label, title, description, actions, icon, className
         {label ? <p className="type-label">{label}</p> : null}
         <div className={cn('flex min-w-0 items-center gap-3', label ? 'mt-2' : '')}>
           {icon ? <span className="shrink-0 text-moonlight">{icon}</span> : null}
-          <h1 className="truncate text-[26px] font-semibold leading-[1.15] tracking-[-0.01em] text-white sm:text-heading">
+          <h1 className="break-words text-[26px] font-semibold leading-[1.15] tracking-[-0.01em] text-white sm:text-heading">
             {title}
           </h1>
         </div>
