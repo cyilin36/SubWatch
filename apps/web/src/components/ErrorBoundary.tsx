@@ -25,21 +25,28 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBound
   override render(): ReactNode {
     if (!this.state.hasError) return this.props.children;
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[var(--background)] px-6 text-center text-[var(--foreground)]">
-        <h1 className="text-xl font-semibold">{i18n.t('errorBoundary.title')}</h1>
-        <p className="max-w-md text-sm text-[var(--muted-foreground)]">{i18n.t('errorBoundary.description')}</p>
-        {this.state.message ? (
-          <pre className="max-w-lg overflow-auto rounded-lg bg-[var(--surface-muted)] p-3 text-left text-xs">
-            {this.state.message}
-          </pre>
-        ) : null}
-        <button
-          type="button"
-          className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-foreground)]"
-          onClick={() => window.location.reload()}
-        >
-          {i18n.t('errorBoundary.reload')}
-        </button>
+      <div className="relative flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center text-white">
+        <div className="ambient-layer" aria-hidden>
+          <div className="ambient-blob ambient-blob--moon" />
+          <div className="ambient-blob ambient-blob--champagne" />
+          <div className="ambient-blob ambient-blob--deep" />
+        </div>
+        <div className="glass glass-panel relative w-full max-w-lg p-8 sm:p-10">
+          <h1 className="text-subheading text-white">{i18n.t('errorBoundary.title')}</h1>
+          <p className="mt-3 text-body text-moonlight">{i18n.t('errorBoundary.description')}</p>
+          {this.state.message ? (
+            <pre className="glass-flat mt-6 max-w-lg overflow-auto p-4 text-left font-mono text-xs text-moonlight">
+              {this.state.message}
+            </pre>
+          ) : null}
+          <button
+            type="button"
+            className="cta mt-8 inline-flex h-11 items-center justify-center rounded-pill px-6 text-sm font-medium"
+            onClick={() => window.location.reload()}
+          >
+            {i18n.t('errorBoundary.reload')}
+          </button>
+        </div>
       </div>
     );
   }

@@ -8,6 +8,7 @@ import {
   BellRing,
   CreditCard,
   ExternalLink,
+  History,
   LayoutTemplate,
   Pause,
   Pencil,
@@ -36,10 +37,10 @@ import {
   CardHeader,
   CardTitle,
   ConfirmDialog,
-  EmptyState,
   ErrorState,
   FullPageSpinner,
   PageHeader,
+  StatTile,
   StatusBadge,
   Table,
   TBody,
@@ -167,6 +168,18 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
 
   const daysLeft = subscription.daysLeft;
   const renewals = subscription.renewals ?? [];
+  const reminderOffsets = [...subscription.reminderOffsets].sort((a, b) => b - a);
+  const daysAlarm = !subscription.paused && (daysLeft <= 7 || subscription.status === 'expired');
+
+  const daysHint = subscription.paused
+    ? t('subscriptions.statusPaused')
+    : daysLeft < 0
+      ? t('subscriptions.daysOverdue', { count: Math.abs(daysLeft) })
+      : subscription.status === 'expired'
+        ? t('subscriptions.dueTodayExpired')
+        : daysLeft === 0
+          ? t('subscriptions.dueToday')
+          : t('subscriptions.daysUntil', { count: daysLeft });
 
   const editingForm = (
     <form
@@ -174,14 +187,14 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
         void onSave(event);
       }}
       noValidate
-      className="space-y-4"
+      className="space-y-6"
     >
       <SubscriptionFormFields
         form={form}
         channels={channelsQuery.data ?? []}
         timezone={timezone}
       />
-      <Card className="flex flex-wrap items-center justify-end gap-2 p-3">
+      <div className="glass flex flex-wrap items-center justify-end gap-2 p-3">
         <Button
           type="button"
           variant="outline"
@@ -196,15 +209,16 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
           <Save className="h-4 w-4" aria-hidden />
           {t('subscriptions.saveChanges')}
         </Button>
-      </Card>
+      </div>
     </form>
   );
 
   return (
     <div>
       <PageHeader
+        label={t('nav.subscriptions')}
         title={
-          <span className="flex flex-wrap items-center gap-2">
+          <span className="flex min-w-0 flex-wrap items-center gap-3">
             <span className="truncate">{subscription.name}</span>
             <StatusBadge status={subscription.status} />
           </span>
@@ -216,7 +230,7 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
         actions={
           editing ? null : (
             <>
-              <Button variant="outline" size="sm" onClick={() => navigate('/')}>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
                 <ArrowLeft className="h-4 w-4" aria-hidden />
                 {t('common.back')}
               </Button>
@@ -241,7 +255,7 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
                 {t('subscriptions.renew')}
               </Button>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 loading={testReminderMutation.isPending}
                 onClick={() => testReminderMutation.mutate()}
@@ -250,7 +264,7 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
                 {t('subscriptions.testReminder')}
               </Button>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 loading={lifecycleMutation.isPending}
                 onClick={() => lifecycleMutation.mutate(subscription.paused ? 'resume' : 'pause')}
@@ -274,7 +288,7 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
       {editing ? (
         editingForm
       ) : (
-        <div className="mx-auto max-w-3xl space-y-4">
+        <div className="space-y-6">
           {!subscription.paused && subscription.status === 'expired' ? (
             <Alert tone="danger" title={t('status.expired')}>
               {t('subscriptions.expiredHint')}
@@ -285,95 +299,103 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
             </Alert>
           ) : null}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('subscriptions.info')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <StatTile
+              label={t('subscriptions.expiryDate')}
+              value={subscription.expiryDate}
+              hint={`${subscription.expiryTime} · ${t(`cycle.${subscription.cycle}`)}`}
+            />
+            <StatTile
+              label={t('subscriptions.daysLeft')}
+              value={subscription.paused ? '—' : daysLeft}
+              hint={daysHint}
+              accent={!subscription.paused && !daysAlarm}
+              tone={daysAlarm ? (daysLeft < 0 || subscription.status === 'expired' ? 'danger' : 'warning') : undefined}
+            />
+            <StatTile
+              label={t('subscriptions.reminders')}
+              className="sm:col-span-2 xl:col-span-1"
+              value={reminderOffsets.length === 0 ? '—' : reminderOffsets.length}
+              hint={
+                reminderOffsets.length === 0
+                  ? t('common.none')
+                  : reminderOffsets.map((offset) => t('common.days', { count: offset })).join(' · ')
+              }
+            />
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>{t('subscriptions.info')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl className="grid gap-5 sm:grid-cols-2">
+                  <div className="min-w-0">
+                    <dt className="type-label">{t('subscriptions.expiryDate')}</dt>
+                    <dd className="mt-1.5 text-body font-medium text-white">
+                      {formatExpiry(subscription.expiryDate, subscription.expiryTime)}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="type-label">{t('subscriptions.cycle')}</dt>
+                    <dd className="mt-1.5 text-body text-white/90">{t(`cycle.${subscription.cycle}`)}</dd>
+                  </div>
+                  <div className="min-w-0 sm:col-span-2">
+                    <dt className="type-label">{t('subscriptions.link')}</dt>
+                    <dd className="mt-1.5 min-w-0 text-body">
+                      {subscription.url ? (
+                        <a
+                          href={subscription.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex max-w-full items-center gap-1.5 text-moonlight underline decoration-white/20 underline-offset-4 transition-colors duration-500 ease-glass hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                          <span className="truncate">{subscription.url}</span>
+                        </a>
+                      ) : (
+                        <span className="text-moon-steel">{t('subscriptions.noLink')}</span>
+                      )}
+                    </dd>
+                  </div>
+                </dl>
+
+                {subscription.notes ? (
+                  <div className="mt-6 border-t border-white/10 pt-5">
+                    <p className="type-label">{t('subscriptions.notes')}</p>
+                    <p className="mt-2 whitespace-pre-wrap break-words text-body text-white/90">
+                      {subscription.notes}
+                    </p>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('subscriptions.reminders')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
                 <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">
-                    {t('subscriptions.expiryDate')}
-                  </dt>
-                  <dd className="mt-0.5 text-sm font-medium">
-                    {formatExpiry(subscription.expiryDate, subscription.expiryTime)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">
-                    {t('subscriptions.daysLeft')}
-                  </dt>
-                  <dd className="mt-0.5 text-sm">
-                    {subscription.paused ? (
-                      <span className="text-[var(--muted-foreground)]">
-                        {t('subscriptions.statusPaused')}
-                      </span>
-                    ) : daysLeft < 0 ? (
-                      <span className="text-[var(--danger)]">
-                        {t('subscriptions.daysOverdue', { count: Math.abs(daysLeft) })}
-                      </span>
-                    ) : subscription.status === 'expired' ? (
-                      <span className="text-[var(--danger)]">{t('subscriptions.dueTodayExpired')}</span>
-                    ) : daysLeft === 0 ? (
-                      <span className="text-[var(--warning)]">{t('subscriptions.dueToday')}</span>
+                  <p className="type-label">{t('subscriptionForm.reminderOffsets')}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {reminderOffsets.length === 0 ? (
+                      <span className="text-body text-moon-steel">{t('common.none')}</span>
                     ) : (
-                      <span className={daysLeft <= 7 ? 'text-[var(--warning)]' : undefined}>
-                        {t('subscriptions.daysUntil', { count: daysLeft })}
-                      </span>
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('subscriptions.cycle')}</dt>
-                  <dd className="mt-0.5 text-sm">{t(`cycle.${subscription.cycle}`)}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">
-                    {t('subscriptions.link')}
-                  </dt>
-                  <dd className="mt-0.5 truncate text-sm">
-                    {subscription.url ? (
-                      <a
-                        href={subscription.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex max-w-full items-center gap-1 text-[var(--brand)] hover:underline"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                        <span className="truncate">{subscription.url}</span>
-                      </a>
-                    ) : (
-                      <span className="text-[var(--muted-foreground)]">
-                        {t('subscriptions.noLink')}
-                      </span>
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">
-                    {t('subscriptions.reminders')}
-                  </dt>
-                  <dd className="mt-1 flex flex-wrap gap-1">
-                    {subscription.reminderOffsets.length === 0 ? (
-                      <span className="text-sm text-[var(--muted-foreground)]">{t('common.none')}</span>
-                    ) : (
-                      subscription.reminderOffsets.map((offset) => (
+                      reminderOffsets.map((offset) => (
                         <Badge key={offset} tone="info">
                           {t('common.days', { count: offset })}
                         </Badge>
                       ))
                     )}
-                  </dd>
+                  </div>
                 </div>
                 <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">
-                    {t('subscriptions.channels')}
-                  </dt>
-                  <dd className="mt-1 flex flex-wrap gap-1">
+                  <p className="type-label">{t('subscriptions.channels')}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
                     {channelNames.length === 0 ? (
-                      <span className="text-sm text-[var(--muted-foreground)]">
-                        {t('subscriptions.defaultChannels')}
-                      </span>
+                      <span className="text-body text-moon-steel">{t('subscriptions.defaultChannels')}</span>
                     ) : (
                       channelNames.map((name) => (
                         <Badge key={name} tone="muted">
@@ -381,37 +403,28 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
                         </Badge>
                       ))
                     )}
-                  </dd>
+                  </div>
                 </div>
-              </dl>
-
-              {subscription.notes ? (
-                <div className="mt-4 border-t border-[var(--border)] pt-3">
-                  <p className="text-xs text-[var(--muted-foreground)]">{t('subscriptions.notes')}</p>
-                  <p className="mt-1 whitespace-pre-wrap break-words text-sm">{subscription.notes}</p>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
           {subscription.templateName || subscription.templateId || subscription.fieldDefs.length > 0 ? (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <LayoutTemplate className="h-4 w-4 text-[var(--brand)]" aria-hidden />
+                  <LayoutTemplate className="h-4 w-4 text-moonlight" aria-hidden />
                   {t('subscriptions.templateInfo')}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4">
                 <div>
-                  <p className="text-xs text-[var(--muted-foreground)]">
-                    {t('subscriptions.templateName')}
-                  </p>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm font-medium">
+                  <p className="type-label">{t('subscriptions.templateName')}</p>
+                  <p className="mt-1.5 flex flex-wrap items-center gap-2 text-body font-medium text-white">
                     {subscription.templateId ? (
                       <Link
                         to={`/templates/${subscription.templateId}`}
-                        className="text-[var(--brand)] hover:underline"
+                        className="text-moonlight underline decoration-white/20 underline-offset-4 transition-colors duration-500 ease-glass hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
                       >
                         {subscription.templateName ?? subscription.templateId}
                       </Link>
@@ -426,9 +439,7 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
                 {subscription.fieldDefs.length > 0 ? (
                   <TemplateFieldsView fields={subscription.fieldDefs} values={subscription.fields} />
                 ) : (
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    {t('subscriptions.noTemplateFields')}
-                  </p>
+                  <p className="text-body text-moon-steel">{t('subscriptions.noTemplateFields')}</p>
                 )}
               </CardContent>
             </Card>
@@ -440,7 +451,10 @@ function SubscriptionDetailContent({ subscription }: { subscription: Subscriptio
             </CardHeader>
             <CardContent className="pt-0">
               {renewals.length === 0 ? (
-                <EmptyState className="border-none py-8" title={t('subscriptions.noRenewals')} />
+                <div className="glass-flat flex flex-col items-center px-6 py-10 text-center">
+                  <History className="h-6 w-6 text-moon-steel" aria-hidden />
+                  <p className="mt-3 text-body text-moonlight">{t('subscriptions.noRenewals')}</p>
+                </div>
               ) : (
                 <Table>
                   <THead>

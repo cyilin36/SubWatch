@@ -56,11 +56,11 @@ const en = {
     expand: 'Expand sidebar',
     collapse: 'Collapse sidebar',
     closeMenu: 'Close menu',
-  },
-  theme: {
-    light: 'Light',
-    dark: 'Dark',
-    system: 'System',
+    create: 'New',
+    newSubscription: 'New subscription reminder',
+    newMonitor: 'New monitor',
+    skipToContent: 'Skip to content',
+    mainNav: 'Main',
   },
   auth: {
     loginTitle: 'Sign in to SubWatch',
@@ -84,6 +84,8 @@ const en = {
     retry: 'Retry connection',
   },
   home: {
+    eyebrow: 'Overview',
+    title: 'Subscriptions & monitors',
     stats: {
       total: 'Monitors & subscriptions',
       attention: 'Expiring / quota warning',
@@ -679,7 +681,6 @@ const en = {
     notificationRetentionDays: 'Notification log retention (days)',
     baseUrl: 'Instance base URL',
     baseUrlHint: 'Used for deep links in notifications, e.g. https://subwatch.example.com. Leave empty to infer.',
-    theme: 'Default theme',
     defaultChannelIds: 'Default notification channels',
     defaultChannelIdsHint: 'Monitors and subscriptions without channels deliver here.',
     saveGeneral: 'Save settings',
@@ -708,7 +709,6 @@ const en = {
     healthy: 'Running',
     unhealthy: 'Unreachable',
     languageHint: 'Switching the UI language also updates the notification language.',
-    themeHint: 'Theme preference is stored in the browser and synced to the server.',
     noChannels: 'No channels yet. Create a notification channel first.',
     generalSaved: 'General settings saved',
     aboutHint: 'See the README for data directory, backups and upgrades.',

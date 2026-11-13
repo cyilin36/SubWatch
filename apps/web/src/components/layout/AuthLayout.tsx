@@ -1,33 +1,24 @@
 import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import { BrandMark } from './Sidebar';
-import { LanguageMenu, ThemeMenu } from './Controls';
+import { AmbientBackground } from './AmbientBackground';
+import { LanguageMenu, LayoutBrand } from './Controls';
 import { useAuth } from '../../providers/AuthProvider';
 
-/** Centered layout used by /login and /setup. */
+/** Centered glass layout used by /login and /setup. */
 export function AuthLayout({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
   const { appName } = useAuth();
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--background)] text-[var(--foreground)]">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-2.5">
-          <BrandMark />
-          <div>
-            <p className="text-sm font-semibold leading-tight">{appName}</p>
-            <p className="text-[10px] uppercase tracking-wider text-[var(--muted-foreground)]">
-              {t('app.tagline')}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-0.5">
-          <LanguageMenu />
-          <ThemeMenu />
-        </div>
+    <div className="relative flex min-h-screen flex-col text-white">
+      <AmbientBackground />
+      <header className="relative flex items-center justify-between gap-4 px-4 py-5 sm:px-8">
+        <LayoutBrand appName={appName} />
+        <LanguageMenu />
+      </header>
+      <div className="relative flex flex-1 items-center justify-center px-4 pb-24">
+        <div className="w-full max-w-[27rem]">{children}</div>
       </div>
-      <div className="flex flex-1 items-center justify-center px-4 pb-20">
-        <div className="w-full max-w-sm">{children}</div>
-      </div>
+      <p className="relative pb-8 text-center text-[11px] tracking-[0.14em] text-moon-steel uppercase">
+        {appName}
+      </p>
     </div>
   );
 }

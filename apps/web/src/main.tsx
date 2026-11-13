@@ -5,11 +5,11 @@ import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import './i18n';
 import './styles.css';
-import { applyTheme, getStoredTheme } from './lib/theme';
+import { applyTheme } from './lib/theme';
 import App from './App';
 
-// Apply the persisted theme before the first paint to avoid a flash.
-applyTheme(getStoredTheme());
+// The client is dark-only; stamp it before the first paint to avoid a flash.
+applyTheme();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,7 +29,24 @@ createRoot(document.getElementById('root') as HTMLElement).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <App />
-        <Toaster position="top-right" richColors closeButton theme="system" />
+        <Toaster
+          position="top-right"
+          theme="dark"
+          closeButton
+          toastOptions={{
+            classNames: {
+              toast: 'glass-popover',
+            },
+            style: {
+              background: 'rgb(18 28 48 / 0.82)',
+              border: '1px solid rgb(255 255 255 / 0.15)',
+              borderRadius: '16px',
+              color: '#ffffff',
+              boxShadow: '0 24px 64px rgb(3 7 18 / 0.65)',
+              backdropFilter: 'blur(40px) saturate(180%)',
+            },
+          }}
+        />
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,

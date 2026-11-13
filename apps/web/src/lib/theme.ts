@@ -1,38 +1,30 @@
 import type { Theme } from '@subwatch/shared';
 
+/**
+ * The web client ships a single night-glass appearance. The theme preference is
+ * kept in the settings payload for API compatibility, but the UI always renders
+ * dark: glass only reads correctly when there is light to bend behind it.
+ */
 export const THEME_STORAGE_KEY = 'subwatch-theme';
 
+export const FIXED_THEME: Theme = 'dark';
+
 export function getStoredTheme(): Theme {
-  try {
-    const value = localStorage.getItem(THEME_STORAGE_KEY);
-    if (value === 'light' || value === 'dark' || value === 'system') return value;
-  } catch {
-    // localStorage is unavailable in some privacy modes; fall through.
-  }
-  return 'system';
+  return FIXED_THEME;
 }
 
-export function storeTheme(theme: Theme): void {
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
-  } catch {
-    // Ignore storage failures.
-  }
+export function storeTheme(): void {
+  // Retained for API compatibility; the appearance is fixed.
 }
 
-export function prefersDark(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+export function resolveTheme(): 'dark' {
+  return 'dark';
 }
 
-export function resolveTheme(theme: Theme): 'light' | 'dark' {
-  if (theme === 'system') return prefersDark() ? 'dark' : 'light';
-  return theme;
-}
-
-export function applyTheme(theme: Theme): 'light' | 'dark' {
-  const resolved = resolveTheme(theme);
+/** Stamp the dark appearance on <html> before the first paint. */
+export function applyTheme(): 'dark' {
   const root = document.documentElement;
-  root.classList.toggle('dark', resolved === 'dark');
-  root.dataset.theme = resolved;
-  return resolved;
+  root.classList.add('dark');
+  root.dataset.theme = 'dark';
+  return 'dark';
 }

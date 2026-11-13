@@ -15,8 +15,9 @@ export interface CollapsibleProps {
 }
 
 /**
- * Small native `<details>` disclosure styled like the rest of the form cards.
- * Used to tuck advanced options out of the default form flow.
+ * Recessed glass disclosure (`<details>`) for advanced options tucked out of
+ * the default form flow. The summary row is keyboard reachable and keeps a
+ * visible focus ring.
  */
 export function Collapsible({
   title,
@@ -40,27 +41,31 @@ export function Collapsible({
     <details
       open={open}
       onToggle={handleToggle}
-      className={cn('rounded-lg border border-[var(--border)]', className)}
+      className={cn('glass-flat group rounded-btn transition-colors duration-500 ease-glass', className)}
     >
       <summary
         className={cn(
-          'flex cursor-pointer list-none select-none items-center gap-1.5 px-3 py-2',
-          'text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]',
-          'hover:text-[var(--foreground)] [&::-webkit-details-marker]:hidden',
+          'flex cursor-pointer list-none select-none items-center gap-2 px-4 py-3',
+          'type-label transition-colors duration-500 ease-glass hover:text-white',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night',
+          '[&::-webkit-details-marker]:hidden',
         )}
       >
         <ChevronRight
-          className={cn('h-3.5 w-3.5 shrink-0 transition-transform', open && 'rotate-90')}
+          className={cn(
+            'h-4 w-4 shrink-0 text-moonlight transition-transform duration-500 ease-glass',
+            open && 'rotate-90',
+          )}
           aria-hidden
         />
         <span className="min-w-0 flex-1">{title}</span>
         {hint ? (
-          <span className="hidden min-w-0 truncate text-[11px] font-normal normal-case tracking-normal text-[var(--muted-foreground)] sm:inline">
+          <span className="hidden min-w-0 truncate text-xs font-normal normal-case tracking-normal text-moon-steel sm:inline">
             {hint}
           </span>
         ) : null}
       </summary>
-      <div className="space-y-4 border-t border-[var(--border)] px-3 py-3">{children}</div>
+      <div className="space-y-4 border-t border-white/10 px-4 py-4">{children}</div>
     </details>
   );
 }

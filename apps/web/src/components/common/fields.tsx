@@ -53,12 +53,7 @@ export function TagsInput({ id, value, onChange, placeholder, invalid, multiline
         onChange={(event) => handleChange(event.target.value)}
         placeholder={placeholder}
         aria-invalid={invalid || undefined}
-        className={cn(
-          'w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)]',
-          'placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]',
-          invalid && 'border-[var(--danger)] focus:ring-[var(--danger)]',
-          className,
-        )}
+        className={cn('field px-4 py-3', className)}
       />
     );
   }
@@ -100,7 +95,7 @@ export function MultiCheckbox({
 }) {
   const { t } = useTranslation();
   if (items.length === 0) {
-    return <p className="text-sm text-[var(--muted-foreground)]">{emptyText ?? t('common.none')}</p>;
+    return <p className="text-body text-moonlight">{emptyText ?? t('common.none')}</p>;
   }
   const toggle = (itemValue: string) => {
     onChange(
@@ -115,22 +110,22 @@ export function MultiCheckbox({
           <label
             key={item.value}
             className={cn(
-              'flex cursor-pointer items-start gap-2.5 rounded-lg border p-2.5 text-sm transition-colors',
+              'glass-flat flex cursor-pointer items-start gap-3 px-4 py-3 text-sm transition-colors duration-300',
               checked
-                ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_8%,transparent)]'
-                : 'border-[var(--border)] hover:bg-[var(--surface-muted)]',
+                ? 'border-white/40 bg-white/10'
+                : 'hover:border-white/25 hover:bg-white/5',
             )}
           >
             <input
               type="checkbox"
               checked={checked}
               onChange={() => toggle(item.value)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--brand)]"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-moonlight"
             />
             <span className="min-w-0">
-              <span className="block truncate font-medium">{item.label}</span>
+              <span className="block truncate font-medium text-white">{item.label}</span>
               {item.description ? (
-                <span className="block truncate text-xs text-[var(--muted-foreground)]">{item.description}</span>
+                <span className="block truncate text-xs text-moon-steel">{item.description}</span>
               ) : null}
             </span>
           </label>
@@ -170,8 +165,8 @@ export function OffsetsInput({
   const customOffsets = value.filter((offset) => !OFFSET_PRESETS.includes(offset)).sort((a, b) => b - a);
 
   return (
-    <div className="space-y-2" id={id}>
-      <div className="flex flex-wrap gap-1.5">
+    <div className="space-y-3" id={id}>
+      <div className="flex flex-wrap gap-2">
         {OFFSET_PRESETS.map((offset) => {
           const active = value.includes(offset);
           return (
@@ -180,10 +175,11 @@ export function OffsetsInput({
               type="button"
               onClick={() => toggle(offset)}
               className={cn(
-                'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                'rounded-pill border px-3.5 py-1.5 text-xs font-medium transition-colors duration-300',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50',
                 active
-                  ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-foreground)]'
-                  : 'border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--surface-muted)]',
+                  ? 'border-white/40 bg-white/14 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.24)]'
+                  : 'border-white/15 text-moonlight hover:border-white/30 hover:bg-white/8 hover:text-white',
               )}
             >
               {t('common.days', { count: offset })}
@@ -196,7 +192,7 @@ export function OffsetsInput({
             type="button"
             onClick={() => toggle(offset)}
             title={t('common.remove')}
-            className="rounded-full border border-[var(--info)] bg-[color-mix(in_srgb,var(--info)_12%,transparent)] px-2.5 py-1 text-xs font-medium text-[var(--info)]"
+            className="rounded-pill border border-[rgba(124,156,196,0.4)] bg-[rgba(124,156,196,0.14)] px-3.5 py-1.5 text-xs font-medium text-moonlight transition-colors hover:bg-[rgba(124,156,196,0.24)]"
           >
             {t('common.days', { count: offset })} ×
           </button>
@@ -210,15 +206,13 @@ export function OffsetsInput({
           value={customValue}
           onChange={(event) => setCustomValue(event.target.value)}
           placeholder={t('subscriptionForm.addOffset')}
-          className="h-8 w-28"
+          className="h-10 w-32"
         />
         <Button variant="outline" size="sm" onClick={addCustom} disabled={customValue.trim() === ''}>
           {t('common.add')}
         </Button>
         {value.length > 0 ? (
-          <span className="text-xs text-[var(--muted-foreground)]">
-            {[...value].sort((a, b) => b - a).join(', ')}
-          </span>
+          <span className="text-xs text-moon-steel">{[...value].sort((a, b) => b - a).join(', ')}</span>
         ) : null}
       </div>
     </div>
@@ -232,7 +226,7 @@ export function OffsetsInput({
 export function RootError({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <div className="flex items-start gap-2 rounded-lg border border-[var(--danger)] bg-[color-mix(in_srgb,var(--danger)_10%,transparent)] px-3 py-2 text-sm text-[var(--danger)]">
+    <div className="glass-flat flex items-start gap-3 border-[rgba(240,128,127,0.4)] bg-[rgba(240,128,127,0.12)] px-4 py-3 text-sm text-[#f0807f]">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
       <span className="break-words">{message}</span>
     </div>
@@ -243,7 +237,7 @@ export function JsonPreview({ value, className }: { value: unknown; className?: 
   return (
     <pre
       className={cn(
-        'max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-[var(--surface-muted)] p-3 font-mono text-xs leading-relaxed',
+        'glass-flat max-h-80 overflow-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-relaxed text-white/80',
         className,
       )}
     >
@@ -264,13 +258,11 @@ export function FormSection({
   className?: string;
 }) {
   return (
-    <div className={cn('rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4', className)}>
-      {title ? <h3 className="text-sm font-semibold">{title}</h3> : null}
-      {description ? (
-        <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">{description}</p>
-      ) : null}
-      <div className={cn(title || description ? 'mt-3' : '', 'space-y-4')}>{children}</div>
-    </div>
+    <section className={cn('glass p-6 sm:p-8', className)}>
+      {title ? <h3 className="text-[18px] font-medium leading-snug text-white">{title}</h3> : null}
+      {description ? <p className="mt-1.5 text-body text-moonlight">{description}</p> : null}
+      <div className={cn(title || description ? 'mt-6' : '', 'space-y-5')}>{children}</div>
+    </section>
   );
 }
 
@@ -290,7 +282,7 @@ export function Pagination({
   const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-2">
-      <p className="text-xs text-[var(--muted-foreground)]">
+      <p className="text-xs tracking-[0.08em] text-moon-steel">
         {t('common.total', { total })} · {t('common.pageInfo', { page: Math.min(page + 1, Math.max(pages, 1)), pages: Math.max(pages, 1) })}
       </p>
       <div className="flex items-center gap-2">
@@ -333,7 +325,7 @@ export function Segmented<T extends string>({
   return (
     <div
       role="group"
-      className={cn('inline-flex flex-wrap items-center gap-1 rounded-lg bg-[var(--surface-muted)] p-1', className)}
+      className={cn('glass-flat inline-flex flex-wrap items-center gap-1 rounded-btn p-1.5', className)}
     >
       {options.map((option) => (
         <button
@@ -342,11 +334,11 @@ export function Segmented<T extends string>({
           aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
           className={cn(
-            'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]',
+            'rounded-btn px-4 py-2 text-sm font-medium transition-colors duration-300',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50',
             value === option.value
-              ? 'bg-[var(--surface)] text-[var(--foreground)] shadow-sm'
-              : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]',
+              ? 'bg-white/12 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.24)]'
+              : 'text-moonlight hover:text-white',
           )}
         >
           {option.label}

@@ -11,7 +11,10 @@ export interface PushTokenDialogProps {
   onDone?: () => void;
 }
 
-/** One-time reveal dialog for a newly created or rotated push token. */
+/**
+ * One-time reveal dialog for a newly created or rotated push token. Content is
+ * spaced on a 24px rhythm; every copyable block sits in a recessed glass well.
+ */
 export function PushTokenDialog({ open, token, title, hint, onOpenChange, onDone }: PushTokenDialogProps) {
   const { t } = useTranslation();
   const { baseUrl } = useAuth();
@@ -37,35 +40,39 @@ export function PushTokenDialog({ open, token, title, hint, onOpenChange, onDone
         </Button>
       }
     >
-      <div className="space-y-4">
-        <div>
-          <div className="mb-1.5 flex items-center justify-between gap-2">
-            <p className="text-sm font-medium">{t('monitorForm.pushTokenTitle')}</p>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="type-label">{t('monitorForm.pushTokenTitle')}</p>
             <CopyButton value={token} label={t('monitorForm.copyToken')} />
           </div>
-          <Input readOnly value={token} className="font-mono text-xs" onFocus={(event) => event.target.select()} />
-          <p className="mt-1 text-xs text-[var(--warning)]">{t('monitorForm.pushTokenOnlyOnce')}</p>
+          <Input
+            readOnly
+            value={token}
+            className="font-mono text-xs"
+            onFocus={(event) => event.target.select()}
+          />
+          <p className="text-xs text-warning">{t('monitorForm.pushTokenOnlyOnce')}</p>
         </div>
 
-        <div>
-          <p className="mb-1.5 text-sm font-medium">{t('monitorForm.pushUrl')}</p>
-          <div className="flex items-center gap-2">
-            <Input readOnly value={pushUrl} className="font-mono text-xs" />
-            <CopyButton value={pushUrl} />
+        <div className="space-y-2">
+          <p className="type-label">{t('monitorForm.pushUrl')}</p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input readOnly value={pushUrl} className="min-w-0 flex-1 font-mono text-xs" />
+            <CopyButton value={pushUrl} className="shrink-0" />
           </div>
         </div>
 
-        <div>
-          <p className="mb-1.5 text-sm font-medium">{t('monitorForm.pushCurl')}</p>
-          <pre className="max-h-44 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-[var(--surface-muted)] p-3 font-mono text-xs">
+        <div className="space-y-2">
+          <p className="type-label">{t('monitorForm.pushCurl')}</p>
+          <pre className="glass-flat max-h-44 overflow-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-relaxed text-white/80">
             {curl}
           </pre>
-          <div className="mt-1.5 flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
             <CopyButton value={curl} />
-            <p className="text-xs text-[var(--muted-foreground)]">{t('monitorForm.pushUrlHint')}</p>
+            <p className="min-w-0 text-xs text-moon-steel">{t('monitorForm.pushUrlHint')}</p>
           </div>
         </div>
-
       </div>
     </Dialog>
   );

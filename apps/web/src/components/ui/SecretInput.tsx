@@ -71,12 +71,12 @@ export function SecretInput({
         autoComplete={autoComplete}
         disabled={disabled}
         invalid={invalid}
-        className="pr-10"
+        className="pr-11"
       />
       <button
         type="button"
         onClick={() => setVisible((current) => !current)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-moonlight transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
         aria-label={visible ? 'Hide secret' : 'Show secret'}
         tabIndex={-1}
       >

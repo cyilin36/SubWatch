@@ -94,14 +94,14 @@ export function RenewDialog({ open, onOpenChange, target }: RenewDialogProps) {
         </>
       }
     >
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-sm">
-          <span className="text-[var(--muted-foreground)]">{t('renew.current')}</span>
-          <span className="font-medium">
+      <div className="space-y-6">
+        <div className="glass-flat flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 text-sm">
+          <span className="type-label">{t('renew.current')}</span>
+          <span className="font-medium text-white">
             {target ? formatExpiry(target.expiryDate, target.expiryTime) : '—'}
           </span>
-          <ArrowRight className="h-3.5 w-3.5 text-[var(--muted-foreground)]" aria-hidden />
-          <span className="font-medium">
+          <ArrowRight className="h-4 w-4 text-moon-steel" aria-hidden />
+          <span className="font-medium text-white">
             {dateMissing || !target ? '—' : formatExpiry(date, target.expiryTime)}
           </span>
         </div>

@@ -45,9 +45,9 @@ export function SubscriptionFormFields({ form, channels, timezone }: Subscriptio
   }));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <FormSection title={t('subscriptionForm.basicInfo')}>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field
             label={t('common.name')}
             htmlFor="subscription-name"
@@ -94,21 +94,21 @@ export function SubscriptionFormFields({ form, channels, timezone }: Subscriptio
             />
           </Field>
 
-          <div className="sm:col-span-2 -mt-1 flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 text-xs text-[var(--muted-foreground)]">
-              {t('subscriptionForm.quickAdd')}:
-            </span>
-            {QUICK_MONTHS.map((months) => (
-              <Button
-                key={months}
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setQuickDate(months)}
-              >
-                {t(`subscriptionForm.quickMonths.${months}`)}
-              </Button>
-            ))}
+          <div className="sm:col-span-2">
+            <div className="glass-flat flex flex-wrap items-center gap-2 px-4 py-3">
+              <span className="type-label mr-1">{t('subscriptionForm.quickAdd')}</span>
+              {QUICK_MONTHS.map((months) => (
+                <Button
+                  key={months}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setQuickDate(months)}
+                >
+                  {t(`subscriptionForm.quickMonths.${months}`)}
+                </Button>
+              ))}
+            </div>
           </div>
 
           <Field
@@ -171,16 +171,14 @@ export function SubscriptionFormFields({ form, channels, timezone }: Subscriptio
           />
         </Field>
         <div>
-          <p className="mb-1.5 text-sm font-medium">{t('subscriptionForm.channels')}</p>
+          <p className="type-label mb-2">{t('subscriptionForm.channels')}</p>
           <MultiCheckbox
             items={channelItems}
             value={selectedChannels}
             onChange={(next) => setValue('channelIds', next, { shouldDirty: true })}
             emptyText={t('channels.noChannelsHint')}
           />
-          <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-            {t('subscriptionForm.channelsHint')}
-          </p>
+          <p className="mt-2 text-xs text-moon-steel">{t('subscriptionForm.channelsHint')}</p>
         </div>
       </FormSection>
 

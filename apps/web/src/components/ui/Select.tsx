@@ -40,38 +40,36 @@ export function Select({
         aria-label={ariaLabel}
         aria-invalid={invalid || undefined}
         className={cn(
-          'inline-flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)]',
-          'focus:outline-none focus:ring-2 focus:ring-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-60',
-          'data-[placeholder]:text-[var(--muted-foreground)]',
-          invalid && 'border-[var(--danger)] focus:ring-[var(--danger)]',
+          'field flex h-11 items-center justify-between gap-2 px-4 text-left',
+          'data-[placeholder]:text-moon-steel',
           className,
         )}
       >
         <SelectPrimitive.Value placeholder={placeholder} />
         <SelectPrimitive.Icon asChild>
-          <ChevronDown className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" aria-hidden />
+          <ChevronDown className="h-4 w-4 shrink-0 text-moon-steel" aria-hidden />
         </SelectPrimitive.Icon>
       </SelectPrimitive.Trigger>
       <SelectPrimitive.Portal>
         <SelectPrimitive.Content
           position="popper"
-          sideOffset={4}
-          className="z-[60] max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] shadow-lg"
+          sideOffset={8}
+          className="glass-popover z-[60] max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden p-1.5"
         >
-          <SelectPrimitive.Viewport className="p-1">
+          <SelectPrimitive.Viewport>
             {options.map((option) => (
               <SelectPrimitive.Item
                 key={option.value}
                 value={option.value}
                 disabled={option.disabled}
                 className={cn(
-                  'relative flex w-full cursor-pointer select-none items-center gap-2 rounded-md py-1.5 pl-2 pr-8 text-sm outline-none',
-                  'data-[highlighted]:bg-[var(--surface-muted)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+                  'relative flex w-full cursor-pointer select-none items-center gap-2 rounded-btn px-3 py-2 text-sm text-white/85 outline-none',
+                  'data-[highlighted]:bg-white/10 data-[highlighted]:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                 )}
               >
                 <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
-                <SelectPrimitive.ItemIndicator className="absolute right-2 inline-flex items-center">
-                  <Check className="h-3.5 w-3.5 text-[var(--brand)]" aria-hidden />
+                <SelectPrimitive.ItemIndicator className="ml-auto inline-flex items-center">
+                  <Check className="h-3.5 w-3.5 text-moonlight" aria-hidden />
                 </SelectPrimitive.ItemIndicator>
               </SelectPrimitive.Item>
             ))}
