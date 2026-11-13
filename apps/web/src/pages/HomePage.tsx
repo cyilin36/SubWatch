@@ -339,7 +339,7 @@ export function HomePage() {
         description={t('app.tagline')}
         actions={
           <>
-            <Button variant="outline" onClick={() => navigate('/monitors/new')}>
+            <Button variant="secondary" onClick={() => navigate('/monitors/new')}>
               <Activity className="h-4 w-4" aria-hidden />
               {t('home.newMonitor')}
             </Button>
@@ -433,7 +433,7 @@ export function HomePage() {
                       <Plus className="h-4 w-4" aria-hidden />
                       {t('home.newSubscription')}
                     </Button>
-                    <Button variant="outline" onClick={() => navigate('/monitors/new')}>
+                    <Button variant="secondary" onClick={() => navigate('/monitors/new')}>
                       <Activity className="h-4 w-4" aria-hidden />
                       {t('home.newMonitor')}
                     </Button>
