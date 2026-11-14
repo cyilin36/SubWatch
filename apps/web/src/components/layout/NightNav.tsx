@@ -19,7 +19,7 @@ const CREATE_ITEMS = [
 
 /**
  * Night Nav: one 72px glass bar. Wordmark on the left, links in the middle and a
- * single champagne action on the right. Form pages hide the action so their own
+ * single accent action on the right. Form pages hide the action so their own
  * submit button stays the only accent on screen.
  */
 export function NightNav({ appName }: { appName: string }) {

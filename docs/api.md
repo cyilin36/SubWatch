@@ -233,7 +233,7 @@ curl -s -c cookies.txt \
     "theme": "system"
   },
   "smtp": null,
-  "version": "0.1.0-rc2",
+  "version": "0.1.0-rc3",
   "timezone": "Asia/Shanghai"
 }
 ```
@@ -261,6 +261,7 @@ curl -s -c cookies.txt \
 | Push | `POST /api/push/:token` | 公开（Token 鉴权） |
 | 订阅 | `GET/POST /api/subscriptions`、`GET/PUT/DELETE /api/subscriptions/:id`、`POST /api/subscriptions/:id/renew`、`POST /api/subscriptions/:id/pause`、`POST /api/subscriptions/:id/resume`、`POST /api/subscriptions/:id/test-reminder` | 见[订阅 API](#订阅-api) |
 | 模板 | `GET/POST /api/templates`、`GET/PUT/DELETE /api/templates/:id`、`POST /api/templates/:id/render`、`GET /api/templates/:id/export`、`POST /api/templates/import` | 见[模板 API](#模板-api) |
+| 模板（Git 导入） | `POST /api/templates/git/preview`、`POST /api/templates/git/import`、`POST /api/templates/:id/update-from-source` | 见[从 Git 导入模板](#从-git-导入模板) |
 | 通知渠道 | `GET/POST /api/channels`、`PUT/DELETE /api/channels/:id`、`POST /api/channels/:id/test`、`POST /api/channels/test` | 见[通知渠道 API](#通知渠道-api) |
 | 通知记录 | `GET /api/notifications`、`POST /api/notifications/:id/retry` | 见[通知记录 API](#通知记录-api) |
 | 设置 | `GET/PATCH /api/settings`、`POST /api/settings/smtp/test`、`GET /api/settings/version` | 见[设置 API](#设置与元信息-api) |
@@ -443,14 +444,19 @@ curl -s -c cookies.txt \
     "icon": "🖥️",
     "color": "#3366ff",
     "category": "基础设施",
+    "version": "",
     "fieldCount": 6,
     "usageCount": 2,
+    "sourceUrl": null,
+    "sourceLabel": null,
     "updatedAt": "2026-01-01T00:00:00.000Z"
   }
 ]
 ```
 
 - `fieldCount`：字段数量；`usageCount`：当前引用该模板的订阅（订阅模板）或监控（监控模板）数量。
+- `sourceUrl` / `sourceLabel`：模板的 git 来源地址与简短标识（如 `owner/repo`）；手动创建的模板为 `null`。
+- `version`：作者声明的版本号，空字符串表示未声明。
 - 不带 `kind` 时返回全部模板，按 `kind`、`name` 排序。
 
 `GET /api/templates/:id` 返回完整 `TemplateDto`：
@@ -464,10 +470,16 @@ curl -s -c cookies.txt \
   "icon": "🖥️",
   "color": "#3366ff",
   "category": "基础设施",
+  "version": "1.0.0",
   "fields": [
     { "key": "service", "label": "服务名", "type": "text", "required": true }
   ],
   "payload": { "name": "{{service}} 续费" },
+  "sourceUrl": null,
+  "sourceBranch": "",
+  "sourcePath": null,
+  "sourceRevision": null,
+  "sourceLabel": null,
   "createdAt": "2026-01-01T00:00:00.000Z",
   "updatedAt": "2026-01-01T00:00:00.000Z"
 }
@@ -545,6 +557,7 @@ curl -s -c cookies.txt \
     "icon": "🖥️",
     "color": "#3366ff",
     "category": "基础设施",
+    "version": "",
     "fields": [],
     "payload": {}
   }
@@ -555,6 +568,39 @@ curl -s -c cookies.txt \
 
 请求体为上述信封。服务端按 `templateInputSchema` 校验并创建新模板（生成新 `id`），响应 `201` + `TemplateDto`。
 `format`、`version` 不匹配或 `template` 非法时返回 `400 validation_error`；`exportedAt` 仅作参考。
+
+---
+
+### 从 Git 导入模板
+
+在「模板」页可从 git 仓库导入模板，详见[从 Git 导入模板](template-import.md)。仓库需提供 `subwatch-templates.json` 清单。
+全部端点需登录，非 GET 需 CSRF 头。
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/templates/git/preview` | 克隆并读取清单，返回可选模板 `TemplateGitPreviewDto`（不写库）；请求体 `{ url, branch? }` |
+| POST | `/api/templates/git/import` | 导入所选模板，请求体 `{ url, branch?, paths: [...] }`，返回 `201` + `{ imported, templates }` |
+| POST | `/api/templates/:id/update-from-source` | 按模板记录的来源重新拉取并更新，返回 `TemplateDto`；无来源 `400` |
+
+`TemplateGitPreviewDto`：
+
+```ts
+interface TemplateGitPreviewDto {
+  repositoryLabel: string | null;   // 如 owner/repo
+  repositoryName: string | null;
+  repositoryDescription: string | null;
+  commit: string | null;
+  templates: {
+    path: string; id: string | null; kind: 'subscription' | 'monitor';
+    name: string; description: string; icon: string; color: string; category: string;
+    version: string; error: string | null;
+  }[];
+  skipped: { path: string; error: string }[];
+  error: string | null;
+}
+```
+
+错误：`400 validation_error`（请求体非法、非法地址、`paths` 不在清单内、仓库缺少清单或模板非法）、`404 not_found`（模板不存在）。
 
 ---
 

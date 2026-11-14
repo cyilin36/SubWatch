@@ -19,6 +19,8 @@ import type {
   MetricValue,
   RuleInput,
   TemplateDto,
+  TemplateGitImportResultDto,
+  TemplateGitPreviewDto,
   TemplateKind,
   TemplateRenderResultDto,
   TemplateSummaryDto,
@@ -28,6 +30,8 @@ import type {
   renewInputSchema,
   settingsUpdateSchema,
   templateExportEnvelopeSchema,
+  templateGitImportInputSchema,
+  templateGitPreviewInputSchema,
   templateInputSchema,
 } from '@subwatch/shared';
 
@@ -38,6 +42,10 @@ export type ChangePasswordInput = z.input<typeof changePasswordSchema>;
 export type TemplateInput = z.input<typeof templateInputSchema>;
 /** Shareable template envelope returned by the export endpoint. */
 export type TemplateExportEnvelope = z.input<typeof templateExportEnvelopeSchema>;
+/** Git preview body; the branch defaults to the repository default when omitted. */
+export type TemplateGitPreviewInput = z.input<typeof templateGitPreviewInputSchema>;
+/** Git import body; `paths` lists the manifest entries to import. */
+export type TemplateGitImportInput = z.input<typeof templateGitImportInputSchema>;
 
 export interface MonitorTestInput {
   config: MonitorConfig;
@@ -256,6 +264,12 @@ export const api = {
       request<TemplateExportEnvelope>(`/templates/${encodeURIComponent(id)}/export`),
     import: (envelope: TemplateExportEnvelope) =>
       post<TemplateDto>('/templates/import', envelope),
+    gitPreview: (input: TemplateGitPreviewInput) =>
+      post<TemplateGitPreviewDto>('/templates/git/preview', input),
+    gitImport: (input: TemplateGitImportInput) =>
+      post<TemplateGitImportResultDto>('/templates/git/import', input),
+    updateFromSource: (id: string) =>
+      post<TemplateDto>(`/templates/${encodeURIComponent(id)}/update-from-source`),
   },
 
   channels: {

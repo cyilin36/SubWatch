@@ -57,18 +57,24 @@ data/
 
 ### templates
 
-用户自定义模板（v4）。模板是订阅/监控的创建蓝图，本身不产生业务实体。
+用户自定义模板（v4；v5 增加版本列与 git 来源列）。模板是订阅/监控的创建蓝图，本身不产生业务实体；
+从 git 仓库导入的模板与手动创建的模板存于同一张表，仅来源列不同。
 
 | 列 | 说明 |
 |---|---|
 | `id` | 主键 |
 | `kind` | `subscription` / `monitor` |
 | `name` / `description` / `icon` / `color` / `category` | 展示信息 |
+| `version` | 可选作者版本号，空字符串表示未声明 |
 | `fields` | `TemplateField[]` JSON，参数定义 |
 | `payload` | 渲染草稿 JSON，可含 `{{参数}}` 占位符 |
+| `source_url` | 导入来源 git 地址，`NULL` 表示手动创建 |
+| `source_branch` | 导入来源分支（空串表示默认分支） |
+| `source_path` | 来源仓库内相对路径 |
+| `source_revision` | 上次导入/更新的 commit |
 | `created_at` / `updated_at` | 时间戳 |
 
-索引：`(kind, name)`。
+索引：`(kind, name)`、`(source_path)`。
 
 ### subscriptions
 
@@ -240,6 +246,9 @@ data/
   `template_id`（外键 → `templates`，`ON DELETE SET NULL`）、`template_name`、`field_defs`、`fields`；
   `monitors` 增加 `template_id`、`template_name`。既有订阅/监控的模板列为空值，不做数据回填。
   删除模板只会清空引用行的 `template_id`，模板名与字段/参数快照保留。
+- v5 迁移要点：`templates` 增加 `version`（`TEXT NOT NULL DEFAULT ''`）与 git 来源列
+  `source_url`、`source_branch`、`source_path`、`source_revision`，并建 `(source_path)` 索引。
+  既有模板的来源列为空，视为手动创建的模板，不做数据回填。程序不持久化“模板仓库”实体，只保存模板及其来源。
 
 ## 运维提示
 

@@ -6,7 +6,7 @@ export function AmbientBackground() {
   return (
     <div className="ambient-layer" aria-hidden>
       <div className="ambient-blob ambient-blob--moon" />
-      <div className="ambient-blob ambient-blob--champagne" />
+      <div className="ambient-blob ambient-blob--accent" />
       <div className="ambient-blob ambient-blob--deep" />
     </div>
   );

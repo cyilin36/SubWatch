@@ -8,6 +8,7 @@ import type {
 } from '@subwatch/shared';
 import type { CoreContext } from '../context.js';
 import { all, nowIso, one, parseJson, run, toJson } from '../db/helpers.js';
+import { deriveSourceLabel } from './source.js';
 
 export interface TemplateRow {
   id: string;
@@ -17,8 +18,13 @@ export interface TemplateRow {
   icon: string;
   color: string;
   category: string;
+  version: string;
   fields: string;
   payload: string;
+  source_url: string | null;
+  source_branch: string | null;
+  source_path: string | null;
+  source_revision: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -51,8 +57,14 @@ export function rowToTemplateDto(row: TemplateRow): TemplateDto {
     icon: row.icon,
     color: row.color,
     category: row.category,
+    version: row.version,
     fields: parseFields(row),
     payload: parsePayload(row),
+    sourceUrl: row.source_url,
+    sourceBranch: row.source_branch ?? '',
+    sourcePath: row.source_path,
+    sourceRevision: row.source_revision,
+    sourceLabel: row.source_url === null ? null : deriveSourceLabel(row.source_url),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -67,8 +79,11 @@ function rowToSummary(row: TemplateSummaryRow): TemplateSummaryDto {
     icon: row.icon,
     color: row.color,
     category: row.category,
+    version: row.version,
     fieldCount: parseFields(row).length,
     usageCount: Number(row.usage_count ?? 0),
+    sourceUrl: row.source_url,
+    sourceLabel: row.source_url === null ? null : deriveSourceLabel(row.source_url),
     updatedAt: row.updated_at,
   };
 }
@@ -97,8 +112,9 @@ export function createTemplate(ctx: CoreContext, input: TemplateInput): Template
   run(
     ctx.db,
     `INSERT INTO templates
-       (id, kind, name, description, icon, color, category, fields, payload, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (id, kind, name, description, icon, color, category, version, fields, payload,
+        source_url, source_branch, source_path, source_revision, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, NULL, ?, ?)`,
     [
       id,
       input.kind,
@@ -107,6 +123,7 @@ export function createTemplate(ctx: CoreContext, input: TemplateInput): Template
       input.icon,
       input.color,
       input.category,
+      input.version,
       toJson(input.fields),
       toJson(input.payload),
       now,
@@ -124,7 +141,7 @@ export function updateTemplate(ctx: CoreContext, id: string, input: TemplateInpu
   run(
     ctx.db,
     `UPDATE templates SET
-       name = ?, description = ?, icon = ?, color = ?, category = ?, fields = ?, payload = ?, updated_at = ?
+       name = ?, description = ?, icon = ?, color = ?, category = ?, version = ?, fields = ?, payload = ?, updated_at = ?
      WHERE id = ?`,
     [
       input.name,
@@ -132,6 +149,7 @@ export function updateTemplate(ctx: CoreContext, id: string, input: TemplateInpu
       input.icon,
       input.color,
       input.category,
+      input.version,
       toJson(input.fields),
       toJson(input.payload),
       nowIso(),
@@ -143,4 +161,89 @@ export function updateTemplate(ctx: CoreContext, id: string, input: TemplateInpu
 
 export function deleteTemplate(ctx: CoreContext, id: string): boolean {
   return Number(run(ctx.db, 'DELETE FROM templates WHERE id = ?', [id]).changes) > 0;
+}
+
+// ---------------------------------------------------------------------------
+// Git-imported templates
+//
+// Imported templates are ordinary rows; the only extra state is the provenance
+// recorded on the row itself. There is no persisted repository entity.
+// ---------------------------------------------------------------------------
+
+export interface TemplateGitSource {
+  url: string;
+  branch: string;
+  path: string;
+  revision: string;
+}
+
+/** Insert a template imported from a git repository, recording its provenance. */
+export function createGitTemplate(
+  ctx: CoreContext,
+  input: TemplateInput,
+  source: TemplateGitSource,
+): TemplateDto {
+  const id = randomUUID();
+  const now = nowIso();
+  run(
+    ctx.db,
+    `INSERT INTO templates
+       (id, kind, name, description, icon, color, category, version, fields, payload,
+        source_url, source_branch, source_path, source_revision, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.kind,
+      input.name,
+      input.description,
+      input.icon,
+      input.color,
+      input.category,
+      input.version,
+      toJson(input.fields),
+      toJson(input.payload),
+      source.url,
+      source.branch,
+      source.path,
+      source.revision,
+      now,
+      now,
+    ],
+  );
+  const created = getTemplateById(ctx, id);
+  if (!created) throw new Error('Failed to read back the created template');
+  return created;
+}
+
+/** Overwrite an imported template's content and revision, leaving its source columns intact. */
+export function updateGitTemplateContent(
+  ctx: CoreContext,
+  id: string,
+  input: TemplateInput,
+  revision: string,
+): TemplateDto | undefined {
+  const existing = getTemplateRow(ctx, id);
+  if (!existing) return undefined;
+  run(
+    ctx.db,
+    `UPDATE templates SET
+       kind = ?, name = ?, description = ?, icon = ?, color = ?, category = ?, version = ?,
+       fields = ?, payload = ?, source_revision = ?, updated_at = ?
+     WHERE id = ?`,
+    [
+      input.kind,
+      input.name,
+      input.description,
+      input.icon,
+      input.color,
+      input.category,
+      input.version,
+      toJson(input.fields),
+      toJson(input.payload),
+      revision,
+      nowIso(),
+      id,
+    ],
+  );
+  return getTemplateById(ctx, id);
 }

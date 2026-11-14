@@ -341,4 +341,21 @@ ALTER TABLE monitors ADD COLUMN template_name TEXT;
 CREATE INDEX idx_monitors_template ON monitors(template_id);
 `,
   },
+  {
+    version: 5,
+    name: 'template_git_source',
+    sql: `
+-- Templates can be imported from a git repository. Rather than persisting a
+-- separate "template repository" entity, each imported template records its
+-- provenance (repository URL, branch, file path, last commit). Templates with a
+-- NULL source_url were authored manually. version is an optional author-declared
+-- version string (empty = none).
+ALTER TABLE templates ADD COLUMN version TEXT NOT NULL DEFAULT '';
+ALTER TABLE templates ADD COLUMN source_url TEXT;
+ALTER TABLE templates ADD COLUMN source_branch TEXT;
+ALTER TABLE templates ADD COLUMN source_path TEXT;
+ALTER TABLE templates ADD COLUMN source_revision TEXT;
+CREATE INDEX idx_templates_source_path ON templates(source_path);
+`,
+  },
 ];

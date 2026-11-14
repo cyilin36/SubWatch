@@ -15,9 +15,9 @@ import type { MetricSeries } from '../../lib/metrics';
 import { Select } from '../ui';
 
 /**
- * Night-glass series colours, in priority order: moonlight first, then the one
- * champagne accent, then the status and structural tones. No legacy chart
- * palette is allowed here — every stroke resolves through a design token.
+ * Night-glass series colours, in priority order: moonlight first, then the
+ * status and structural tones. No legacy chart palette is allowed here —
+ * every stroke resolves through a design token.
  */
 const SERIES_COLORS = [
   'var(--color-moonlight)',

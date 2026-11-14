@@ -8,9 +8,11 @@ import {
   CreditCard,
   Download,
   FileJson,
+  GitBranch,
   LayoutTemplate,
   Pencil,
   Plus,
+  RefreshCw,
   Trash2,
   Upload,
   type LucideIcon,
@@ -40,6 +42,7 @@ import {
   TabsTrigger,
 } from '../components/ui';
 import { Segmented } from '../components/common/fields';
+import { TemplateGitImportDialog } from '../components/templates/TemplateGitImportDialog';
 import { TemplateImportDialog } from '../components/templates/TemplateImportDialog';
 
 const KINDS: TemplateKind[] = ['subscription', 'monitor'];
@@ -54,7 +57,9 @@ interface TemplateCardProps {
   timezone: string;
   locale: string;
   exporting: boolean;
+  updating: boolean;
   onExport: () => void;
+  onUpdate: () => void;
   onDelete: () => void;
 }
 
@@ -67,11 +72,15 @@ function TemplateCard({
   timezone,
   locale,
   exporting,
+  updating,
   onExport,
+  onUpdate,
   onDelete,
 }: TemplateCardProps) {
   const { t } = useTranslation();
   const KindIcon = KIND_ICONS[template.kind];
+  const sourceLabel = template.sourceLabel ?? template.sourceUrl ?? '';
+  const sourceIsLink = /^https?:\/\//i.test(template.sourceUrl ?? '');
 
   return (
     <Card interactive className="flex flex-col">
@@ -92,9 +101,28 @@ function TemplateCard({
               <span className="block truncate">{template.name}</span>
             </Link>
           </h3>
+          {template.sourceUrl ? (
+            <p className="relative z-10 mt-1 truncate text-xs text-moonlight" title={template.sourceUrl}>
+              {sourceIsLink ? (
+                <a
+                  href={template.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline decoration-ink/20 underline-offset-2 transition-colors duration-500 ease-glass hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
+                >
+                  {t('templates.list.sourceLabel', { label: sourceLabel })}
+                </a>
+              ) : (
+                <span>{t('templates.list.sourceLabel', { label: sourceLabel })}</span>
+              )}
+            </p>
+          ) : null}
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <Badge tone="muted">{t(templateKindLabelKey(template.kind))}</Badge>
             {template.category ? <Badge tone="info">{template.category}</Badge> : null}
+            {template.version ? (
+              <Badge tone="muted">{t('templates.list.versionBadge', { version: template.version })}</Badge>
+            ) : null}
           </div>
         </div>
       </div>
@@ -115,6 +143,12 @@ function TemplateCard({
           <Download className="h-3.5 w-3.5" aria-hidden />
           {t('templates.list.export')}
         </Button>
+        {template.sourceUrl ? (
+          <Button variant="outline" size="sm" loading={updating} onClick={onUpdate}>
+            <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+            {t('templates.list.updateFromSource')}
+          </Button>
+        ) : null}
         <EditButton id={template.id} />
         <Button variant="danger" size="sm" onClick={onDelete}>
           <Trash2 className="h-3.5 w-3.5" aria-hidden />
@@ -149,7 +183,9 @@ export function TemplatesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createKind, setCreateKind] = useState<TemplateKind>('subscription');
   const [importOpen, setImportOpen] = useState(false);
+  const [gitImportOpen, setGitImportOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<TemplateSummaryDto | null>(null);
+  const [updateTarget, setUpdateTarget] = useState<TemplateSummaryDto | null>(null);
 
   const templatesQuery = useQuery({
     queryKey: ['templates', kind],
@@ -174,6 +210,16 @@ export function TemplatesPage() {
     },
     onSuccess: (template) => toast.success(t('templates.list.exportSuccess', { name: template.name })),
     onError: (error) => toast.error(t('templates.list.exportFailed'), { description: errorMessage(error) }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (template: TemplateSummaryDto) => api.templates.updateFromSource(template.id),
+    onSuccess: () => {
+      toast.success(t('templates.list.updateSuccess'));
+      void queryClient.invalidateQueries({ queryKey: ['templates'] });
+      setUpdateTarget(null);
+    },
+    onError: (error) => toast.error(t('templates.list.updateFailed'), { description: errorMessage(error) }),
   });
 
   const templates = templatesQuery.data ?? [];
@@ -213,6 +259,10 @@ export function TemplatesPage() {
                 <Upload className="h-4 w-4" aria-hidden />
                 {t('templates.import.button')}
               </Button>
+              <Button variant="outline" onClick={() => setGitImportOpen(true)}>
+                <GitBranch className="h-4 w-4" aria-hidden />
+                {t('templates.gitImport.button')}
+              </Button>
             </div>
           }
         />
@@ -228,7 +278,9 @@ export function TemplatesPage() {
             timezone={timezone}
             locale={locale}
             exporting={exportMutation.isPending && exportMutation.variables?.id === template.id}
+            updating={updateMutation.isPending && updateMutation.variables?.id === template.id}
             onExport={() => exportMutation.mutate(template)}
+            onUpdate={() => setUpdateTarget(template)}
             onDelete={() => setDeleteTarget(template)}
           />
         ))}
@@ -244,7 +296,11 @@ export function TemplatesPage() {
         icon={<LayoutTemplate className="h-5 w-5" />}
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+            <Button variant="secondary" size="sm" onClick={() => setGitImportOpen(true)}>
+              <GitBranch className="h-4 w-4" aria-hidden />
+              {t('templates.gitImport.button')}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)}>
               <Upload className="h-4 w-4" aria-hidden />
               {t('templates.import.button')}
             </Button>
@@ -338,6 +394,8 @@ export function TemplatesPage() {
         onImported={(template) => setKind(template.kind)}
       />
 
+      <TemplateGitImportDialog open={gitImportOpen} onOpenChange={setGitImportOpen} />
+
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => {
@@ -354,6 +412,21 @@ export function TemplatesPage() {
         loading={deleteMutation.isPending}
         onConfirm={() => {
           if (deleteTarget) deleteMutation.mutate(deleteTarget);
+        }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(updateTarget)}
+        onOpenChange={(open) => {
+          if (!open) setUpdateTarget(null);
+        }}
+        title={t('templates.list.updateFromSource')}
+        description={t('templates.list.updateConfirm', { name: updateTarget?.name ?? '' })}
+        confirmLabel={t('templates.list.updateFromSource')}
+        destructive={false}
+        loading={updateMutation.isPending}
+        onConfirm={() => {
+          if (updateTarget) updateMutation.mutate(updateTarget);
         }}
       />
     </div>

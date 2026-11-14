@@ -34,7 +34,7 @@
 | `placeholder` / `help` | 表单占位提示与帮助文本 |
 | `defaultValue` | 预填默认值；`secret` 禁止设置 |
 
-模板层面的限制：`kind` 只能是 `subscription` 或 `monitor`；`name` 1..100；`description` ≤500；`icon` ≤16（单个 emoji）；`color` 为空或 `#RRGGBB`；`category` ≤50；字段 ≤50 个；payload 为 JSON 对象且 ≤100 KB。
+模板层面的限制：`kind` 只能是 `subscription` 或 `monitor`；`name` 1..100；`description` ≤500；`icon` ≤16（单个 emoji）；`color` 为空或 `#RRGGBB`；`category` ≤50；`version` ≤32（可选，作者自定义版本号）；字段 ≤50 个；payload 为 JSON 对象且 ≤100 KB。
 
 ## 占位符语法
 
@@ -168,6 +168,12 @@
 - `format` 固定为 `subwatch-template`，`version` 固定为 `1`。
 - `exportedAt` 仅作参考，导入时忽略。
 - 导入时 `template` 与创建接口使用同一 schema，错误返回 `400 validation_error`。
+
+## 从 Git 导入
+
+除手动创建与 JSON 导入外，还可在「模板」页从 git 仓库导入模板：仓库提供 `subwatch-templates.json` 清单，
+拉取预览后勾选所需模板导入。导入的模板与手动创建的模板完全一样，可编辑、可删除，并在卡片上显示来源，
+支持按来源重新拉取更新。仓库结构、清单格式与 API 详见[从 Git 导入模板](template-import.md)。
 
 ## 安全说明
 

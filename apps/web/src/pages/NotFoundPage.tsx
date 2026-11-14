@@ -6,7 +6,7 @@ import { BrandMark } from '../components/layout/BrandMark';
 
 /**
  * Standalone 404: the layout has no nav here, so the page paints its own
- * ambient light and the "back home" link is the only champagne action.
+ * ambient light and the "back home" link is the only accent action.
  */
 export function NotFoundPage() {
   const { t } = useTranslation();
