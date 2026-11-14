@@ -15,7 +15,7 @@ export interface TemplateGitImportDialogProps {
 }
 
 const checkboxClass =
-  'mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border border-ink/30 bg-transparent accent-[var(--color-champagne-ink)] disabled:cursor-not-allowed disabled:opacity-45';
+  'mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border border-ink/30 bg-transparent accent-[var(--color-accent-ink)] disabled:cursor-not-allowed disabled:opacity-45';
 
 /**
  * Import templates from a git repository. The user enters a repository URL

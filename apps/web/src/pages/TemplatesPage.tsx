@@ -296,11 +296,11 @@ export function TemplatesPage() {
         icon={<LayoutTemplate className="h-5 w-5" />}
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={() => setGitImportOpen(true)}>
+            <Button variant="secondary" size="sm" onClick={() => setGitImportOpen(true)}>
               <GitBranch className="h-4 w-4" aria-hidden />
               {t('templates.gitImport.button')}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+            <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)}>
               <Upload className="h-4 w-4" aria-hidden />
               {t('templates.import.button')}
             </Button>

@@ -202,7 +202,7 @@ export function MonitorDetailPage() {
       />
 
       {/* Key numbers: the current metrics when available, otherwise the config
-          summary. Only the first tile is allowed to carry the champagne accent. */}
+          summary. Only the first tile is allowed to carry the accent. */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {metricEntries.length > 0 ? (
           metricEntries.slice(0, 4).map(([key, metric], index) => (
