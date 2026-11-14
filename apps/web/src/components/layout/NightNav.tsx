@@ -69,7 +69,7 @@ export function NightNav({ appName }: { appName: string }) {
               role="dialog"
               aria-modal="true"
               aria-label={t('nav.menu')}
-              className="glass glass-panel absolute inset-y-3 left-3 flex w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden"
+              className="glass glass-panel absolute left-3 top-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] flex w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden"
             >
               <div className="flex items-center gap-3 border-b border-ink/10 px-5 py-4">
                 <BrandMark />
@@ -102,7 +102,7 @@ export function NightNav({ appName }: { appName: string }) {
                   })}
                 </ul>
               </nav>
-              <div className="flex flex-col gap-2 border-t border-ink/10 p-4">
+              <div className="flex flex-col gap-2 border-t border-ink/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                 {CREATE_ITEMS.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -117,10 +117,10 @@ export function NightNav({ appName }: { appName: string }) {
                     </Link>
                   );
                 })}
-                <div className="mt-1 flex items-center justify-between">
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-1">
-                    <ThemeMenu />
-                    <LanguageMenu />
+                    <ThemeMenu showLabel />
+                    <LanguageMenu showLabel />
                   </div>
                   <button
                     type="button"
@@ -167,7 +167,7 @@ export function NightNav({ appName }: { appName: string }) {
           </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:ml-0">
-            <div className="hidden items-center gap-1.5 sm:flex">
+            <div className="flex items-center gap-1.5">
               <ThemeMenu />
               <LanguageMenu />
               <button
@@ -177,7 +177,7 @@ export function NightNav({ appName }: { appName: string }) {
                 }}
                 title={t('nav.logout')}
                 aria-label={t('nav.logout')}
-                className="rounded-full p-2 text-moonlight transition-colors hover:bg-ink/10 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60"
+                className="hidden h-10 w-10 items-center justify-center rounded-full text-moonlight transition-colors hover:bg-ink/10 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60 sm:inline-flex"
               >
                 <LogOut className="h-4 w-4" aria-hidden />
               </button>

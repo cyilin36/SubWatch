@@ -3,8 +3,8 @@ import type { Theme } from '@subwatch/shared';
 /** Stored appearance preference: light, dark, or follow the operating system. */
 export const THEME_STORAGE_KEY = 'subwatch-theme';
 
-/** Night glass stays the default; light is an opt-in appearance. */
-export const DEFAULT_THEME: Theme = 'dark';
+/** Day glass is the default appearance; night glass is one click away. */
+export const DEFAULT_THEME: Theme = 'light';
 
 export function getStoredTheme(): Theme {
   try {
@@ -46,5 +46,7 @@ export function applyTheme(theme: Theme): 'light' | 'dark' {
   const root = document.documentElement;
   root.dataset.theme = resolved;
   root.classList.toggle('dark', resolved === 'dark');
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', resolved === 'dark' ? '#060a13' : '#f7f3ea');
   return resolved;
 }

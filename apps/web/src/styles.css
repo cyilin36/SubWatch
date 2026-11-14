@@ -235,13 +235,17 @@ html[data-theme='light'] {
   color-scheme: light;
 }
 
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+
 /*
  * Transitional aliases: the pre-glass code base speaks in these names. They now
  * resolve to glass values so untouched markup still reads as one system while
  * files are migrated to the tokens above.
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   --background: var(--color-night);
   --surface: var(--color-glass);
   --surface-muted: var(--color-glass-soft);

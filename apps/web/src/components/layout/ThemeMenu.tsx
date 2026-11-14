@@ -5,7 +5,7 @@ import type { Theme } from '@subwatch/shared';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../providers/AuthProvider';
 
-const MENU_CONTENT = 'glass-popover z-[70] min-w-44 overflow-hidden p-1.5';
+const MENU_CONTENT = 'glass-popover z-[90] min-w-44 overflow-hidden p-1.5';
 const MENU_ITEM =
   'flex cursor-pointer select-none items-center justify-between gap-3 rounded-btn px-3 py-2 text-sm text-ink/85 outline-none transition-colors data-[highlighted]:bg-ink/10 data-[highlighted]:text-ink';
 
@@ -20,7 +20,7 @@ const OPTIONS: { value: Theme; labelKey: string; icon: LucideIcon }[] = [
  * The preference is stored per browser, so every member of a household can keep
  * their own.
  */
-export function ThemeMenu({ className }: { className?: string }) {
+export function ThemeMenu({ className, showLabel = false }: { className?: string; showLabel?: boolean }) {
   const { t } = useTranslation();
   const { theme, resolvedTheme, setTheme } = useAuth();
 
@@ -34,12 +34,16 @@ export function ThemeMenu({ className }: { className?: string }) {
           aria-label={t('nav.theme')}
           title={t('nav.theme')}
           className={cn(
-            'rounded-full p-2 text-moonlight transition-colors hover:bg-ink/10 hover:text-ink',
+            'text-moonlight transition-colors hover:bg-ink/10 hover:text-ink',
             'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60',
+            showLabel
+              ? 'flex h-10 items-center gap-2 rounded-pill px-3 text-sm'
+              : 'inline-flex h-10 w-10 items-center justify-center rounded-full',
             className,
           )}
         >
           <TriggerIcon className="h-4 w-4" aria-hidden />
+          {showLabel ? <span>{t('nav.theme')}</span> : null}
         </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
