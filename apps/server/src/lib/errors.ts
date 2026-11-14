@@ -47,14 +47,6 @@ export class ConflictError extends AppError {
   }
 }
 
-/** A template installed from a template repository cannot be edited or deleted directly. */
-export class TemplateManagedError extends AppError {
-  constructor(message = 'Template is managed by a template repository and is read-only') {
-    super(409, 'template_managed', message);
-    this.name = 'TemplateManagedError';
-  }
-}
-
 export class UnprocessableError extends AppError {
   constructor(message = 'Unprocessable entity', details?: unknown) {
     super(422, 'unprocessable_entity', message, details);

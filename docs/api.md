@@ -261,7 +261,7 @@ curl -s -c cookies.txt \
 | Push | `POST /api/push/:token` | 公开（Token 鉴权） |
 | 订阅 | `GET/POST /api/subscriptions`、`GET/PUT/DELETE /api/subscriptions/:id`、`POST /api/subscriptions/:id/renew`、`POST /api/subscriptions/:id/pause`、`POST /api/subscriptions/:id/resume`、`POST /api/subscriptions/:id/test-reminder` | 见[订阅 API](#订阅-api) |
 | 模板 | `GET/POST /api/templates`、`GET/PUT/DELETE /api/templates/:id`、`POST /api/templates/:id/render`、`GET /api/templates/:id/export`、`POST /api/templates/import` | 见[模板 API](#模板-api) |
-| 模板仓库 | `GET/POST /api/template-sources`、`GET/PUT/DELETE /api/template-sources/:id`、`POST /api/template-sources/:id/sync` | 见[模板仓库 API](#模板仓库-api) |
+| 模板（Git 导入） | `POST /api/templates/git/preview`、`POST /api/templates/git/import`、`POST /api/templates/:id/update-from-source` | 见[从 Git 导入模板](#从-git-导入模板) |
 | 通知渠道 | `GET/POST /api/channels`、`PUT/DELETE /api/channels/:id`、`POST /api/channels/:id/test`、`POST /api/channels/test` | 见[通知渠道 API](#通知渠道-api) |
 | 通知记录 | `GET /api/notifications`、`POST /api/notifications/:id/retry` | 见[通知记录 API](#通知记录-api) |
 | 设置 | `GET/PATCH /api/settings`、`POST /api/settings/smtp/test`、`GET /api/settings/version` | 见[设置 API](#设置与元信息-api) |
@@ -447,15 +447,15 @@ curl -s -c cookies.txt \
     "version": "",
     "fieldCount": 6,
     "usageCount": 2,
-    "sourceId": null,
-    "sourceName": null,
+    "sourceUrl": null,
+    "sourceLabel": null,
     "updatedAt": "2026-01-01T00:00:00.000Z"
   }
 ]
 ```
 
 - `fieldCount`：字段数量；`usageCount`：当前引用该模板的订阅（订阅模板）或监控（监控模板）数量。
-- `sourceId` / `sourceName`：模板来源仓库；本地模板为 `null`。
+- `sourceUrl` / `sourceLabel`：模板的 git 来源地址与简短标识（如 `owner/repo`）；手动创建的模板为 `null`。
 - `version`：作者声明的版本号，空字符串表示未声明。
 - 不带 `kind` 时返回全部模板，按 `kind`、`name` 排序。
 
@@ -475,9 +475,11 @@ curl -s -c cookies.txt \
     { "key": "service", "label": "服务名", "type": "text", "required": true }
   ],
   "payload": { "name": "{{service}} 续费" },
-  "sourceId": null,
+  "sourceUrl": null,
+  "sourceBranch": "",
   "sourcePath": null,
   "sourceRevision": null,
+  "sourceLabel": null,
   "createdAt": "2026-01-01T00:00:00.000Z",
   "updatedAt": "2026-01-01T00:00:00.000Z"
 }
@@ -555,6 +557,7 @@ curl -s -c cookies.txt \
     "icon": "🖥️",
     "color": "#3366ff",
     "category": "基础设施",
+    "version": "",
     "fields": [],
     "payload": {}
   }
@@ -568,119 +571,36 @@ curl -s -c cookies.txt \
 
 ---
 
-## 模板仓库 API
+### 从 Git 导入模板
 
-模板仓库把模板托管在 git 仓库中，详见[模板仓库](template-repositories.md)。全部端点需登录，非 GET 需 CSRF 头。
+在「模板」页可从 git 仓库导入模板，详见[从 Git 导入模板](template-import.md)。仓库需提供 `subwatch-templates.json` 清单。
+全部端点需登录，非 GET 需 CSRF 头。
 
-### 数据结构
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/templates/git/preview` | 克隆并读取清单，返回可选模板 `TemplateGitPreviewDto`（不写库）；请求体 `{ url, branch? }` |
+| POST | `/api/templates/git/import` | 导入所选模板，请求体 `{ url, branch?, paths: [...] }`，返回 `201` + `{ imported, templates }` |
+| POST | `/api/templates/:id/update-from-source` | 按模板记录的来源重新拉取并更新，返回 `TemplateDto`；无来源 `400` |
+
+`TemplateGitPreviewDto`：
 
 ```ts
-interface TemplateSourceDto {
-  id: string;
-  name: string;
-  url: string;
-  branch: string;
-  enabled: boolean;
-  lastSyncedAt: string | null;   // ISO 时间戳
-  lastCommit: string | null;     // 上次同步的 commit
-  lastError: string | null;      // 上次同步的错误（凭据已脱敏）
-  templateCount: number;         // 当前从该仓库安装的模板数
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface TemplateSourceDetailDto extends TemplateSourceDto {
-  templates: {
-    id: string;
-    path: string;                // 仓库内相对路径
-    kind: 'subscription' | 'monitor';
-    name: string;
-    description: string;
-    icon: string;
-    color: string;
-    category: string;
-    version: string;
-    updatedAt: string;
-  }[];
-}
-
-interface TemplateSourceSyncResultDto {
-  ok: boolean;
+interface TemplateGitPreviewDto {
+  repositoryLabel: string | null;   // 如 owner/repo
+  repositoryName: string | null;
+  repositoryDescription: string | null;
   commit: string | null;
-  added: number;
-  updated: number;
-  removed: number;
-  unchanged: number;
+  templates: {
+    path: string; id: string | null; kind: 'subscription' | 'monitor';
+    name: string; description: string; icon: string; color: string; category: string;
+    version: string; error: string | null;
+  }[];
   skipped: { path: string; error: string }[];
   error: string | null;
 }
 ```
 
-`TemplateSourceInput`：`{ name?: string≤100, url: git 地址≤2000, branch?: string≤100, enabled?: boolean }`。
-`url` 仅接受 `https://`、`http://`、`file://`。
-
-- `enabled` 为启用标记，当前不参与自动调度；同步始终由显式调用 `POST /api/template-sources/:id/sync` 触发。
-- 同步将仓库浅克隆到 `<DATA_DIR>/template-sources/<id>/` 作为暂存副本，安装结果持久化在 `templates` 表；删除仓库会一并清理该目录。
-
-### 清单与预览
-
-仓库可在根目录提供 `subwatch-templates.json` 清单，声明模板及其展示/版本信息；无清单时回退扫描 `templates/**/*.json`。
-
-```json
-{
-  "format": "subwatch-template-repository",
-  "version": 1,
-  "name": "我的模板库",
-  "templates": [
-    { "path": "templates/subscription/vps.json", "id": "vps", "name": "VPS 续费", "kind": "subscription", "version": "1.0.0" },
-    { "path": "templates/monitor/api.json", "version": "2.3.0" }
-  ]
-}
-```
-
-`GET /api/template-sources/:id/available` 克隆并读取清单/校验文件（不写库），返回：
-
-```ts
-interface TemplateSourceAvailableDto {
-  commit: string | null;
-  repositoryName: string | null;
-  repositoryDescription: string | null;
-  templates: {
-    path: string;
-    id: string | null;
-    kind: 'subscription' | 'monitor';
-    name: string;
-    description: string;
-    icon: string;
-    color: string;
-    category: string;
-    version: string;
-    installed: boolean;      // 该 path 是否已从本源安装
-    error: string | null;    // 该文件缺失/非法时的错误
-  }[];
-  skipped: { path: string; error: string }[];
-  error: string | null;      // 克隆或清单解析失败时的错误（仍返回 200）
-}
-```
-
-### 端点
-
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| GET | `/api/template-sources` | 仓库列表 `TemplateSourceDto[]` |
-| POST | `/api/template-sources` | 新增仓库，请求体 `TemplateSourceInput`，返回 `201` |
-| GET | `/api/template-sources/:id` | 仓库详情 `TemplateSourceDetailDto` |
-| PUT | `/api/template-sources/:id` | 更新仓库，请求体 `TemplateSourceInput` |
-| DELETE | `/api/template-sources/:id` | 删除仓库及其托管模板，返回 `204` |
-| GET | `/api/template-sources/:id/available` | 预览仓库清单 `TemplateSourceAvailableDto`（限流 20 次/分钟） |
-| POST | `/api/template-sources/:id/sync` | 安装/更新；可选请求体 `{ "paths": [...] }`，省略则全量同步（限流 10 次/分钟） |
-| POST | `/api/template-sources/:id/uninstall` | 卸载选中模板，请求体 `{ "paths": [...] }`，返回 `{ removed }` |
-
-错误：`400 validation_error`（请求体非法、非法地址或 `paths` 不在清单内）、`404 not_found`（仓库不存在）、
-`409 conflict`（地址+分支重复或正在同步）、`409 template_managed`（对托管模板直接编辑/删除）。
-
-托管模板在 `TemplateSummaryDto` 中带 `sourceId`/`sourceName`/`version`，在 `TemplateDto` 中带 `sourceId`/`sourcePath`/`sourceRevision`/`version`；
-对托管模板调用 `PUT`/`DELETE /api/templates/:id` 返回 `409 template_managed`。
+错误：`400 validation_error`（请求体非法、非法地址、`paths` 不在清单内、仓库缺少清单或模板非法）、`404 not_found`（模板不存在）。
 
 ---
 

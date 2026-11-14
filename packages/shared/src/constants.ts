@@ -91,5 +91,9 @@ export type TemplateFieldType = (typeof TEMPLATE_FIELD_TYPE_VALUES)[number];
 export const MAX_TEMPLATE_FIELDS = 50;
 export const MAX_TEMPLATE_PAYLOAD_BYTES = 100_000;
 export const MAX_TEMPLATE_FIELD_VALUE_CHARS = 10_000;
+/** Upper bound on template files one git repository import may process. */
+export const MAX_TEMPLATE_SOURCE_TEMPLATES = 500;
+/** Upper bound on a single template/manifest file size, in bytes. */
+export const MAX_TEMPLATE_FILE_BYTES = 256 * 1024;
 export const TEMPLATE_EXPORT_FORMAT = 'subwatch-template';
 export const TEMPLATE_EXPORT_VERSION = 1;
