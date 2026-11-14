@@ -8,6 +8,7 @@
 - [通知与 Webhook 集成](notifications.md)：邮件/Webhook 渠道、事件 payload、模板变量、HMAC 签名、重试队列、通知记录
 - [数据与档案结构](storage.md)：数据目录、SQLite 表结构、迁移/备份/保留策略
 - [用户自定义模板](templates.md)：订阅/监控模板的参数类型、占位符、渲染、导入导出与安全语义
+- [模板仓库](template-repositories.md)：用 git 仓库集中托管模板，拉取安装/更新与托管模板语义
 
 ## 三种接入方式
 

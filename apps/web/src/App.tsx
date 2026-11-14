@@ -47,6 +47,9 @@ const TemplatesPage = lazy(() =>
 const TemplateEditorPage = lazy(() =>
   import('./pages/TemplateEditorPage').then((m) => ({ default: m.TemplateEditorPage })),
 );
+const TemplateSourcesPage = lazy(() =>
+  import('./pages/TemplateSourcesPage').then((m) => ({ default: m.TemplateSourcesPage })),
+);
 
 /**
  * Legacy routes from the pre-v2 multi-page layout (separate dashboard, monitor
@@ -128,6 +131,7 @@ function AppRoutes() {
         <Route path="templates" element={<TemplatesPage />} />
         <Route path="templates/new" element={<TemplateEditorPage />} />
         <Route path="templates/:id" element={<TemplateEditorPage />} />
+        <Route path="template-sources" element={<TemplateSourcesPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         {LEGACY_REDIRECTS.map((path) => (

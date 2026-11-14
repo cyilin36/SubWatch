@@ -21,6 +21,10 @@ import type {
   TemplateDto,
   TemplateKind,
   TemplateRenderResultDto,
+  TemplateSourceDetailDto,
+  TemplateSourceDto,
+  TemplateSourceInput,
+  TemplateSourceSyncResultDto,
   TemplateSummaryDto,
 } from '@subwatch/shared';
 import type {
@@ -256,6 +260,17 @@ export const api = {
       request<TemplateExportEnvelope>(`/templates/${encodeURIComponent(id)}/export`),
     import: (envelope: TemplateExportEnvelope) =>
       post<TemplateDto>('/templates/import', envelope),
+  },
+
+  templateSources: {
+    list: () => request<TemplateSourceDto[]>('/template-sources'),
+    get: (id: string) => request<TemplateSourceDetailDto>(`/template-sources/${encodeURIComponent(id)}`),
+    create: (input: TemplateSourceInput) => post<TemplateSourceDto>('/template-sources', input),
+    update: (id: string, input: TemplateSourceInput) =>
+      put<TemplateSourceDto>(`/template-sources/${encodeURIComponent(id)}`, input),
+    remove: (id: string) => del<undefined>(`/template-sources/${encodeURIComponent(id)}`),
+    sync: (id: string) =>
+      post<TemplateSourceSyncResultDto>(`/template-sources/${encodeURIComponent(id)}/sync`),
   },
 
   channels: {
