@@ -195,6 +195,15 @@ export async function updateTemplateFromSource(ctx: CoreContext, id: string): Pr
         );
       }
 
+      // A template's kind is immutable (the regular edit endpoint rejects it too).
+      // Silently flipping subscription <-> monitor here would move the template
+      // to a different tab and invalidate how it is used, so refuse instead.
+      if (effective.kind !== row.kind) {
+        throw new BadRequestError(
+          `Template kind cannot change: stored template is "${row.kind}" but the source file is "${effective.kind}"`,
+        );
+      }
+
       const updated = updateGitTemplateContent(ctx, id, effective, commit);
       if (!updated) throw new NotFoundError('Template not found');
       return updated;
