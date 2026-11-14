@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.1.0-rc2';
+export const APP_VERSION = '0.1.0-rc3';
 
 /**
  * Sentinel submitted by the UI when an already-stored secret must be kept
