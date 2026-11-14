@@ -74,7 +74,7 @@ SubWatch 通过「通知渠道」把提醒发出去。渠道分两种：`email`�
 ```http
 POST /your-hook HTTP/1.1
 Content-Type: application/json
-User-Agent: SubWatch/0.1.0
+User-Agent: SubWatch/0.1.0-rc2
 X-SubWatch-Signature: sha256=<hex>
 
 {

@@ -233,7 +233,7 @@ curl -s -c cookies.txt \
     "theme": "system"
   },
   "smtp": null,
-  "version": "0.1.0",
+  "version": "0.1.0-rc2",
   "timezone": "Asia/Shanghai"
 }
 ```
