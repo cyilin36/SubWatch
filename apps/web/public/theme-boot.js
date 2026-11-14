@@ -14,7 +14,7 @@
     root.setAttribute('data-theme', theme);
     root.classList.toggle('dark', theme === 'dark');
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', theme === 'dark' ? '#060a13' : '#fdfbf7');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#060a13' : '#ffffff');
   } catch (error) {
     // Storage is unavailable; the markup already defaults to the light appearance.
   }

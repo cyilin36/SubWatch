@@ -47,6 +47,6 @@ export function applyTheme(theme: Theme): 'light' | 'dark' {
   root.dataset.theme = resolved;
   root.classList.toggle('dark', resolved === 'dark');
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', resolved === 'dark' ? '#060a13' : '#fdfbf7');
+  if (meta) meta.setAttribute('content', resolved === 'dark' ? '#060a13' : '#ffffff');
   return resolved;
 }
