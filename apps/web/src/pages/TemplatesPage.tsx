@@ -102,6 +102,9 @@ function TemplateCard({
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <Badge tone="muted">{t(templateKindLabelKey(template.kind))}</Badge>
             {template.category ? <Badge tone="info">{template.category}</Badge> : null}
+            {template.version ? (
+              <Badge tone="muted">{t('templates.list.versionBadge', { version: template.version })}</Badge>
+            ) : null}
             {template.sourceId ? (
               <Badge tone="info">
                 {t('templates.list.fromSource', { name: template.sourceName ?? '' })}

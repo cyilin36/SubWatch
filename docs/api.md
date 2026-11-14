@@ -444,6 +444,7 @@ curl -s -c cookies.txt \
     "icon": "🖥️",
     "color": "#3366ff",
     "category": "基础设施",
+    "version": "",
     "fieldCount": 6,
     "usageCount": 2,
     "sourceId": null,
@@ -455,6 +456,7 @@ curl -s -c cookies.txt \
 
 - `fieldCount`：字段数量；`usageCount`：当前引用该模板的订阅（订阅模板）或监控（监控模板）数量。
 - `sourceId` / `sourceName`：模板来源仓库；本地模板为 `null`。
+- `version`：作者声明的版本号，空字符串表示未声明。
 - 不带 `kind` 时返回全部模板，按 `kind`、`name` 排序。
 
 `GET /api/templates/:id` 返回完整 `TemplateDto`：
@@ -468,6 +470,7 @@ curl -s -c cookies.txt \
   "icon": "🖥️",
   "color": "#3366ff",
   "category": "基础设施",
+  "version": "1.0.0",
   "fields": [
     { "key": "service", "label": "服务名", "type": "text", "required": true }
   ],
@@ -596,6 +599,7 @@ interface TemplateSourceDetailDto extends TemplateSourceDto {
     icon: string;
     color: string;
     category: string;
+    version: string;
     updatedAt: string;
   }[];
 }
@@ -618,6 +622,47 @@ interface TemplateSourceSyncResultDto {
 - `enabled` 为启用标记，当前不参与自动调度；同步始终由显式调用 `POST /api/template-sources/:id/sync` 触发。
 - 同步将仓库浅克隆到 `<DATA_DIR>/template-sources/<id>/` 作为暂存副本，安装结果持久化在 `templates` 表；删除仓库会一并清理该目录。
 
+### 清单与预览
+
+仓库可在根目录提供 `subwatch-templates.json` 清单，声明模板及其展示/版本信息；无清单时回退扫描 `templates/**/*.json`。
+
+```json
+{
+  "format": "subwatch-template-repository",
+  "version": 1,
+  "name": "我的模板库",
+  "templates": [
+    { "path": "templates/subscription/vps.json", "id": "vps", "name": "VPS 续费", "kind": "subscription", "version": "1.0.0" },
+    { "path": "templates/monitor/api.json", "version": "2.3.0" }
+  ]
+}
+```
+
+`GET /api/template-sources/:id/available` 克隆并读取清单/校验文件（不写库），返回：
+
+```ts
+interface TemplateSourceAvailableDto {
+  commit: string | null;
+  repositoryName: string | null;
+  repositoryDescription: string | null;
+  templates: {
+    path: string;
+    id: string | null;
+    kind: 'subscription' | 'monitor';
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    category: string;
+    version: string;
+    installed: boolean;      // 该 path 是否已从本源安装
+    error: string | null;    // 该文件缺失/非法时的错误
+  }[];
+  skipped: { path: string; error: string }[];
+  error: string | null;      // 克隆或清单解析失败时的错误（仍返回 200）
+}
+```
+
 ### 端点
 
 | 方法 | 路径 | 说明 |
@@ -627,12 +672,14 @@ interface TemplateSourceSyncResultDto {
 | GET | `/api/template-sources/:id` | 仓库详情 `TemplateSourceDetailDto` |
 | PUT | `/api/template-sources/:id` | 更新仓库，请求体 `TemplateSourceInput` |
 | DELETE | `/api/template-sources/:id` | 删除仓库及其托管模板，返回 `204` |
-| POST | `/api/template-sources/:id/sync` | 拉取并安装/更新，返回 `TemplateSourceSyncResultDto`（限流 10 次/分钟） |
+| GET | `/api/template-sources/:id/available` | 预览仓库清单 `TemplateSourceAvailableDto`（限流 20 次/分钟） |
+| POST | `/api/template-sources/:id/sync` | 安装/更新；可选请求体 `{ "paths": [...] }`，省略则全量同步（限流 10 次/分钟） |
+| POST | `/api/template-sources/:id/uninstall` | 卸载选中模板，请求体 `{ "paths": [...] }`，返回 `{ removed }` |
 
-错误：`400 validation_error`（请求体非法，含非法地址）、`404 not_found`（仓库不存在）、
+错误：`400 validation_error`（请求体非法、非法地址或 `paths` 不在清单内）、`404 not_found`（仓库不存在）、
 `409 conflict`（地址+分支重复或正在同步）、`409 template_managed`（对托管模板直接编辑/删除）。
 
-托管模板在 `TemplateSummaryDto` 中带 `sourceId`/`sourceName`，在 `TemplateDto` 中带 `sourceId`/`sourcePath`/`sourceRevision`；
+托管模板在 `TemplateSummaryDto` 中带 `sourceId`/`sourceName`/`version`，在 `TemplateDto` 中带 `sourceId`/`sourcePath`/`sourceRevision`/`version`；
 对托管模板调用 `PUT`/`DELETE /api/templates/:id` 返回 `409 template_managed`。
 
 ---

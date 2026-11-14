@@ -371,4 +371,14 @@ CREATE UNIQUE INDEX idx_templates_source_path ON templates(source_id, source_pat
 CREATE INDEX idx_templates_source ON templates(source_id);
 `,
   },
+  {
+    version: 6,
+    name: 'template_version',
+    sql: `
+-- Templates may declare an optional author version (e.g. a semver string).
+-- Empty string means "no version declared". Used for display in the template
+-- library and in a repository's preview catalogue.
+ALTER TABLE templates ADD COLUMN version TEXT NOT NULL DEFAULT '';
+`,
+  },
 ];

@@ -150,6 +150,7 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
   const [icon, setIcon] = useState(template?.icon ?? '');
   const [color, setColor] = useState(template?.color ?? '');
   const [category, setCategory] = useState(template?.category ?? '');
+  const [version, setVersion] = useState(template?.version ?? '');
   const [fields, setFields] = useState<TemplateFieldDraft[]>(
     template ? template.fields.map(templateFieldToDraft) : [],
   );
@@ -238,6 +239,7 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
       icon: icon.trim(),
       color: color.trim(),
       category: category.trim(),
+      version: version.trim(),
       fields: fields.map(draftToTemplateField),
       payload: parsePayloadObject(payloadText),
     });
@@ -357,6 +359,20 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
                         <option key={entry} value={entry} />
                       ))}
                     </datalist>
+                  </Field>
+
+                  <Field
+                    label={t('templates.editor.version')}
+                    htmlFor="template-version"
+                    hint={t('templates.editor.versionHint')}
+                  >
+                    <Input
+                      id="template-version"
+                      value={version}
+                      maxLength={32}
+                      placeholder={t('templates.editor.versionPlaceholder')}
+                      onChange={(event) => setVersion(event.target.value)}
+                    />
                   </Field>
 
                   <Field
