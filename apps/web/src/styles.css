@@ -595,7 +595,7 @@ body {
 .cm-editor .cm-gutters {
   background-color: var(--color-code-gutter) !important;
   border-right: 1px solid var(--color-line-soft) !important;
-  color: var(--color-moon-steel) !important;
+  color: var(--color-moonlight) !important;
 }
 
 .cm-editor .cm-activeLine {
