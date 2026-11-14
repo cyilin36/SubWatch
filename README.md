@@ -54,6 +54,7 @@ DATA_DIR=./data PORT=8080 TZ=Asia/Shanghai node apps/server/dist/index.js
 - **备份必须包含整个 `data/`，尤其是 `.secret-key`**，否则加密的密码/密钥无法恢复。
 - 升级时自动执行数据库迁移，迁移前会备份到 `data/backups/`；**不支持降级**，回退请恢复备份。
 - 直接用 `http://IP:8080` 即可使用；只有主动用域名/HTTPS 时才需要反向代理（见 `.env.example` 的 `TRUST_PROXY`）。
+- 「模板仓库」功能需要运行环境可执行 `git`（Docker 镜像已内置）；从仓库同步的模板保存在本地 `data/` 内，安装后即可离线使用。
 - 自定义 JS 由管理员编写、在沙箱中执行；管理权限不要开放给不可信用户。
 
 ## 文档
