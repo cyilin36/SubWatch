@@ -24,7 +24,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * Primary is the champagne pill: the one accent action on a screen. Everything
+ * Primary is the accent pill: the one accent action on a screen. Everything
  * else is glass or ghost, so the accent never has to compete with itself.
  */
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
@@ -59,7 +59,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         'transition-[background-color,border-color,box-shadow,transform,color] duration-500 ease-glass',
         'disabled:pointer-events-none disabled:opacity-45',
         variant === 'primary'
-          ? 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-ink focus-visible:ring-offset-2 focus-visible:ring-offset-night-deep'
+          ? 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-ink focus-visible:ring-offset-2 focus-visible:ring-offset-night-deep'
           : 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night',
         BUTTON_VARIANTS[variant],
         BUTTON_SIZES[size],
@@ -209,14 +209,14 @@ export interface StatTileProps {
   label: ReactNode;
   value: ReactNode;
   hint?: ReactNode;
-  /** The single champagne number on a page. */
+  /** The single accent number on a page. */
   accent?: boolean;
   tone?: Tone;
   className?: string;
 }
 
 export function StatTile({ label, value, hint, accent = false, tone, className }: StatTileProps) {
-  const color = accent ? 'var(--color-champagne-ink)' : tone ? TONE_COLORS[tone] : 'var(--color-ink)';
+  const color = accent ? 'var(--color-accent-ink)' : tone ? TONE_COLORS[tone] : 'var(--color-ink)';
   return (
     <div className={cn('glass-tile p-6', className)}>
       <p className="type-label">{label}</p>

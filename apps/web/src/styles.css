@@ -5,15 +5,15 @@
  *
  * Night Glass (default): a deep night base with two or three large, soft light
  * blooms and translucent panels floating above them.
- * Day Glass (opt-in): the same geometry on a warm ivory base, with white glass
+ * Day Glass (opt-in): the same geometry on a neutral paper base, with white glass
  * and ink text. Glass never carries its own colour; it borrows, bends and
  * softens the light behind it.
  *
  * Every surface, line, shadow and text tone is a token, overridden once under
  * `html[data-theme='light']`. Components never branch on the appearance.
- * The single accent colour is champagne: the primary action, one key number and
- * the brand mark. Champagne is deepened for the light base so it keeps its
- * contrast against ivory.
+ * The single accent colour is a cool steel blue: the primary action, one key
+ * number and the brand mark. It is deepened for the light base so it keeps its
+ * contrast against paper.
  */
 
 @theme {
@@ -29,12 +29,12 @@
   --color-night-steel: #16233a;
   --color-moon-steel: #33517a;
   --color-moonlight: #7c9cc4;
-  --color-champagne: #e4b863;
-  --color-champagne-ink: #e4b863;
+  --color-accent: #8fb6e8;
+  --color-accent-ink: #b6d0ef;
 
   /* Text and icon tones. `ink` is the inverted text colour used by components. */
   --color-ink: #ffffff;
-  --color-cta-foreground: #060a13;
+  --color-cta-foreground: #071019;
   --color-tone-muted: #9db6d6;
   --color-popover-arrow: #121c30;
   --inset-highlight: rgb(255 255 255 / 0.24);
@@ -62,8 +62,8 @@
   /* Ambient blooms behind the glass. */
   --bloom-moon: rgb(51 81 122 / 0.95);
   --bloom-moon-fade: rgb(51 81 122 / 0);
-  --bloom-champagne: rgb(228 184 99 / 0.55);
-  --bloom-champagne-fade: rgb(228 184 99 / 0);
+  --bloom-accent: rgb(143 182 232 / 0.5);
+  --bloom-accent-fade: rgb(143 182 232 / 0);
   --bloom-deep: rgb(36 58 92 / 0.85);
   --bloom-deep-fade: rgb(36 58 92 / 0);
 
@@ -131,9 +131,9 @@
   --shadow-brand:
     0 8px 24px rgb(3 7 18 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.3),
     inset 0 -1px 0 rgb(2 6 16 / 0.3);
-  --shadow-glow: 0 12px 32px rgb(228 184 99 / 0.25);
+  --shadow-glow: 0 12px 32px rgb(143 182 232 / 0.22);
   --glass-sheen: rgb(255 255 255 / 0.05);
-  --selection-bg: rgb(228 184 99 / 0.28);
+  --selection-bg: rgb(143 182 232 / 0.28);
   --selection-fg: #ffffff;
   --scrollbar-thumb: rgb(255 255 255 / 0.16);
   --scrollbar-thumb-hover: rgb(255 255 255 / 0.28);
@@ -149,8 +149,8 @@
 }
 
 /*
- * Day Glass. One block flips the whole system: warm ivory base, white glass,
- * ink text, and champagne deepened so it still reads against paper.
+ * Day Glass. One block flips the whole system: neutral paper base, white glass,
+ * ink text, and accent deepened so it still reads against paper.
  */
 html[data-theme='light'] {
   --color-night-deep: #eef1f5;
@@ -158,10 +158,10 @@ html[data-theme='light'] {
   --color-night-steel: #f4f6f9;
   --color-moon-steel: #aab4c0;
   --color-moonlight: #5a6675;
-  --color-champagne: #c8942b;
-  --color-champagne-ink: #8a6217;
+  --color-accent: #2b5c8a;
+  --color-accent-ink: #24507a;
   --color-ink: #101d2e;
-  --color-cta-foreground: #1a1408;
+  --color-cta-foreground: #ffffff;
   --color-tone-muted: #5a6675;
   --color-popover-arrow: #ffffff;
   --inset-highlight: rgb(255 255 255 / 0.75);
@@ -186,14 +186,14 @@ html[data-theme='light'] {
 
   --bloom-moon: rgb(221 233 247 / 0.85);
   --bloom-moon-fade: rgb(221 233 247 / 0);
-  --bloom-champagne: rgb(232 236 241 / 0.45);
-  --bloom-champagne-fade: rgb(232 236 241 / 0);
+  --bloom-accent: rgb(206 224 243 / 0.55);
+  --bloom-accent-fade: rgb(206 224 243 / 0);
   --bloom-deep: rgb(224 231 239 / 0.8);
   --bloom-deep-fade: rgb(224 231 239 / 0);
 
   --color-success: #1d7a4d;
-  --color-warning: #8f5a12;
-  --color-danger: #b23b3b;
+  --color-warning: #b45309;
+  --color-danger: #b42318;
   --color-info: #2f5f97;
 
   --chart-grid: rgb(20 36 56 / 0.12);
@@ -223,9 +223,9 @@ html[data-theme='light'] {
   --shadow-brand:
     0 8px 24px rgb(31 45 61 / 0.14), inset 0 1px 0 rgb(255 255 255 / 0.9),
     inset 0 -1px 0 rgb(31 45 61 / 0.05);
-  --shadow-glow: 0 12px 32px rgb(176 125 28 / 0.25);
+  --shadow-glow: 0 12px 32px rgb(43 92 138 / 0.22);
   --glass-sheen: rgb(255 255 255 / 0.6);
-  --selection-bg: rgb(176 125 28 / 0.22);
+  --selection-bg: rgb(43 92 138 / 0.2);
   --selection-fg: #101d2e;
   --scrollbar-thumb: rgb(20 36 56 / 0.18);
   --scrollbar-thumb-hover: rgb(20 36 56 / 0.3);
@@ -252,7 +252,7 @@ html[data-theme='dark'] {
   --border: var(--color-line);
   --foreground: var(--color-ink);
   --muted-foreground: var(--color-moonlight);
-  --brand: var(--color-champagne);
+  --brand: var(--color-accent);
   --brand-foreground: var(--color-night-deep);
   --success: var(--color-success);
   --warning: var(--color-warning);
@@ -315,15 +315,15 @@ body {
   filter: blur(40px);
 }
 
-.ambient-blob--champagne {
+.ambient-blob--accent {
   width: 38rem;
   height: 38rem;
   top: -10rem;
   right: -10rem;
   background: radial-gradient(
     circle,
-    var(--bloom-champagne) 0%,
-    var(--bloom-champagne-fade) 70%
+    var(--bloom-accent) 0%,
+    var(--bloom-accent-fade) 70%
   );
   filter: blur(48px);
 }
@@ -434,9 +434,9 @@ body {
     box-shadow: var(--shadow-dialog);
   }
 
-  /* The only champagne-filled component in the system. */
+  /* The only accent-filled component in the system. */
   .cta {
-    background-color: var(--color-champagne);
+    background-color: var(--color-accent);
     color: var(--color-cta-foreground);
     border: none;
     border-radius: var(--radius-pill);
@@ -449,7 +449,7 @@ body {
   }
 
   .cta:hover:not(:disabled) {
-    background-color: color-mix(in srgb, var(--color-champagne) 92%, var(--color-ink));
+    background-color: color-mix(in srgb, var(--color-accent) 92%, var(--color-ink));
     box-shadow: var(--shadow-glow);
     transform: translateY(-1px);
   }
@@ -460,7 +460,7 @@ body {
   }
 
   .cta:focus-visible {
-    outline: 2px solid var(--color-champagne-ink);
+    outline: 2px solid var(--color-accent-ink);
     outline-offset: 2px;
   }
 

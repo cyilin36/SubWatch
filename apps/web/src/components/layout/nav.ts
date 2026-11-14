@@ -18,7 +18,7 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 /**
- * Routes that own a champagne action themselves (full-page forms, editors and
+ * Routes that own an accent action themselves (full-page forms, editors and
  * detail pages with inline editing). The nav create action hides there so a
  * screen never shows two primary accents at once.
  */
