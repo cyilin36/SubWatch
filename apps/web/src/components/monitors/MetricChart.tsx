@@ -27,9 +27,9 @@ const SERIES_COLORS = [
   'var(--color-info)',
 ];
 
-const GRID_STROKE = 'rgb(255 255 255 / 0.08)';
-const AXIS_STROKE = 'rgb(124 156 196 / 0.55)';
-const TICK_FILL = 'rgb(124 156 196 / 0.85)';
+const GRID_STROKE = 'var(--chart-grid)';
+const AXIS_STROKE = 'var(--chart-axis)';
+const TICK_FILL = 'var(--chart-tick)';
 
 export interface MetricChartProps {
   series: MetricSeries;
@@ -93,7 +93,6 @@ export function MetricChart({ series, range, timezone, locale }: MetricChartProp
           <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
             <CartesianGrid
               stroke={GRID_STROKE}
-              strokeOpacity={0.28}
               strokeDasharray="3 3"
               vertical={false}
             />
@@ -102,7 +101,7 @@ export function MetricChart({ series, range, timezone, locale }: MetricChartProp
               tickFormatter={formatTimestamp}
               tick={{ fill: TICK_FILL, fontSize: 11 }}
               tickLine={false}
-              axisLine={{ stroke: AXIS_STROKE, strokeOpacity: 0.4 }}
+              axisLine={{ stroke: AXIS_STROKE }}
               minTickGap={28}
             />
             <YAxis
@@ -132,7 +131,7 @@ export function MetricChart({ series, range, timezone, locale }: MetricChartProp
                             />
                             <span className="truncate text-moonlight">{entry.name}</span>
                           </span>
-                          <span className="font-medium tabular-nums text-white">{entry.value}</span>
+                          <span className="font-medium tabular-nums text-ink">{entry.value}</span>
                         </li>
                       ))}
                     </ul>

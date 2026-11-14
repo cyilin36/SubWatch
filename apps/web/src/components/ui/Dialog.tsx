@@ -39,7 +39,7 @@ export function Dialog({
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-night-deep/75 backdrop-blur-md" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-scrim backdrop-blur-md" />
         <DialogPrimitive.Content
           {...(description ? {} : { 'aria-describedby': undefined })}
           className={cn(
@@ -49,9 +49,9 @@ export function Dialog({
             className,
           )}
         >
-          <div className="flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
+          <div className="flex items-start justify-between gap-4 border-b border-ink/10 px-6 py-5">
             <div className="min-w-0">
-              <DialogPrimitive.Title className="text-[20px] font-medium leading-snug text-white">
+              <DialogPrimitive.Title className="text-[20px] font-medium leading-snug text-ink">
                 {title}
               </DialogPrimitive.Title>
               {description ? (
@@ -68,7 +68,7 @@ export function Dialog({
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{children}</div>
           {footer ? (
-            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-white/10 px-6 py-4">
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-ink/10 px-6 py-4">
               {footer}
             </div>
           ) : null}

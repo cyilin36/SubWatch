@@ -239,7 +239,7 @@ curl -s -c cookies.txt \
 ```
 
 - `smtp` 为掩码后的配置（`passwordSet: boolean`），未配置时为 `null`。
-- `theme`：`light` / `dark` / `system`。
+- `theme`：`light` / `dark` / `system`；WebUI 的外观偏好保存在浏览器本地，该字段仅为兼容保留。
 
 ### 分页响应
 
@@ -657,7 +657,7 @@ Webhook 渠道 `config`：
 | `notificationRetentionDays` | 1..3650，默认 90 | 通知记录保留天数 |
 | `baseUrl` | 空或 http(s) URL | 通知深链使用；留空自动记录首次登录地址 |
 | `defaultChannelIds` | string[] | 未显式选择频道时使用的默认频道 |
-| `theme` | `light` / `dark` / `system` | 默认主题 |
+| `theme` | `light` / `dark` / `system` | 外观偏好（保留字段，WebUI 以浏览器本地设置为准） |
 
 `smtp` 可更新字段：`host`、`port`、`secure`、`requireTls`、`rejectUnauthorized`、`user`、`password`、`from`、`fromName`、`to`（均可选；密码可为 `__SUBWATCH_KEEP__`）。
 

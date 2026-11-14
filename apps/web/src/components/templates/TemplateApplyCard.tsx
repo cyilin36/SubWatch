@@ -112,7 +112,7 @@ export function TemplateApplyCard({
                 {appliedTemplate.icon || <LayoutTemplate className="h-4 w-4 text-moonlight" />}
               </span>
               <div className="min-w-0">
-                <p className="truncate text-body font-medium text-white">
+                <p className="truncate text-body font-medium text-ink">
                   {t('templates.apply.appliedLabel', { name: appliedTemplate.name })}
                 </p>
                 <p className="truncate text-xs text-moonlight">{t('templates.apply.appliedHint')}</p>
@@ -134,7 +134,7 @@ export function TemplateApplyCard({
             <p className="text-body text-moonlight">{t(`templates.apply.empty.${kind}`)}</p>
             <Link
               to={`/templates/new?kind=${kind}`}
-              className="inline-flex h-9 items-center gap-1.5 rounded-btn border border-white/15 bg-white/8 px-4 text-xs font-medium text-white transition-colors duration-500 ease-glass hover:border-white/30 hover:bg-white/14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
+              className="inline-flex h-9 items-center gap-1.5 rounded-btn border border-ink/15 bg-ink/8 px-4 text-xs font-medium text-ink transition-colors duration-500 ease-glass hover:border-ink/30 hover:bg-ink/14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
             >
               <Plus className="h-3.5 w-3.5" aria-hidden />
               {t('templates.apply.createLink')}

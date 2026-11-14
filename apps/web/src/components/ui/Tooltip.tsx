@@ -21,10 +21,10 @@ export function Tooltip({
         <TooltipPrimitive.Content
           side={side}
           sideOffset={8}
-          className="glass-popover z-[70] max-w-xs px-3 py-1.5 text-xs text-white/90"
+          className="glass-popover z-[70] max-w-xs px-3 py-1.5 text-xs text-ink/90"
         >
           {content}
-          <TooltipPrimitive.Arrow className="fill-[#16233a]" />
+          <TooltipPrimitive.Arrow className="fill-[var(--color-popover-arrow)]" />
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Portal>
     </TooltipPrimitive.Root>

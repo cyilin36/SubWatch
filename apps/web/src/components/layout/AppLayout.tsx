@@ -15,11 +15,11 @@ export function AppLayout() {
   const { appName } = useAuth();
 
   return (
-    <div className="relative min-h-screen text-white">
+    <div className="relative min-h-screen text-ink">
       <AmbientBackground />
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[90] focus:rounded-full focus:border focus:border-white/20 focus:bg-night-steel focus:px-5 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[90] focus:rounded-full focus:border focus:border-ink/20 focus:bg-night-steel focus:px-5 focus:py-2 focus:text-sm focus:font-medium focus:text-ink"
       >
         {t('nav.skipToContent')}
       </a>
@@ -29,7 +29,7 @@ export function AppLayout() {
           <Outlet />
         </Suspense>
       </main>
-      <footer className="relative mx-auto w-full max-w-[1280px] px-4 pb-8 text-center text-[11px] tracking-[0.14em] text-moonlight/80 uppercase sm:px-6 lg:px-8">
+      <footer className="relative mx-auto w-full max-w-[1280px] px-4 pb-8 text-center text-[11px] tracking-[0.14em] text-moonlight uppercase sm:px-6 lg:px-8">
         {t('app.name')} · {t('app.tagline')}
       </footer>
     </div>

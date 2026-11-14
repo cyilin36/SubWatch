@@ -272,7 +272,7 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
               <TabsTrigger value="basic">{t('templates.editor.basicInfo')}</TabsTrigger>
               <TabsTrigger value="fields">
                 {t('templates.editor.fields.title')}
-                <span className="rounded-pill bg-white/10 px-1.5 py-0.5 text-[10px] leading-none text-moonlight">
+                <span className="rounded-pill bg-ink/10 px-1.5 py-0.5 text-[10px] leading-none text-moonlight">
                   {fields.length}
                 </span>
               </TabsTrigger>
@@ -381,8 +381,8 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
               <FormSection description={t('templates.editor.fields.hint')}>
                 {fields.length === 0 ? (
                   <div className="glass-flat flex flex-col items-center px-6 py-8 text-center">
-                    <LayoutTemplate className="h-6 w-6 text-moonlight/80" aria-hidden />
-                    <p className="mt-3 text-body font-medium text-white/85">
+                    <LayoutTemplate className="h-6 w-6 text-moonlight" aria-hidden />
+                    <p className="mt-3 text-body font-medium text-ink/85">
                       {t('templates.editor.fields.empty')}
                     </p>
                     <p className="mt-1 text-xs text-moonlight">{t('templates.editor.fields.emptyHint')}</p>
@@ -429,7 +429,7 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
                       draftRefs.map((ref) => (
                         <code
                           key={ref.key}
-                          className="rounded-pill border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-xs text-moonlight"
+                          className="rounded-pill border border-ink/10 bg-ink/5 px-2 py-0.5 font-mono text-xs text-moonlight"
                         >
                           {`{{${ref.key}}}`}
                         </code>
@@ -613,7 +613,7 @@ function TemplateFieldRow({
   return (
     <div className="glass-flat space-y-4 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-body font-medium text-white">
+        <p className="text-body font-medium text-ink">
           {t('templates.editor.fields.fieldIndex', { index: index + 1 })}
         </p>
         <div className="flex items-center gap-1">
@@ -690,7 +690,7 @@ function TemplateFieldRow({
           />
         </Field>
         <div className="flex items-end pb-2">
-          <div className="flex items-center gap-2 text-sm text-white/90">
+          <div className="flex items-center gap-2 text-sm text-ink/90">
             <Switch
               id={`${idPrefix}-required`}
               checked={draft.required}
@@ -833,7 +833,7 @@ function TemplateTestRenderPanel({ template }: { template?: TemplateDto }) {
   if (!template) {
     return (
       <div className="glass-flat p-5">
-        <p className="text-body font-medium text-white">{t('templates.editor.testPanel.title')}</p>
+        <p className="text-body font-medium text-ink">{t('templates.editor.testPanel.title')}</p>
         <p className="mt-1.5 text-xs text-moonlight">{t('templates.editor.testPanel.unsavedHint')}</p>
       </div>
     );
@@ -843,7 +843,7 @@ function TemplateTestRenderPanel({ template }: { template?: TemplateDto }) {
 
   return (
     <div className="glass-flat p-5">
-      <p className="text-body font-medium text-white">{t('templates.editor.testPanel.title')}</p>
+      <p className="text-body font-medium text-ink">{t('templates.editor.testPanel.title')}</p>
       <p className="mt-1 text-xs text-moonlight">{t('templates.editor.testPanel.hint')}</p>
 
       <div className="mt-4">

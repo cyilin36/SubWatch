@@ -62,6 +62,11 @@ const en = {
     skipToContent: 'Skip to content',
     mainNav: 'Main',
   },
+  theme: {
+    light: 'Light',
+    dark: 'Dark',
+    system: 'Follow system',
+  },
   auth: {
     loginTitle: 'Sign in to SubWatch',
     loginSubtitle: 'Enter the administrator password to continue',

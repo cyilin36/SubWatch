@@ -46,8 +46,8 @@ export function Collapsible({
       <summary
         className={cn(
           'flex cursor-pointer list-none select-none items-center gap-2 px-4 py-3',
-          'type-label transition-colors duration-500 ease-glass hover:text-white',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night',
+          'type-label transition-colors duration-500 ease-glass hover:text-ink',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night',
           '[&::-webkit-details-marker]:hidden',
         )}
       >
@@ -65,7 +65,7 @@ export function Collapsible({
           </span>
         ) : null}
       </summary>
-      <div className="space-y-4 border-t border-white/10 px-4 py-4">{children}</div>
+      <div className="space-y-4 border-t border-ink/10 px-4 py-4">{children}</div>
     </details>
   );
 }

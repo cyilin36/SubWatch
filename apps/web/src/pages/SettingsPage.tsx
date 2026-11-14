@@ -628,11 +628,11 @@ export function SettingsPage() {
                 <p className="text-moonlight">{t('settings.aboutText')}</p>
                 <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 pt-3">
                   <dt className="text-xs text-moonlight">{t('settings.apiVersion')}</dt>
-                  <dd className="text-right font-mono text-xs text-white">{settings.version}</dd>
+                  <dd className="text-right font-mono text-xs text-ink">{settings.version}</dd>
                   <dt className="text-xs text-moonlight">{t('settings.uiVersion')}</dt>
-                  <dd className="text-right font-mono text-xs text-white">{settings.version}</dd>
+                  <dd className="text-right font-mono text-xs text-ink">{settings.version}</dd>
                   <dt className="text-xs text-moonlight">{t('settings.timezone')}</dt>
-                  <dd className="text-right text-xs text-white">{timezone}</dd>
+                  <dd className="text-right text-xs text-ink">{timezone}</dd>
                 </dl>
                 <p className="pt-2 text-xs text-moonlight">{t('settings.aboutHint')}</p>
               </CardContent>
@@ -650,7 +650,7 @@ export function SettingsPage() {
                   ) : healthOk ? (
                     <>
                       <CheckCircle2 className="h-4 w-4 text-success" aria-hidden />
-                      <span className="text-white">{t('settings.healthy')}</span>
+                      <span className="text-ink">{t('settings.healthy')}</span>
                       <Badge tone="success">
                         {formatDurationSeconds(healthQuery.data?.uptimeSeconds, locale)}
                       </Badge>
@@ -658,19 +658,19 @@ export function SettingsPage() {
                   ) : (
                     <>
                       <XCircle className="h-4 w-4 text-danger" aria-hidden />
-                      <span className="text-white">{t('settings.unhealthy')}</span>
+                      <span className="text-ink">{t('settings.unhealthy')}</span>
                     </>
                   )}
                 </div>
                 <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 pt-3">
                   <dt className="text-xs text-moonlight">{t('settings.apiVersion')}</dt>
-                  <dd className="text-right font-mono text-xs text-white">{healthQuery.data?.version ?? settings.version}</dd>
+                  <dd className="text-right font-mono text-xs text-ink">{healthQuery.data?.version ?? settings.version}</dd>
                   <dt className="text-xs text-moonlight">{t('settings.health')}</dt>
-                  <dd className="text-right text-xs text-white">
+                  <dd className="text-right text-xs text-ink">
                     {healthQuery.data?.ok ? t('settings.healthy') : t('settings.unhealthy')}
                   </dd>
                   <dt className="text-xs text-moonlight">{t('common.updatedAt')}</dt>
-                  <dd className="text-right text-xs text-white">
+                  <dd className="text-right text-xs text-ink">
                     {healthQuery.dataUpdatedAt
                       ? formatDateTime(new Date(healthQuery.dataUpdatedAt).toISOString(), timezone, 'en')
                       : '—'}

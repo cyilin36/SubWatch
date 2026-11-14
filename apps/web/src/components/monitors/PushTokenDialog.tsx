@@ -65,7 +65,7 @@ export function PushTokenDialog({ open, token, title, hint, onOpenChange, onDone
 
         <div className="space-y-2">
           <p className="type-label">{t('monitorForm.pushCurl')}</p>
-          <pre className="glass-flat max-h-44 overflow-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-relaxed text-white/80">
+          <pre className="glass-flat max-h-44 overflow-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-relaxed text-ink/80">
             {curl}
           </pre>
           <div className="flex flex-wrap items-center gap-3">

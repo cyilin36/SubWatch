@@ -41,7 +41,7 @@ function OutputWell({
 }) {
   return (
     <details className="glass-flat group overflow-hidden">
-      <summary className="flex cursor-pointer list-none select-none items-center gap-2 px-4 py-2.5 text-moonlight transition-colors duration-500 ease-glass hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none select-none items-center gap-2 px-4 py-2.5 text-moonlight transition-colors duration-500 ease-glass hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 [&::-webkit-details-marker]:hidden">
         <ChevronRight
           className="h-3.5 w-3.5 shrink-0 transition-transform duration-500 ease-glass group-open:rotate-90"
           aria-hidden
@@ -52,8 +52,8 @@ function OutputWell({
       <div
         className={
           mono
-            ? 'max-h-60 overflow-auto border-t border-white/10 px-4 py-3 font-mono text-xs leading-relaxed text-white/80'
-            : 'max-h-48 overflow-auto border-t border-white/10 px-4 py-3 text-xs leading-relaxed text-white/80'
+            ? 'max-h-60 overflow-auto border-t border-ink/10 px-4 py-3 font-mono text-xs leading-relaxed text-ink/80'
+            : 'max-h-48 overflow-auto border-t border-ink/10 px-4 py-3 text-xs leading-relaxed text-ink/80'
         }
       >
         {children}
@@ -111,12 +111,12 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
               {result.httpStatus !== null && result.httpStatus !== undefined ? (
                 <span className="text-xs text-moonlight">
                   {t('monitorForm.httpStatus')}{' '}
-                  <strong className="font-medium text-white">{result.httpStatus}</strong>
+                  <strong className="font-medium text-ink">{result.httpStatus}</strong>
                 </span>
               ) : null}
               <span className="text-xs text-moonlight">
                 {t('monitorForm.duration')}{' '}
-                <strong className="font-medium text-white">{formatMs(result.durationMs)}</strong>
+                <strong className="font-medium text-ink">{formatMs(result.durationMs)}</strong>
               </span>
             </div>
 
@@ -135,7 +135,7 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
                   {metricEntries.map(([key, metric]) => (
                     <div key={key} className="glass-flat min-w-0 px-3 py-2">
                       <p className="truncate text-xs text-moonlight">{metric.label || key}</p>
-                      <p className="mt-0.5 truncate text-sm font-medium text-white">
+                      <p className="mt-0.5 truncate text-sm font-medium text-ink">
                         {formatMetricValue(metric)}
                       </p>
                     </div>
@@ -159,7 +159,7 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
                         {t(`severity.${evaluation.level === 'ok' ? 'success' : evaluation.level}`)}
                       </Badge>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-white">{evaluation.metricKey}</p>
+                        <p className="truncate text-sm font-medium text-ink">{evaluation.metricKey}</p>
                         <p className="truncate text-xs text-moonlight">
                           {evaluation.message || formatMetricValue(evaluation.value)}
                         </p>
@@ -176,7 +176,7 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
               mono
             >
               {result.logs.length === 0 ? (
-                <p className="text-moonlight/80">{t('monitorForm.noLogs')}</p>
+                <p className="text-moonlight">{t('monitorForm.noLogs')}</p>
               ) : (
                 result.logs.map((line, index) => (
                   <p key={index} className="whitespace-pre-wrap break-words">

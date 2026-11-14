@@ -97,11 +97,11 @@ export function RenewDialog({ open, onOpenChange, target }: RenewDialogProps) {
       <div className="space-y-6">
         <div className="glass-flat flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 text-sm">
           <span className="type-label">{t('renew.current')}</span>
-          <span className="font-medium text-white">
+          <span className="font-medium text-ink">
             {target ? formatExpiry(target.expiryDate, target.expiryTime) : '—'}
           </span>
-          <ArrowRight className="h-4 w-4 text-moonlight/80" aria-hidden />
-          <span className="font-medium text-white">
+          <ArrowRight className="h-4 w-4 text-moonlight" aria-hidden />
+          <span className="font-medium text-ink">
             {dateMissing || !target ? '—' : formatExpiry(date, target.expiryTime)}
           </span>
         </div>

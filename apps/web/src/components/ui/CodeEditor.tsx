@@ -1,6 +1,7 @@
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../providers/AuthProvider';
 
 export interface CodeEditorProps {
   value: string;
@@ -22,6 +23,7 @@ export function CodeEditor({
   readOnly = false,
   className,
 }: CodeEditorProps) {
+  const { resolvedTheme } = useAuth();
   return (
     <div
       className={cn(
@@ -32,7 +34,7 @@ export function CodeEditor({
       <CodeMirror
         value={value}
         height={height}
-        theme="dark"
+        theme={resolvedTheme}
         readOnly={readOnly}
         placeholder={placeholder}
         extensions={language === 'javascript' ? [javascript()] : []}

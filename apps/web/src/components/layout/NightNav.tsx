@@ -7,6 +7,7 @@ import { Activity, ChevronDown, CreditCard, LayoutTemplate, LogOut, Menu, Plus, 
 import { cn } from '../../lib/utils';
 import { BrandMark } from './BrandMark';
 import { LanguageMenu } from './Controls';
+import { ThemeMenu } from './ThemeMenu';
 import { isEditorRoute, NAV_ITEMS } from './nav';
 import { useAuth } from '../../providers/AuthProvider';
 
@@ -60,7 +61,7 @@ export function NightNav({ appName }: { appName: string }) {
       ? createPortal(
           <div className="fixed inset-0 z-[80] lg:hidden">
             <div
-              className="absolute inset-0 bg-night-deep/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-scrim backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
               aria-hidden
             />
@@ -70,14 +71,14 @@ export function NightNav({ appName }: { appName: string }) {
               aria-label={t('nav.menu')}
               className="glass glass-panel absolute inset-y-3 left-3 flex w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden"
             >
-              <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4">
+              <div className="flex items-center gap-3 border-b border-ink/10 px-5 py-4">
                 <BrandMark />
                 <p className="min-w-0 flex-1 truncate text-[15px] font-medium">{appName}</p>
                 <button
                   type="button"
                   onClick={() => setMobileOpen(false)}
                   aria-label={t('common.close')}
-                  className="rounded-full p-2 text-moonlight transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+                  className="rounded-full p-2 text-moonlight transition-colors hover:bg-ink/10 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60"
                 >
                   <X className="h-4 w-4" aria-hidden />
                 </button>
@@ -101,7 +102,7 @@ export function NightNav({ appName }: { appName: string }) {
                   })}
                 </ul>
               </nav>
-              <div className="flex flex-col gap-2 border-t border-white/10 p-4">
+              <div className="flex flex-col gap-2 border-t border-ink/10 p-4">
                 {CREATE_ITEMS.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -109,7 +110,7 @@ export function NightNav({ appName }: { appName: string }) {
                       key={item.to}
                       to={item.to}
                       onClick={() => setMobileOpen(false)}
-                      className="glass-flat flex items-center gap-3 rounded-btn px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                      className="glass-flat flex items-center gap-3 rounded-btn px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-ink/10"
                     >
                       <Icon className="h-4 w-4 text-moonlight" aria-hidden />
                       {t(item.labelKey)}
@@ -117,14 +118,17 @@ export function NightNav({ appName }: { appName: string }) {
                   );
                 })}
                 <div className="mt-1 flex items-center justify-between">
-                  <LanguageMenu />
+                  <div className="flex items-center gap-1">
+                    <ThemeMenu />
+                    <LanguageMenu />
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
                       setMobileOpen(false);
                       void logout();
                     }}
-                    className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-moonlight transition-colors hover:bg-white/10 hover:text-white"
+                    className="flex items-center gap-2 rounded-full px-3 py-2 text-sm text-moonlight transition-colors hover:bg-ink/10 hover:text-ink"
                   >
                     <LogOut className="h-4 w-4" aria-hidden />
                     {t('nav.logout')}
@@ -143,10 +147,10 @@ export function NightNav({ appName }: { appName: string }) {
         <div className="mx-auto flex h-[72px] w-full max-w-[1280px] items-center gap-3 px-4 sm:px-6 lg:px-8">
           <Link
             to="/"
-            className="flex min-w-0 shrink-0 items-center gap-3 rounded-full py-1 pr-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+            className="flex min-w-0 shrink-0 items-center gap-3 rounded-full py-1 pr-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60"
           >
             <BrandMark />
-            <span className="truncate text-body font-medium tracking-tight text-white">{appName}</span>
+            <span className="truncate text-body font-medium tracking-tight text-ink">{appName}</span>
           </Link>
 
           <nav className="mx-auto hidden items-center gap-1 lg:flex" aria-label={t('nav.mainNav')}>
@@ -164,6 +168,7 @@ export function NightNav({ appName }: { appName: string }) {
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:ml-0">
             <div className="hidden items-center gap-1.5 sm:flex">
+              <ThemeMenu />
               <LanguageMenu />
               <button
                 type="button"
@@ -172,7 +177,7 @@ export function NightNav({ appName }: { appName: string }) {
                 }}
                 title={t('nav.logout')}
                 aria-label={t('nav.logout')}
-                className="rounded-full p-2 text-moonlight transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+                className="rounded-full p-2 text-moonlight transition-colors hover:bg-ink/10 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60"
               >
                 <LogOut className="h-4 w-4" aria-hidden />
               </button>
@@ -202,7 +207,7 @@ export function NightNav({ appName }: { appName: string }) {
                         <DropdownMenu.Item key={item.to} asChild>
                           <Link
                             to={item.to}
-                            className="flex cursor-pointer select-none items-center gap-3 rounded-btn px-3 py-2.5 text-sm text-white/85 outline-none transition-colors data-[highlighted]:bg-white/10 data-[highlighted]:text-white"
+                            className="flex cursor-pointer select-none items-center gap-3 rounded-btn px-3 py-2.5 text-sm text-ink/85 outline-none transition-colors data-[highlighted]:bg-ink/10 data-[highlighted]:text-ink"
                           >
                             <Icon className="h-4 w-4 text-moonlight" aria-hidden />
                             {t(item.labelKey)}
@@ -221,8 +226,8 @@ export function NightNav({ appName }: { appName: string }) {
               aria-label={t('nav.menu')}
               aria-expanded={mobileOpen}
               className={cn(
-                'rounded-full p-2 text-moonlight transition-colors hover:bg-white/10 hover:text-white lg:hidden',
-                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60',
+                'rounded-full p-2 text-moonlight transition-colors hover:bg-ink/10 hover:text-ink lg:hidden',
+                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60',
               )}
             >
               <Menu className="h-5 w-5" aria-hidden />

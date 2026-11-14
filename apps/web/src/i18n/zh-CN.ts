@@ -62,6 +62,11 @@ const zhCN = {
     skipToContent: '跳到主要内容',
     mainNav: '主导航',
   },
+  theme: {
+    light: '亮色',
+    dark: '深色',
+    system: '跟随系统',
+  },
   auth: {
     loginTitle: '登录 SubWatch',
     loginSubtitle: '输入管理员密码以继续',

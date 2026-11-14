@@ -77,17 +77,17 @@ function TemplateCard({
     <Card interactive className="flex flex-col">
       <div className="flex items-start gap-3 p-5 pb-3">
         <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] border border-white/15 bg-white/5 text-xl text-moonlight"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] border border-ink/15 bg-ink/5 text-xl text-moonlight"
           style={template.color ? { borderColor: template.color } : undefined}
           aria-hidden
         >
           {template.icon || <KindIcon className="h-5 w-5" />}
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="min-w-0 text-body-lg font-medium leading-snug text-white">
+          <h3 className="min-w-0 text-body-lg font-medium leading-snug text-ink">
             <Link
               to={`/templates/${template.id}`}
-              className="block max-w-full after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
+              className="block max-w-full after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
             >
               <span className="block truncate">{template.name}</span>
             </Link>
@@ -100,7 +100,7 @@ function TemplateCard({
       </div>
 
       <div className="flex-1 px-5 pb-3">
-        <p className="line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-moonlight/80">
+        <p className="line-clamp-2 min-h-[2.5rem] text-xs leading-relaxed text-moonlight">
           {template.description || t('templates.list.noDescription')}
         </p>
         <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-moonlight">
@@ -110,7 +110,7 @@ function TemplateCard({
         </div>
       </div>
 
-      <div className="relative z-10 flex flex-wrap items-center justify-end gap-1.5 border-t border-white/10 p-2.5">
+      <div className="relative z-10 flex flex-wrap items-center justify-end gap-1.5 border-t border-ink/10 p-2.5">
         <Button variant="outline" size="sm" loading={exporting} onClick={onExport}>
           <Download className="h-3.5 w-3.5" aria-hidden />
           {t('templates.list.export')}
@@ -131,7 +131,7 @@ function EditButton({ id }: { id: string }) {
   return (
     <Link
       to={`/templates/${id}`}
-      className="relative z-10 inline-flex h-9 items-center gap-1.5 rounded-btn border border-white/15 bg-transparent px-4 text-xs font-medium text-white transition-colors duration-500 ease-glass hover:border-white/30 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
+      className="relative z-10 inline-flex h-9 items-center gap-1.5 rounded-btn border border-ink/15 bg-transparent px-4 text-xs font-medium text-ink transition-colors duration-500 ease-glass hover:border-ink/30 hover:bg-ink/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
     >
       <Pencil className="h-3.5 w-3.5" aria-hidden />
       {t('common.edit')}
@@ -287,14 +287,14 @@ export function TemplatesPage() {
         {t('templates.list.hint')}
         <Link
           to="/subscriptions/new"
-          className="text-moonlight underline decoration-white/20 underline-offset-4 transition-colors duration-500 ease-glass hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
+          className="text-moonlight underline decoration-ink/20 underline-offset-4 transition-colors duration-500 ease-glass hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
         >
           {t('templates.list.trySubscription')}
         </Link>
         <span aria-hidden>·</span>
         <Link
           to="/monitors/new"
-          className="text-moonlight underline decoration-white/20 underline-offset-4 transition-colors duration-500 ease-glass hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
+          className="text-moonlight underline decoration-ink/20 underline-offset-4 transition-colors duration-500 ease-glass hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
         >
           {t('templates.list.tryMonitor')}
         </Link>

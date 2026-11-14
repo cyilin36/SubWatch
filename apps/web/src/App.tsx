@@ -7,6 +7,8 @@ import { AppLayout } from './components/layout/AppLayout';
 import { AmbientBackground } from './components/layout/AmbientBackground';
 import { BrandMark } from './components/layout/BrandMark';
 import { LanguageMenu } from './components/layout/Controls';
+import { ThemeMenu } from './components/layout/ThemeMenu';
+import { GlassToaster } from './components/ui/GlassToaster';
 import { Button, FullPageSpinner, TooltipProvider } from './components/ui';
 import { errorMessage } from './lib/utils';
 import { LoginPage, SetupPage } from './pages/AuthPages';
@@ -81,15 +83,16 @@ function LoginRoute() {
 function ConnectionError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
   const { t } = useTranslation();
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-5 py-16 text-center text-white">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-5 py-16 text-center text-ink">
       <AmbientBackground />
       <div className="glass glass-panel relative w-full max-w-lg p-8 sm:p-10">
         <BrandMark className="mx-auto h-12 w-12 rounded-[18px]" />
         <p className="type-label mt-8">{t('app.name')}</p>
-        <h1 className="mt-3 text-subheading text-white">{t('auth.unableToConnect')}</h1>
+        <h1 className="mt-3 text-subheading text-ink">{t('auth.unableToConnect')}</h1>
         <p className="mt-3 break-words text-body text-moonlight">{errorMessage(error)}</p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Button onClick={onRetry}>{t('auth.retry')}</Button>
+          <ThemeMenu />
           <LanguageMenu />
         </div>
       </div>
@@ -143,6 +146,7 @@ export default function App() {
       <TooltipProvider>
         <AuthProvider>
           <AppRoutes />
+          <GlassToaster />
         </AuthProvider>
       </TooltipProvider>
     </ErrorBoundary>

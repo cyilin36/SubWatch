@@ -41,13 +41,13 @@ export function Select({
         aria-invalid={invalid || undefined}
         className={cn(
           'field flex h-11 items-center justify-between gap-2 px-4 text-left',
-          'data-[placeholder]:text-moonlight/80',
+          'data-[placeholder]:text-moonlight',
           className,
         )}
       >
         <SelectPrimitive.Value placeholder={placeholder} />
         <SelectPrimitive.Icon asChild>
-          <ChevronDown className="h-4 w-4 shrink-0 text-moonlight/80" aria-hidden />
+          <ChevronDown className="h-4 w-4 shrink-0 text-moonlight" aria-hidden />
         </SelectPrimitive.Icon>
       </SelectPrimitive.Trigger>
       <SelectPrimitive.Portal>
@@ -63,8 +63,8 @@ export function Select({
                 value={option.value}
                 disabled={option.disabled}
                 className={cn(
-                  'relative flex w-full cursor-pointer select-none items-center gap-2 rounded-btn px-3 py-2 text-sm text-white/85 outline-none',
-                  'data-[highlighted]:bg-white/10 data-[highlighted]:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+                  'relative flex w-full cursor-pointer select-none items-center gap-2 rounded-btn px-3 py-2 text-sm text-ink/85 outline-none',
+                  'data-[highlighted]:bg-ink/10 data-[highlighted]:text-ink data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                 )}
               >
                 <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>

@@ -76,7 +76,7 @@ export function SecretInput({
       <button
         type="button"
         onClick={() => setVisible((current) => !current)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-moonlight transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-moonlight transition-colors hover:bg-ink/10 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50"
         aria-label={visible ? 'Hide secret' : 'Show secret'}
         tabIndex={-1}
       >

@@ -173,7 +173,7 @@ export function NotificationsPage() {
                   <div key={notification.id} className="glass p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-body font-medium text-white">
+                        <p className="text-body font-medium text-ink">
                           {t(`event.${notification.eventType}`)}
                         </p>
                         <p className="mt-0.5 truncate text-xs text-moonlight">
@@ -255,7 +255,7 @@ export function NotificationsPage() {
                           {formatDateTime(notification.createdAt, timezone, locale)}
                         </TD>
                         <TD>
-                          <p className="text-body text-white">{t(`event.${notification.eventType}`)}</p>
+                          <p className="text-body text-ink">{t(`event.${notification.eventType}`)}</p>
                           <p className="max-w-[220px] truncate text-xs text-moonlight">
                             {notification.eventKey}
                           </p>
@@ -332,11 +332,11 @@ export function NotificationsPage() {
             <dl className="glass-flat grid gap-5 rounded-btn p-4 sm:grid-cols-2 sm:p-5">
               <div className="min-w-0">
                 <dt className="type-label">{t('notifications.eventType')}</dt>
-                <dd className="mt-2 text-body text-white">{t(`event.${payloadTarget.eventType}`)}</dd>
+                <dd className="mt-2 text-body text-ink">{t(`event.${payloadTarget.eventType}`)}</dd>
               </div>
               <div className="min-w-0">
                 <dt className="type-label">{t('notifications.channel')}</dt>
-                <dd className="mt-2 break-words text-body text-white">
+                <dd className="mt-2 break-words text-body text-ink">
                   {payloadTarget.channelName ?? t('notifications.noChannel')}
                 </dd>
               </div>
@@ -348,7 +348,7 @@ export function NotificationsPage() {
               </div>
               <div className="min-w-0">
                 <dt className="type-label">{t('notifications.sentAt')}</dt>
-                <dd className="mt-2 text-body text-white">
+                <dd className="mt-2 text-body text-ink">
                   {payloadTarget.sentAt
                     ? formatDateTime(payloadTarget.sentAt, timezone, locale)
                     : t('notifications.notSet')}

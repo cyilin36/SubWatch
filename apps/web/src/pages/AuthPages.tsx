@@ -46,7 +46,7 @@ function AuthPanel({
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[18px] glass-flat text-moonlight">
           {icon}
         </div>
-        <h1 className="text-balance text-subheading text-white">{title}</h1>
+        <h1 className="text-balance text-subheading text-ink">{title}</h1>
         <p className="mt-2 text-balance text-body text-moonlight">{subtitle}</p>
       </div>
       {children}

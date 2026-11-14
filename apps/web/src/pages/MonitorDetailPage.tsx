@@ -63,7 +63,7 @@ const OPERATOR_SYMBOLS: Record<string, string> = {
 function CodeWell({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`glass-flat min-w-0 overflow-x-auto px-4 py-3 font-mono text-xs leading-relaxed text-white/80 ${className ?? ''}`}
+      className={`glass-flat min-w-0 overflow-x-auto px-4 py-3 font-mono text-xs leading-relaxed text-ink/80 ${className ?? ''}`}
     >
       {children}
     </div>
@@ -238,7 +238,7 @@ export function MonitorDetailPage() {
           ) : (
             <Card className="p-6 sm:p-8">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-[18px] font-medium leading-snug text-white">
+                <h2 className="text-[18px] font-medium leading-snug text-ink">
                   {t('monitorDetail.trend')}
                 </h2>
                 <Segmented
@@ -266,7 +266,7 @@ export function MonitorDetailPage() {
             <ErrorState error={runsQuery.error} onRetry={() => void runsQuery.refetch()} />
           ) : runsQuery.isPending ? (
             <Card className="p-6 sm:p-8">
-              <h2 className="text-[18px] font-medium leading-snug text-white">
+              <h2 className="text-[18px] font-medium leading-snug text-ink">
                 {t('monitorDetail.runHistory')}
               </h2>
               <Skeleton className="mt-5 h-40" />
@@ -289,7 +289,7 @@ export function MonitorDetailPage() {
           ) : (
             <Card className="overflow-hidden">
               <div className="flex flex-wrap items-center justify-between gap-3 p-6 sm:px-8">
-                <h2 className="text-[18px] font-medium leading-snug text-white">
+                <h2 className="text-[18px] font-medium leading-snug text-ink">
                   {t('monitorDetail.runHistory')}
                 </h2>
                 <Button
@@ -347,7 +347,7 @@ export function MonitorDetailPage() {
           {/* Status and configuration */}
           <Card className="p-6">
             <div className="flex items-start justify-between gap-4">
-              <h2 className="min-w-0 text-[18px] font-medium leading-snug text-white">
+              <h2 className="min-w-0 text-[18px] font-medium leading-snug text-ink">
                 {t('monitorDetail.statusLabel')}
               </h2>
               <div className="flex shrink-0 items-center gap-2">
@@ -364,13 +364,13 @@ export function MonitorDetailPage() {
             <dl className="mt-5 grid grid-cols-2 gap-4">
               <div>
                 <dt className="type-label">{t('monitorDetail.interval')}</dt>
-                <dd className="mt-1.5 text-body font-medium text-white">
+                <dd className="mt-1.5 text-body font-medium text-ink">
                   {formatInterval(monitor.intervalSeconds, locale)}
                 </dd>
               </div>
               <div>
                 <dt className="type-label">{t('monitorDetail.lastChecked')}</dt>
-                <dd className="mt-1.5 text-body text-white">
+                <dd className="mt-1.5 text-body text-ink">
                   {monitor.lastCheckedAt
                     ? formatRelativeTime(monitor.lastCheckedAt, timezone, locale)
                     : t('common.never')}
@@ -378,35 +378,35 @@ export function MonitorDetailPage() {
               </div>
               <div>
                 <dt className="type-label">{t('monitorDetail.nextRun')}</dt>
-                <dd className="mt-1.5 text-body text-white">
+                <dd className="mt-1.5 text-body text-ink">
                   {monitor.nextRunAt ? formatDateTime(monitor.nextRunAt, timezone, locale) : '—'}
                 </dd>
               </div>
               <div>
                 <dt className="type-label">{t('monitorDetail.consecutiveFailures')}</dt>
-                <dd className="mt-1.5 text-body font-medium text-white">
+                <dd className="mt-1.5 text-body font-medium text-ink">
                   {monitor.consecutiveFailures}
                 </dd>
               </div>
               <div>
                 <dt className="type-label">{t('monitorDetail.rulesCountLabel')}</dt>
-                <dd className="mt-1.5 text-body font-medium text-white">{monitor.rules.length}</dd>
+                <dd className="mt-1.5 text-body font-medium text-ink">{monitor.rules.length}</dd>
               </div>
             </dl>
 
             {monitor.templateName ? (
-              <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-white/10 pt-4 text-xs">
+              <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-4 text-xs">
                 <LayoutTemplate className="h-3.5 w-3.5 text-moonlight" aria-hidden />
-                <span className="text-moonlight/80">{t('monitorDetail.templateSource')}</span>
+                <span className="text-moonlight">{t('monitorDetail.templateSource')}</span>
                 {monitor.templateId ? (
                   <Link
                     to={`/templates/${monitor.templateId}`}
-                    className="rounded-btn font-medium text-moonlight underline-offset-4 transition-colors duration-500 ease-glass hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                    className="rounded-btn font-medium text-moonlight underline-offset-4 transition-colors duration-500 ease-glass hover:text-ink hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50"
                   >
                     {monitor.templateName}
                   </Link>
                 ) : (
-                  <span className="font-medium text-white">{monitor.templateName}</span>
+                  <span className="font-medium text-ink">{monitor.templateName}</span>
                 )}
                 {!monitor.templateId ? (
                   <Badge tone="warning">{t('monitorDetail.templateDeleted')}</Badge>
@@ -429,7 +429,7 @@ export function MonitorDetailPage() {
             ) : null}
 
             {monitor.config.type === 'http' ? (
-              <div className="mt-5 border-t border-white/10 pt-4">
+              <div className="mt-5 border-t border-ink/10 pt-4">
                 <CodeWell>
                   <p className="break-all">
                     {monitor.config.request.method} {monitor.config.request.url}
@@ -448,7 +448,7 @@ export function MonitorDetailPage() {
 
           {/* Threshold rules */}
           <Card className="p-6">
-            <h2 className="text-[18px] font-medium leading-snug text-white">
+            <h2 className="text-[18px] font-medium leading-snug text-ink">
               {t('monitorDetail.rulesTitle')}
             </h2>
             {monitor.rules.length === 0 ? (
@@ -458,7 +458,7 @@ export function MonitorDetailPage() {
                 {monitor.rules.map((rule) => (
                   <li key={rule.id} className="glass-flat px-4 py-3">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="min-w-0 truncate text-sm font-medium text-white">
+                      <p className="min-w-0 truncate text-sm font-medium text-ink">
                         {rule.label || rule.metricKey}
                       </p>
                       <Badge tone={rule.enabled ? 'success' : 'muted'}>
@@ -483,7 +483,7 @@ export function MonitorDetailPage() {
           {/* Push token */}
           {isPush ? (
             <Card className="p-6">
-              <h2 className="flex items-center gap-2 text-[18px] font-medium leading-snug text-white">
+              <h2 className="flex items-center gap-2 text-[18px] font-medium leading-snug text-ink">
                 <KeyRound className="h-4 w-4 text-moonlight" aria-hidden />
                 {t('monitorDetail.pushToken')}
               </h2>

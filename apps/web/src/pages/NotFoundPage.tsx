@@ -11,17 +11,17 @@ import { BrandMark } from '../components/layout/BrandMark';
 export function NotFoundPage() {
   const { t } = useTranslation();
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-5 py-16 text-center text-white">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-5 py-16 text-center text-ink">
       <AmbientBackground />
       <main className="glass glass-panel relative w-full max-w-lg p-8 sm:p-10">
         <BrandMark className="mx-auto h-12 w-12 rounded-[18px]" />
         <p
-          className="mt-6 text-display text-white/15 select-none"
+          className="mt-6 text-display text-ink/15 select-none"
           aria-hidden
         >
           404
         </p>
-        <h1 className="mt-2 text-balance text-subheading text-white">{t('notFound.title')}</h1>
+        <h1 className="mt-2 text-balance text-subheading text-ink">{t('notFound.title')}</h1>
         <p className="mx-auto mt-2 max-w-sm text-balance text-body text-moonlight">
           {t('notFound.description')}
         </p>

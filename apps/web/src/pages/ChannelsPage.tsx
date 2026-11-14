@@ -335,7 +335,7 @@ function ChannelDialog({
           </Field>
         </div>
         <div className="glass-flat flex items-center justify-between gap-3 rounded-btn px-4 py-3">
-          <p className="text-body font-medium text-white">{t('channels.enabled')}</p>
+          <p className="text-body font-medium text-ink">{t('channels.enabled')}</p>
           <Switch
             checked={form.watch('enabled')}
             onCheckedChange={(checked) => form.setValue('enabled', checked, { shouldDirty: true })}
@@ -522,7 +522,7 @@ function ChannelDialog({
 
             <div className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-body font-medium text-white">{t('channels.headers')}</p>
+                <p className="text-body font-medium text-ink">{t('channels.headers')}</p>
                 <Button
                   type="button"
                   variant="outline"
@@ -704,7 +704,7 @@ export function ChannelsPage() {
                     <ChannelIcon type={channel.type} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-body font-medium text-white">{channel.name}</p>
+                    <p className="truncate text-body font-medium text-ink">{channel.name}</p>
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
                       <Badge tone="muted">
                         {isEmail ? t('channels.email') : t('channels.webhook')}
@@ -727,7 +727,7 @@ export function ChannelsPage() {
                     ariaLabel={`${t('channels.enabled')} ${channel.name}`}
                   />
                 </div>
-                <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/10 pt-4">
+                <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-4">
                   <Button
                     variant="outline"
                     size="sm"

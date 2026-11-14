@@ -14,7 +14,7 @@ import type { AuthStatusDto, Locale, SettingsDto, Theme } from '@subwatch/shared
 import i18n, { persistLocale } from '../i18n';
 import { api, type MonitorMetaDto } from '../lib/api';
 import { errorMessage } from '../lib/utils';
-import { FIXED_THEME } from '../lib/theme';
+import { applyTheme, getStoredTheme, resolveTheme, storeTheme } from '../lib/theme';
 
 export interface AuthContextValue {
   status: AuthStatusDto | undefined;
@@ -46,6 +46,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const unauthorizedAtRef = useRef(0);
+  const [theme, setThemeState] = useState<Theme>(() => getStoredTheme());
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() =>
+    resolveTheme(getStoredTheme()),
+  );
 
   const statusQuery = useQuery<AuthStatusDto>({
     queryKey: ['auth', 'status'],
@@ -82,6 +86,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       i18n.off('languageChanged', handler);
     };
+  }, []);
+
+  // Stamp the appearance on <html>; every design token is scoped by data-theme.
+  useEffect(() => {
+    setResolvedTheme(applyTheme(theme));
+  }, [theme]);
+
+  // While the preference is "system", follow the operating system live.
+  useEffect(() => {
+    if (theme !== 'system' || typeof window.matchMedia !== 'function') return;
+    const query = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => setResolvedTheme(applyTheme('system'));
+    query.addEventListener('change', handler);
+    return () => query.removeEventListener('change', handler);
+  }, [theme]);
+
+  const setTheme = useCallback((next: Theme) => {
+    storeTheme(next);
+    setThemeState(next);
   }, []);
 
   // Global 401 handler: drop session state and let the router redirect to /login.
@@ -204,8 +227,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setupRequired: statusQuery.data?.setupRequired ?? meta?.setupRequired ?? false,
       timezone,
       locale,
-      theme: FIXED_THEME,
-      resolvedTheme: 'dark',
+      theme,
+      resolvedTheme,
       appName: meta?.appName ?? 'SubWatch',
       baseUrl: meta?.baseUrl ?? '',
       login,
@@ -213,9 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       retry,
       setLanguage,
-      setTheme: () => {
-        // The appearance is fixed dark; no-op kept for interface stability.
-      },
+      setTheme,
       syncSettings,
       reloadSettings,
     }),
@@ -228,6 +249,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       settingsQuery.isPending,
       timezone,
       locale,
+      theme,
+      resolvedTheme,
+      setTheme,
       login,
       setup,
       logout,

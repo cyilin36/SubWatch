@@ -815,7 +815,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                       <p className="text-xs text-moonlight">{t('monitorForm.codeHint')}</p>
                     </div>
                     <Collapsible title={t('monitorForm.codeExampleLabel')}>
-                      <pre className="overflow-auto font-mono text-xs leading-relaxed text-white/80">
+                      <pre className="overflow-auto font-mono text-xs leading-relaxed text-ink/80">
                         {JS_EXAMPLE}
                       </pre>
                     </Collapsible>
@@ -853,7 +853,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                     return (
                       <div key={field.id} className="glass-flat space-y-4 p-4">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-sm font-medium text-white">
+                          <p className="text-sm font-medium text-ink">
                             {t('monitorForm.rules')} #{index + 1}
                           </p>
                           <div className="flex items-center gap-2">

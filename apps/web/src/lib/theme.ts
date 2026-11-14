@@ -1,30 +1,50 @@
 import type { Theme } from '@subwatch/shared';
 
-/**
- * The web client ships a single night-glass appearance. The theme preference is
- * kept in the settings payload for API compatibility, but the UI always renders
- * dark: glass only reads correctly when there is light to bend behind it.
- */
+/** Stored appearance preference: light, dark, or follow the operating system. */
 export const THEME_STORAGE_KEY = 'subwatch-theme';
 
-export const FIXED_THEME: Theme = 'dark';
+/** Night glass stays the default; light is an opt-in appearance. */
+export const DEFAULT_THEME: Theme = 'dark';
 
 export function getStoredTheme(): Theme {
-  return FIXED_THEME;
+  try {
+    const value = localStorage.getItem(THEME_STORAGE_KEY);
+    if (value === 'light' || value === 'dark' || value === 'system') return value;
+  } catch {
+    // localStorage is unavailable in some privacy modes; fall through.
+  }
+  return DEFAULT_THEME;
 }
 
-export function storeTheme(): void {
-  // Retained for API compatibility; the appearance is fixed.
+export function storeTheme(theme: Theme): void {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // Ignore storage failures; the in-memory preference still applies.
+  }
 }
 
-export function resolveTheme(): 'dark' {
-  return 'dark';
+export function prefersDark(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
 }
 
-/** Stamp the dark appearance on <html> before the first paint. */
-export function applyTheme(): 'dark' {
+export function resolveTheme(theme: Theme): 'light' | 'dark' {
+  if (theme === 'system') return prefersDark() ? 'dark' : 'light';
+  return theme;
+}
+
+/**
+ * Stamp the resolved appearance on <html>. Every token in styles.css is scoped by
+ * `data-theme`, so this single attribute repaints the whole interface.
+ */
+export function applyTheme(theme: Theme): 'light' | 'dark' {
+  const resolved = resolveTheme(theme);
   const root = document.documentElement;
-  root.classList.add('dark');
-  root.dataset.theme = 'dark';
-  return 'dark';
+  root.dataset.theme = resolved;
+  root.classList.toggle('dark', resolved === 'dark');
+  return resolved;
 }

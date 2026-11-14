@@ -169,7 +169,7 @@ export function TemplateImportDialog({ open, onOpenChange, onImported }: Templat
 
         {preview ? (
           <div className="glass-flat flex flex-wrap items-center gap-2 px-4 py-3 text-sm">
-            <span className="font-medium text-white">{preview.name}</span>
+            <span className="font-medium text-ink">{preview.name}</span>
             <Badge tone="info">{t(`templates.kind.${preview.kind}`)}</Badge>
             <span className="text-xs text-moonlight">
               {t('templates.list.fieldCount', { count: preview.fieldCount })}
