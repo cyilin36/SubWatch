@@ -615,6 +615,9 @@ interface TemplateSourceSyncResultDto {
 `TemplateSourceInput`：`{ name?: string≤100, url: git 地址≤2000, branch?: string≤100, enabled?: boolean }`。
 `url` 仅接受 `https://`、`http://`、`file://`。
 
+- `enabled` 为启用标记，当前不参与自动调度；同步始终由显式调用 `POST /api/template-sources/:id/sync` 触发。
+- 同步将仓库浅克隆到 `<DATA_DIR>/template-sources/<id>/` 作为暂存副本，安装结果持久化在 `templates` 表；删除仓库会一并清理该目录。
+
 ### 端点
 
 | 方法 | 路径 | 说明 |
