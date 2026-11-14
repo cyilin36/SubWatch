@@ -256,7 +256,7 @@ function HomeSkeleton() {
 /**
  * The single landing page of the app: a three-number stats strip and one
  * unified, urgency-sorted list of reminder subscriptions plus custom monitors.
- * Page actions stay secondary — the night nav already carries the champagne CTA.
+ * Page actions stay secondary — the night nav already carries the accent CTA.
  */
 export function HomePage() {
   const { t } = useTranslation();
@@ -369,24 +369,27 @@ export function HomePage() {
             aria-label={t('home.eyebrow')}
             className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4"
           >
-            {/* The only champagne number on the page. */}
+            {/* The only accent number on the page. */}
             <StatTile
               className="col-span-2 p-5 sm:col-span-1 sm:p-6"
               label={t('home.stats.total')}
               value={total}
               accent
             />
+            {/* Counts only take a semantic tone when they are non-zero: a "0"
+                rendered in warning/danger red reads as an alarm when nothing
+                needs attention. */}
             <StatTile
               className="p-5 sm:p-6"
               label={t('home.stats.attention')}
               value={attention}
-              tone="warning"
+              tone={attention > 0 ? 'warning' : undefined}
             />
             <StatTile
               className="p-5 sm:p-6"
               label={t('home.stats.critical')}
               value={alarming}
-              tone="danger"
+              tone={alarming > 0 ? 'danger' : undefined}
             />
           </section>
 

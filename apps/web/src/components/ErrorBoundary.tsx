@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBound
       <div className="relative flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center text-ink">
         <div className="ambient-layer" aria-hidden>
           <div className="ambient-blob ambient-blob--moon" />
-          <div className="ambient-blob ambient-blob--champagne" />
+          <div className="ambient-blob ambient-blob--accent" />
           <div className="ambient-blob ambient-blob--deep" />
         </div>
         <div className="glass glass-panel relative w-full max-w-lg p-8 sm:p-10">

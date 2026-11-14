@@ -27,7 +27,7 @@ type SetupValues = z.infer<typeof setupFormSchema>;
 /**
  * One glass panel per auth screen. AuthLayout already paints the ambient light
  * and the brand, so the page only owns the panel itself: recessed icon well,
- * subheading title and the single champagne submit button.
+ * subheading title and the single accent submit button.
  */
 function AuthPanel({
   icon,
