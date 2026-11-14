@@ -8,7 +8,9 @@ import {
   CreditCard,
   Download,
   FileJson,
+  GitBranch,
   LayoutTemplate,
+  Lock,
   Pencil,
   Plus,
   Trash2,
@@ -38,6 +40,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  Tooltip,
 } from '../components/ui';
 import { Segmented } from '../components/common/fields';
 import { TemplateImportDialog } from '../components/templates/TemplateImportDialog';
@@ -85,16 +88,25 @@ function TemplateCard({
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="min-w-0 text-body-lg font-medium leading-snug text-ink">
-            <Link
-              to={`/templates/${template.id}`}
-              className="block max-w-full after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
-            >
-              <span className="block truncate">{template.name}</span>
-            </Link>
+            {template.sourceId ? (
+              <span className="block max-w-full truncate">{template.name}</span>
+            ) : (
+              <Link
+                to={`/templates/${template.id}`}
+                className="block max-w-full after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
+              >
+                <span className="block truncate">{template.name}</span>
+              </Link>
+            )}
           </h3>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <Badge tone="muted">{t(templateKindLabelKey(template.kind))}</Badge>
             {template.category ? <Badge tone="info">{template.category}</Badge> : null}
+            {template.sourceId ? (
+              <Badge tone="info">
+                {t('templates.list.fromSource', { name: template.sourceName ?? '' })}
+              </Badge>
+            ) : null}
           </div>
         </div>
       </div>
@@ -115,11 +127,22 @@ function TemplateCard({
           <Download className="h-3.5 w-3.5" aria-hidden />
           {t('templates.list.export')}
         </Button>
-        <EditButton id={template.id} />
-        <Button variant="danger" size="sm" onClick={onDelete}>
-          <Trash2 className="h-3.5 w-3.5" aria-hidden />
-          {t('common.delete')}
-        </Button>
+        {template.sourceId ? (
+          <Tooltip content={t('templates.list.managedHint')}>
+            <span className="relative z-10 inline-flex h-9 items-center gap-1.5 rounded-btn border border-ink/15 bg-transparent px-4 text-xs font-medium text-moonlight">
+              <Lock className="h-3.5 w-3.5" aria-hidden />
+              {t('templates.list.readOnly')}
+            </span>
+          </Tooltip>
+        ) : (
+          <>
+            <EditButton id={template.id} />
+            <Button variant="danger" size="sm" onClick={onDelete}>
+              <Trash2 className="h-3.5 w-3.5" aria-hidden />
+              {t('common.delete')}
+            </Button>
+          </>
+        )}
       </div>
     </Card>
   );
@@ -244,6 +267,13 @@ export function TemplatesPage() {
         icon={<LayoutTemplate className="h-5 w-5" />}
         actions={
           <>
+            <Link
+              to="/template-sources"
+              className="inline-flex h-9 items-center gap-1.5 rounded-btn border border-ink/15 bg-transparent px-4 text-xs font-medium text-ink transition-colors duration-500 ease-glass hover:border-ink/30 hover:bg-ink/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
+            >
+              <GitBranch className="h-4 w-4" aria-hidden />
+              {t('templates.list.manageSources')}
+            </Link>
             <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
               <Upload className="h-4 w-4" aria-hidden />
               {t('templates.import.button')}

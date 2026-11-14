@@ -11,7 +11,7 @@ import {
 } from '@subwatch/shared';
 import type { CoreContext } from '../context.js';
 import { createRequireAuth } from '../auth/guard.js';
-import { BadRequestError, NotFoundError } from '../lib/errors.js';
+import { BadRequestError, NotFoundError, TemplateManagedError } from '../lib/errors.js';
 import { nowIso } from '../db/helpers.js';
 import {
   createTemplate,
@@ -74,6 +74,9 @@ export function registerTemplateRoutes(app: FastifyInstance, ctx: CoreContext): 
       const { id } = idParamsSchema.parse(request.params);
       const existing = requireTemplate(ctx, id);
       const input = templateInputSchema.parse(request.body ?? {});
+      if (existing.sourceId) {
+        throw new TemplateManagedError();
+      }
       if (input.kind !== existing.kind) {
         throw new BadRequestError('A template kind cannot be changed after creation');
       }
@@ -88,6 +91,12 @@ export function registerTemplateRoutes(app: FastifyInstance, ctx: CoreContext): 
     { preHandler: requireAuth },
     async (request, reply) => {
       const { id } = idParamsSchema.parse(request.params);
+      const template = requireTemplate(ctx, id);
+      if (template.sourceId) {
+        throw new TemplateManagedError(
+          'Template is managed by a template repository and cannot be deleted here; remove it from the source repository and sync instead',
+        );
+      }
       if (!deleteTemplate(ctx, id)) throw new NotFoundError('Template not found');
       reply.code(204);
       return reply.send();

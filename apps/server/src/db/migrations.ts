@@ -341,4 +341,34 @@ ALTER TABLE monitors ADD COLUMN template_name TEXT;
 CREATE INDEX idx_monitors_template ON monitors(template_id);
 `,
   },
+  {
+    version: 5,
+    name: 'template_sources',
+    sql: `
+-- Template repositories: a git repository of subscription/monitor templates
+-- that SubWatch clones and installs. Each installed template carries the
+-- source id and its file path inside the repository, which is the stable key
+-- used to update or prune it across syncs. source_id NULL means the template
+-- was authored locally rather than pulled from a repository.
+CREATE TABLE template_sources (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL DEFAULT '',
+  url TEXT NOT NULL,
+  branch TEXT NOT NULL DEFAULT '',
+  enabled INTEGER NOT NULL DEFAULT 1,
+  last_synced_at TEXT,
+  last_commit TEXT,
+  last_error TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX idx_template_sources_url ON template_sources(url, branch);
+
+ALTER TABLE templates ADD COLUMN source_id TEXT REFERENCES template_sources(id) ON DELETE SET NULL;
+ALTER TABLE templates ADD COLUMN source_path TEXT;
+ALTER TABLE templates ADD COLUMN source_revision TEXT;
+CREATE UNIQUE INDEX idx_templates_source_path ON templates(source_id, source_path);
+CREATE INDEX idx_templates_source ON templates(source_id);
+`,
+  },
 ];
