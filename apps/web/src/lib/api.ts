@@ -21,6 +21,7 @@ import type {
   TemplateDto,
   TemplateKind,
   TemplateRenderResultDto,
+  TemplateSourceAvailableDto,
   TemplateSourceDetailDto,
   TemplateSourceDto,
   TemplateSourceInput,
@@ -269,8 +270,15 @@ export const api = {
     update: (id: string, input: TemplateSourceInput) =>
       put<TemplateSourceDto>(`/template-sources/${encodeURIComponent(id)}`, input),
     remove: (id: string) => del<undefined>(`/template-sources/${encodeURIComponent(id)}`),
-    sync: (id: string) =>
-      post<TemplateSourceSyncResultDto>(`/template-sources/${encodeURIComponent(id)}/sync`),
+    available: (id: string) =>
+      request<TemplateSourceAvailableDto>(`/template-sources/${encodeURIComponent(id)}/available`),
+    sync: (id: string, paths?: string[]) =>
+      post<TemplateSourceSyncResultDto>(
+        `/template-sources/${encodeURIComponent(id)}/sync`,
+        paths ? { paths } : {},
+      ),
+    uninstall: (id: string, paths: string[]) =>
+      post<{ removed: number }>(`/template-sources/${encodeURIComponent(id)}/uninstall`, { paths }),
   },
 
   channels: {

@@ -120,6 +120,7 @@ export function registerTemplateRoutes(app: FastifyInstance, ctx: CoreContext): 
           icon: template.icon,
           color: template.color,
           category: template.category,
+          version: template.version,
           fields: template.fields,
           payload: template.payload,
         },

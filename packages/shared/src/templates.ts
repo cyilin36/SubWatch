@@ -295,6 +295,8 @@ export const templateInputSchema = z
         message: 'color must be empty or a #RRGGBB hex value',
       }),
     category: z.string().max(50).default(''),
+    /** Optional author-declared version (e.g. `1.2.0`); free-form, max 32 chars. */
+    version: z.string().max(32).default(''),
     fields: z.array(templateFieldSchema).max(MAX_TEMPLATE_FIELDS).default([]),
     payload: z.record(z.unknown()),
   })

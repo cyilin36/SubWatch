@@ -57,13 +57,14 @@ data/
 
 ### templates
 
-用户自定义模板（v4；v5 增加模板仓库来源列）。模板是订阅/监控的创建蓝图，本身不产生业务实体。
+用户自定义模板（v4；v5 增加模板仓库来源列；v6 增加版本列）。模板是订阅/监控的创建蓝图，本身不产生业务实体。
 
 | 列 | 说明 |
 |---|---|
 | `id` | 主键 |
 | `kind` | `subscription` / `monitor` |
 | `name` / `description` / `icon` / `color` / `category` | 展示信息 |
+| `version` | 可选作者版本号，空字符串表示未声明 |
 | `fields` | `TemplateField[]` JSON，参数定义 |
 | `payload` | 渲染草稿 JSON，可含 `{{参数}}` 占位符 |
 | `source_id` | 来源模板仓库，`NULL` 表示本地创建 |
@@ -262,6 +263,7 @@ data/
 - v5 迁移要点：新增 `template_sources` 表（模板仓库）；`templates` 增加 `source_id`（外键 → `template_sources`，
   `ON DELETE SET NULL`）、`source_path`、`source_revision` 与 `(source_id, source_path)` 唯一索引。
   既有模板的来源列为空，视为本地模板，不做数据回填。删除仓库会移除其托管模板，订阅/监控的模板快照按既有语义保留。
+- v6 迁移要点：`templates` 增加 `version`（`TEXT NOT NULL DEFAULT ''`），用于展示模板版本；既有模板为空串。
 
 ## 运维提示
 

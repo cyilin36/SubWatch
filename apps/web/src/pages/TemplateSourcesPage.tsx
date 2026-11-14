@@ -3,10 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { AlertTriangle, GitBranch, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
-import { templateSourceInputSchema, type TemplateSourceDto, type TemplateSourceInput } from '@subwatch/shared';
+import { AlertTriangle, Eye, GitBranch, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import {
+  templateSourceInputSchema,
+  type TemplateSourceAvailableTemplateDto,
+  type TemplateSourceDto,
+  type TemplateSourceInput,
+} from '@subwatch/shared';
 import { api } from '../lib/api';
 import { applyZodIssues, getFieldError } from '../lib/form';
+import { templateKindLabelKey } from '../lib/templates';
 import { errorMessage, formatDateTime } from '../lib/utils';
 import { useAuth } from '../providers/AuthProvider';
 import {
@@ -163,6 +169,262 @@ function SourceDialog({
   );
 }
 
+/** Browse a repository's catalogue and install/uninstall individual templates. */
+function BrowseDialog({
+  open,
+  onOpenChange,
+  source,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  source: TemplateSourceDto | null;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [selected, setSelected] = useState<string[]>([]);
+  const [uninstallTarget, setUninstallTarget] = useState<TemplateSourceAvailableTemplateDto | null>(null);
+
+  const availableQuery = useQuery({
+    queryKey: ['template-sources', source?.id, 'available'],
+    queryFn: () => api.templateSources.available(source!.id),
+    enabled: open && Boolean(source),
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    setSelected([]);
+    setUninstallTarget(null);
+  }, [open, source?.id]);
+
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ['template-sources'] });
+    void queryClient.invalidateQueries({ queryKey: ['templates'] });
+    void availableQuery.refetch();
+  };
+
+  const installMutation = useMutation({
+    mutationFn: (paths: string[]) => api.templateSources.sync(source!.id, paths),
+    onSuccess: (result) => {
+      refresh();
+      setSelected([]);
+      if (result.ok) {
+        toast.success(
+          t('templateSources.installSuccess', {
+            added: result.added,
+            updated: result.updated,
+            removed: result.removed,
+            skipped: result.skipped.length,
+          }),
+        );
+      } else {
+        toast.error(t('templateSources.installFailed'), { description: result.error ?? undefined });
+      }
+    },
+    onError: (error) =>
+      toast.error(t('templateSources.installFailed'), { description: errorMessage(error) }),
+  });
+
+  const uninstallMutation = useMutation({
+    mutationFn: (path: string) => api.templateSources.uninstall(source!.id, [path]),
+    onSuccess: (result) => {
+      refresh();
+      setUninstallTarget(null);
+      toast.success(t('templateSources.uninstallSuccess', { count: result.removed }));
+    },
+    onError: (error) =>
+      toast.error(t('templateSources.uninstallFailed'), { description: errorMessage(error) }),
+  });
+
+  const data = availableQuery.data;
+  const templates = data?.templates ?? [];
+  const selectable = templates.filter((entry) => !entry.installed && !entry.error);
+  const allSelected = selectable.length > 0 && selectable.every((entry) => selected.includes(entry.path));
+
+  const toggleOne = (path: string, checked: boolean) => {
+    setSelected((current) => (checked ? [...current, path] : current.filter((entry) => entry !== path)));
+  };
+
+  const toggleAll = () => {
+    setSelected(allSelected ? [] : selectable.map((entry) => entry.path));
+  };
+
+  const checkboxClass =
+    'mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border border-ink/30 bg-transparent accent-[var(--color-champagne-ink)] disabled:cursor-not-allowed disabled:opacity-45';
+
+  const renderBody = () => {
+    if (availableQuery.isPending) {
+      return (
+        <div className="space-y-3">
+          {[0, 1, 2].map((index) => (
+            <Skeleton key={index} className="h-24 rounded-btn" />
+          ))}
+        </div>
+      );
+    }
+    if (availableQuery.isError) {
+      return <ErrorState error={availableQuery.error} onRetry={() => void availableQuery.refetch()} />;
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-moonlight">
+          {data?.repositoryName ? <Badge tone="info">{data.repositoryName}</Badge> : null}
+          <span className="font-mono">
+            {t('templateSources.commitLabel')}: {data?.commit ? data.commit.slice(0, 7) : '—'}
+          </span>
+        </div>
+
+        {data?.repositoryDescription ? (
+          <p className="text-xs text-moonlight">{data.repositoryDescription}</p>
+        ) : null}
+
+        {data?.error ? (
+          <p
+            className="flex items-start gap-2 rounded-btn border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger"
+            role="alert"
+          >
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="min-w-0 break-words">
+              <span className="font-medium">{t('templateSources.catalogError')}: </span>
+              {data.error}
+            </span>
+          </p>
+        ) : null}
+
+        {templates.length === 0 ? (
+          <p className="py-8 text-center text-sm text-moonlight">
+            {t('templateSources.noAvailableTemplates')}
+          </p>
+        ) : (
+          <>
+            {selectable.length > 0 ? (
+              <label className="flex cursor-pointer items-center gap-2 text-xs text-moonlight">
+                <input
+                  type="checkbox"
+                  className={checkboxClass}
+                  checked={allSelected}
+                  onChange={toggleAll}
+                />
+                {t('templateSources.selectAll')}
+              </label>
+            ) : null}
+
+            <ul className="space-y-2">
+              {templates.map((entry) => {
+                const disabled = entry.installed || Boolean(entry.error);
+                return (
+                  <li key={entry.path} className="glass-flat rounded-btn p-3">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        className={checkboxClass}
+                        aria-label={entry.name}
+                        checked={selected.includes(entry.path)}
+                        disabled={disabled}
+                        onChange={(event) => toggleOne(entry.path, event.target.checked)}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Badge tone="muted">{t(templateKindLabelKey(entry.kind))}</Badge>
+                          {entry.category ? <Badge tone="info">{entry.category}</Badge> : null}
+                          {entry.version ? (
+                            <Badge tone="muted">
+                              {t('templates.list.versionBadge', { version: entry.version })}
+                            </Badge>
+                          ) : null}
+                          {entry.installed ? (
+                            <Badge tone="success" dot>
+                              {t('templateSources.installed')}
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <p className="mt-1 text-body font-medium text-ink">{entry.name}</p>
+                        {entry.description ? (
+                          <p className="mt-0.5 text-xs text-moonlight">{entry.description}</p>
+                        ) : null}
+                        <p className="mt-1 break-all font-mono text-[11px] text-moonlight">{entry.path}</p>
+                        {entry.error ? (
+                          <p className="mt-1 text-xs text-danger" role="alert">
+                            {entry.error}
+                          </p>
+                        ) : null}
+                      </div>
+                      {entry.installed ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-danger hover:text-danger"
+                          onClick={() => setUninstallTarget(entry)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                          {t('templateSources.uninstall')}
+                        </Button>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={onOpenChange}
+        title={t('templateSources.availableTitle')}
+        description={t('templateSources.availableDescription')}
+        size="lg"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={installMutation.isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={() => installMutation.mutate(selected)}
+              loading={installMutation.isPending}
+              disabled={selected.length === 0}
+            >
+              {t('templateSources.installSelected')}
+              {selected.length > 0
+                ? ` · ${t('templateSources.selectedCount', { count: selected.length })}`
+                : ''}
+            </Button>
+          </>
+        }
+      >
+        {renderBody()}
+      </Dialog>
+
+      <ConfirmDialog
+        open={Boolean(uninstallTarget)}
+        onOpenChange={(next) => {
+          if (!next) setUninstallTarget(null);
+        }}
+        title={t('templateSources.uninstall')}
+        description={
+          uninstallTarget
+            ? t('templateSources.uninstallConfirm', { name: uninstallTarget.name })
+            : undefined
+        }
+        confirmLabel={t('templateSources.uninstall')}
+        loading={uninstallMutation.isPending}
+        onConfirm={() => {
+          if (uninstallTarget) uninstallMutation.mutate(uninstallTarget.path);
+        }}
+      />
+    </>
+  );
+}
+
 export function TemplateSourcesPage() {
   const { t } = useTranslation();
   const { timezone, locale } = useAuth();
@@ -170,6 +432,7 @@ export function TemplateSourcesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSource, setEditingSource] = useState<TemplateSourceDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TemplateSourceDto | null>(null);
+  const [browseSource, setBrowseSource] = useState<TemplateSourceDto | null>(null);
 
   const sourcesQuery = useQuery({
     queryKey: ['template-sources'],
@@ -295,6 +558,10 @@ export function TemplateSourcesPage() {
             <Pencil className="h-3.5 w-3.5" aria-hidden />
             {t('common.edit')}
           </Button>
+          <Button variant="ghost" size="sm" onClick={() => setBrowseSource(source)}>
+            <Eye className="h-3.5 w-3.5" aria-hidden />
+            {t('templateSources.browseTemplates')}
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -406,6 +673,14 @@ export function TemplateSourcesPage() {
         onConfirm={() => {
           if (deleteTarget) deleteMutation.mutate(deleteTarget);
         }}
+      />
+
+      <BrowseDialog
+        open={Boolean(browseSource)}
+        onOpenChange={(open) => {
+          if (!open) setBrowseSource(null);
+        }}
+        source={browseSource}
       />
     </div>
   );
