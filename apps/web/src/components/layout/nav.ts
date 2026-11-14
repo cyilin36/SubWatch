@@ -8,7 +8,7 @@ export interface NavItem {
   end?: boolean;
 }
 
-/** Sidebar entries: the unified home, templates, channels, notification log, settings. */
+/** Top navigation entries: the unified home, templates, channels, log, settings. */
 export const NAV_ITEMS: NavItem[] = [
   { to: '/', labelKey: 'nav.home', icon: ListChecks, end: true },
   { to: '/templates', labelKey: 'nav.templates', icon: LayoutTemplate },
@@ -17,7 +17,24 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/settings', labelKey: 'nav.settings', icon: Settings },
 ];
 
-/** Resolve the topbar label for the current pathname. */
+/**
+ * Routes that own a champagne action themselves (full-page forms, editors and
+ * detail pages with inline editing). The nav create action hides there so a
+ * screen never shows two primary accents at once.
+ */
+export function isEditorRoute(pathname: string): boolean {
+  if (pathname === '/subscriptions/new' || pathname === '/monitors/new') return true;
+  if (pathname === '/settings') return true;
+  if (pathname === '/templates/new') return true;
+  if (pathname.endsWith('/edit')) return true;
+  // /templates/:id is the template editor; /templates alone is the index.
+  if (/^\/templates\/[^/]+$/.test(pathname)) return true;
+  // Detail pages carry an inline edit mode with its own save action.
+  if (/^\/(subscriptions|monitors)\/[^/]+$/.test(pathname)) return true;
+  return false;
+}
+
+/** Resolve the contextual label for the current pathname. */
 export function navLabelKey(pathname: string): string {
   if (pathname === '/') return 'nav.home';
   if (pathname === '/subscriptions/new') return 'subscriptions.newSubscription';

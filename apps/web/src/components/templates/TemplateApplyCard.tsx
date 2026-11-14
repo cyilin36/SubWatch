@@ -21,6 +21,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Field,
   Select,
   Skeleton,
 } from '../ui';
@@ -98,25 +99,23 @@ export function TemplateApplyCard({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-[var(--brand)]" aria-hidden />
+          <Sparkles className="h-4 w-4 text-moonlight" aria-hidden />
           {t('templates.apply.title')}
         </CardTitle>
         <CardDescription>{t(`templates.apply.hint.${kind}`)}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
         {appliedTemplate ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2">
-            <div className="flex min-w-0 items-center gap-2">
+          <div className="glass-flat flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
               <span className="text-lg leading-none" aria-hidden>
-                {appliedTemplate.icon || <LayoutTemplate className="h-4 w-4" />}
+                {appliedTemplate.icon || <LayoutTemplate className="h-4 w-4 text-moonlight" />}
               </span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">
+                <p className="truncate text-body font-medium text-ink">
                   {t('templates.apply.appliedLabel', { name: appliedTemplate.name })}
                 </p>
-                <p className="truncate text-xs text-[var(--muted-foreground)]">
-                  {t('templates.apply.appliedHint')}
-                </p>
+                <p className="truncate text-xs text-moonlight">{t('templates.apply.appliedHint')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -127,28 +126,23 @@ export function TemplateApplyCard({
             </div>
           </div>
         ) : templatesQuery.isPending ? (
-          <Skeleton className="h-9" />
+          <Skeleton className="h-11" />
         ) : templatesQuery.isError ? (
           <Alert tone="danger">{errorMessage(templatesQuery.error)}</Alert>
         ) : templates.length === 0 ? (
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-[var(--muted-foreground)]">
-              {t(`templates.apply.empty.${kind}`)}
-            </p>
+          <div className="glass-flat flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <p className="text-body text-moonlight">{t(`templates.apply.empty.${kind}`)}</p>
             <Link
               to={`/templates/new?kind=${kind}`}
-              className="inline-flex items-center gap-1 text-sm font-medium text-[var(--brand)] hover:underline"
+              className="inline-flex h-9 items-center gap-1.5 rounded-btn border border-ink/15 bg-ink/8 px-4 text-xs font-medium text-ink transition-colors duration-500 ease-glass hover:border-ink/30 hover:bg-ink/14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-night"
             >
-              <Plus className="h-4 w-4" aria-hidden />
+              <Plus className="h-3.5 w-3.5" aria-hidden />
               {t('templates.apply.createLink')}
             </Link>
           </div>
         ) : (
           <>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="template-apply-select" className="text-sm font-medium">
-                {t('templates.apply.selectLabel')}
-              </label>
+            <Field label={t('templates.apply.selectLabel')} htmlFor="template-apply-select">
               <Select
                 id="template-apply-select"
                 value={selectedId}
@@ -165,14 +159,14 @@ export function TemplateApplyCard({
                   })),
                 ]}
               />
-            </div>
+            </Field>
 
             {templateQuery.isError ? <Alert tone="danger">{errorMessage(templateQuery.error)}</Alert> : null}
 
             {template ? (
               <>
                 {template.description ? (
-                  <p className="text-xs text-[var(--muted-foreground)]">{template.description}</p>
+                  <p className="text-xs text-moonlight">{template.description}</p>
                 ) : null}
                 {template.fields.length > 0 ? (
                   <TemplateFields
@@ -183,7 +177,7 @@ export function TemplateApplyCard({
                     idPrefix={`template-apply-${kind}`}
                   />
                 ) : (
-                  <p className="text-xs text-[var(--muted-foreground)]">{t('templates.apply.noParameters')}</p>
+                  <p className="text-xs text-moonlight">{t('templates.apply.noParameters')}</p>
                 )}
 
                 {errorSummary ? (
@@ -200,6 +194,7 @@ export function TemplateApplyCard({
 
                 <div className="flex justify-end">
                   <Button
+                    variant="outline"
                     size="sm"
                     loading={renderMutation.isPending}
                     onClick={() => {

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { LayoutTemplate } from 'lucide-react';
 import type { TemplateKind } from '@subwatch/shared';
-import { Card } from '../ui';
+import { EmptyState } from '../ui';
 
 /**
  * Replaces the generic entity form while a template is selected but has not
@@ -11,13 +11,15 @@ import { Card } from '../ui';
 export function TemplatePendingCard({ kind }: { kind: TemplateKind }) {
   const { t } = useTranslation();
   return (
-    <Card className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-      <LayoutTemplate className="h-8 w-8 text-[var(--muted-foreground)]" aria-hidden />
-      <p className="text-base font-medium">{t('templates.apply.pendingTitle')}</p>
-      <p className="max-w-md text-sm text-[var(--muted-foreground)]">
-        {t(`templates.apply.pendingHint.${kind}`)}
-      </p>
-      <p className="text-xs text-[var(--muted-foreground)]">{t('templates.apply.pendingSkip')}</p>
-    </Card>
+    <EmptyState
+      icon={<LayoutTemplate className="h-7 w-7" aria-hidden />}
+      title={t('templates.apply.pendingTitle')}
+      description={
+        <>
+          <span className="block">{t(`templates.apply.pendingHint.${kind}`)}</span>
+          <span className="mt-2 block text-xs text-moonlight">{t('templates.apply.pendingSkip')}</span>
+        </>
+      }
+    />
   );
 }

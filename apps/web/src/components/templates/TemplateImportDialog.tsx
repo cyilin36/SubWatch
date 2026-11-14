@@ -133,8 +133,8 @@ export function TemplateImportDialog({ open, onOpenChange, onImported }: Templat
         </>
       }
     >
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center gap-3">
           <input
             ref={fileRef}
             type="file"
@@ -150,7 +150,7 @@ export function TemplateImportDialog({ open, onOpenChange, onImported }: Templat
             <FileJson className="h-4 w-4" aria-hidden />
             {t('templates.import.chooseFile')}
           </Button>
-          {fileName ? <span className="truncate text-xs text-[var(--muted-foreground)]">{fileName}</span> : null}
+          {fileName ? <span className="truncate text-xs text-moonlight">{fileName}</span> : null}
         </div>
 
         <Textarea
@@ -168,10 +168,10 @@ export function TemplateImportDialog({ open, onOpenChange, onImported }: Templat
         {parseError ? <Alert tone="danger">{parseError}</Alert> : null}
 
         {preview ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm">
-            <span className="font-medium">{preview.name}</span>
+          <div className="glass-flat flex flex-wrap items-center gap-2 px-4 py-3 text-sm">
+            <span className="font-medium text-ink">{preview.name}</span>
             <Badge tone="info">{t(`templates.kind.${preview.kind}`)}</Badge>
-            <span className="text-xs text-[var(--muted-foreground)]">
+            <span className="text-xs text-moonlight">
               {t('templates.list.fieldCount', { count: preview.fieldCount })}
             </span>
           </div>

@@ -1,17 +1,15 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useTranslation } from 'react-i18next';
-import { Check, Languages, Monitor, Moon, Sun } from 'lucide-react';
-import { Button } from '../ui';
+import { Check, Languages } from 'lucide-react';
+import { BrandMark } from './BrandMark';
 import { useAuth } from '../../providers/AuthProvider';
-import { cn } from '../../lib/utils';
 
-const MENU_CONTENT =
-  'z-[70] min-w-36 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] p-1 text-[var(--foreground)] shadow-lg';
-
+const MENU_CONTENT = 'glass-popover z-[90] min-w-40 overflow-hidden p-1.5';
 const MENU_ITEM =
-  'flex cursor-pointer select-none items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-[var(--surface-muted)]';
+  'flex cursor-pointer select-none items-center justify-between gap-3 rounded-btn px-3 py-2 text-sm text-ink/85 outline-none transition-colors data-[highlighted]:bg-ink/10 data-[highlighted]:text-ink';
 
-export function LanguageMenu() {
+/** Language switcher shared by the night nav, the auth layout and error screens. */
+export function LanguageMenu({ showLabel = false }: { showLabel?: boolean }) {
   const { t, i18n } = useTranslation();
   const { setLanguage } = useAuth();
   const options = [
@@ -21,12 +19,22 @@ export function LanguageMenu() {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label={t('nav.language')} title={t('nav.language')}>
+        <button
+          type="button"
+          aria-label={t('nav.language')}
+          title={t('nav.language')}
+          className={
+            showLabel
+              ? 'flex h-10 items-center gap-2 rounded-pill px-3 text-sm text-moonlight transition-colors hover:bg-ink/10 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60'
+              : 'inline-flex h-10 w-10 items-center justify-center rounded-full text-moonlight transition-colors hover:bg-ink/10 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink/60'
+          }
+        >
           <Languages className="h-4 w-4" aria-hidden />
-        </Button>
+          {showLabel ? <span>{t('nav.language')}</span> : null}
+        </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content align="end" sideOffset={6} className={MENU_CONTENT}>
+        <DropdownMenu.Content align="end" sideOffset={10} className={MENU_CONTENT}>
           {options.map((option) => (
             <DropdownMenu.Item
               key={option.value}
@@ -37,7 +45,7 @@ export function LanguageMenu() {
             >
               <span>{option.label}</span>
               {i18n.language === option.value ? (
-                <Check className="h-3.5 w-3.5 text-[var(--brand)]" aria-hidden />
+                <Check className="h-3.5 w-3.5 text-moonlight" aria-hidden />
               ) : null}
             </DropdownMenu.Item>
           ))}
@@ -47,61 +55,16 @@ export function LanguageMenu() {
   );
 }
 
-export function ThemeMenu() {
+/** Small brand header used by centered layouts (auth, connection errors). */
+export function LayoutBrand({ appName }: { appName: string }) {
   const { t } = useTranslation();
-  const { theme, resolvedTheme, setTheme } = useAuth();
-  const options = [
-    { value: 'light' as const, labelKey: 'theme.light', icon: Sun },
-    { value: 'dark' as const, labelKey: 'theme.dark', icon: Moon },
-    { value: 'system' as const, labelKey: 'theme.system', icon: Monitor },
-  ];
-  const TriggerIcon = resolvedTheme === 'dark' ? Moon : Sun;
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={t('nav.theme')}
-          title={t('nav.theme')}
-        >
-          <TriggerIcon className="h-4 w-4" aria-hidden />
-        </Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content align="end" sideOffset={6} className={MENU_CONTENT}>
-          {options.map((option) => {
-            const Icon = option.icon;
-            return (
-              <DropdownMenu.Item
-                key={option.value}
-                className={MENU_ITEM}
-                onSelect={() => setTheme(option.value)}
-              >
-                <span className="flex items-center gap-2">
-                  <Icon className="h-4 w-4" aria-hidden />
-                  {t(option.labelKey)}
-                </span>
-                {theme === option.value ? (
-                  <Check className="h-3.5 w-3.5 text-[var(--brand)]" aria-hidden />
-                ) : null}
-              </DropdownMenu.Item>
-            );
-          })}
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
-  );
-}
-
-export function IconMenuSeparator() {
-  return <span className="mx-0.5 h-5 w-px bg-[var(--border)]" aria-hidden />;
-}
-
-export function DropdownItem({ children, onSelect }: { children: React.ReactNode; onSelect: () => void }) {
-  return (
-    <DropdownMenu.Item className={cn(MENU_ITEM)} onSelect={onSelect}>
-      {children}
-    </DropdownMenu.Item>
+    <div className="flex items-center gap-3">
+      <BrandMark />
+      <div className="min-w-0">
+        <p className="truncate text-body font-medium leading-tight text-ink">{appName}</p>
+        <p className="truncate text-[11px] tracking-[0.14em] text-moonlight uppercase">{t('app.tagline')}</p>
+      </div>
+    </div>
   );
 }

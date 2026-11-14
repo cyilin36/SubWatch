@@ -12,11 +12,13 @@ import { api } from '../lib/api';
 import { useAuth } from '../providers/AuthProvider';
 import { errorMessage, formatDateTime } from '../lib/utils';
 import {
+  Alert,
   Button,
   Card,
   Dialog,
   EmptyState,
   ErrorState,
+  Field,
   PageHeader,
   Select,
   Skeleton,
@@ -100,150 +102,221 @@ export function NotificationsPage() {
   };
 
   const items = data?.items ?? [];
+  const filtersActive = statusFilter !== 'all' || eventFilter !== 'all';
 
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader
         title={t('notifications.title')}
         description={t('notifications.subtitle')}
         icon={<BellRing className="h-5 w-5" />}
       />
 
-      <Card className="mb-3 p-3">
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <Select
-            value={statusFilter}
-            onValueChange={applyStatus}
-            options={statusOptions}
-            ariaLabel={t('notifications.filterStatus')}
-          />
-          <Select
-            value={eventFilter}
-            onValueChange={applyEvent}
-            options={eventOptions}
-            ariaLabel={t('notifications.filterEvent')}
-          />
-          <div className="hidden sm:block" />
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              loading={notificationsQuery.isFetching}
-              onClick={() => void notificationsQuery.refetch()}
-            >
-              {!notificationsQuery.isFetching ? <RefreshCcw className="h-4 w-4" aria-hidden /> : null}
-              {t('common.refresh')}
-            </Button>
-          </div>
+      <section className="space-y-4">
+        <div className="glass-flat grid gap-3 rounded-btn p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end sm:p-4">
+          <Field label={t('notifications.filterStatus')}>
+            <Select
+              value={statusFilter}
+              onValueChange={applyStatus}
+              options={statusOptions}
+              ariaLabel={t('notifications.filterStatus')}
+            />
+          </Field>
+          <Field label={t('notifications.filterEvent')}>
+            <Select
+              value={eventFilter}
+              onValueChange={applyEvent}
+              options={eventOptions}
+              ariaLabel={t('notifications.filterEvent')}
+            />
+          </Field>
+          <Button
+            variant="outline"
+            size="md"
+            className="w-full sm:w-auto"
+            loading={notificationsQuery.isFetching}
+            onClick={() => void notificationsQuery.refetch()}
+          >
+            {!notificationsQuery.isFetching ? <RefreshCcw className="h-4 w-4" aria-hidden /> : null}
+            {t('common.refresh')}
+          </Button>
         </div>
-      </Card>
 
-      {notificationsQuery.isPending ? (
-        <Card className="p-4">
-          <div className="space-y-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Skeleton key={index} className="h-10" />
-            ))}
-          </div>
-        </Card>
-      ) : notificationsQuery.isError ? (
-        <ErrorState error={notificationsQuery.error} onRetry={() => void notificationsQuery.refetch()} />
-      ) : items.length === 0 ? (
-        <EmptyState
-          icon={<BellRing className="h-8 w-8" aria-hidden />}
-          title={
-            statusFilter !== 'all' || eventFilter !== 'all'
-              ? t('notifications.emptyFilter')
-              : t('notifications.noNotifications')
-          }
-          description={
-            statusFilter !== 'all' || eventFilter !== 'all'
-              ? t('notifications.emptyFilterHint')
-              : t('notifications.noNotificationsHint')
-          }
-        />
-      ) : (
-        <>
-          <Card className="overflow-hidden">
-            <Table>
-              <THead>
-                <TR>
-                  <TH>{t('notifications.createdAt')}</TH>
-                  <TH>{t('notifications.eventType')}</TH>
-                  <TH className="hidden md:table-cell">{t('notifications.channel')}</TH>
-                  <TH>{t('notifications.status')}</TH>
-                  <TH className="hidden sm:table-cell">{t('notifications.attempts')}</TH>
-                  <TH className="hidden lg:table-cell">{t('notifications.lastError')}</TH>
-                  <TH className="text-right">{t('common.actions')}</TH>
-                </TR>
-              </THead>
-              <TBody>
-                {items.map((notification) => (
-                  <TR key={notification.id}>
-                    <TD className="whitespace-nowrap text-xs">
-                      {formatDateTime(notification.createdAt, timezone, locale)}
-                    </TD>
-                    <TD>
-                      <p className="text-sm">{t(`event.${notification.eventType}`)}</p>
-                      <p className="max-w-[220px] truncate text-xs text-[var(--muted-foreground)]">
-                        {notification.eventKey}
-                      </p>
-                    </TD>
-                    <TD className="hidden md:table-cell">
-                      {notification.channelName ?? t('notifications.noChannel')}
-                    </TD>
-                    <TD>
-                      <StatusBadge status={notification.status} />
-                    </TD>
-                    <TD className="hidden sm:table-cell">{notification.attempts}</TD>
-                    <TD className="hidden max-w-[240px] lg:table-cell">
-                      <p
-                        className="truncate text-xs text-[var(--danger)]"
-                        title={notification.lastError ?? undefined}
-                      >
-                        {notification.lastError ?? '—'}
-                      </p>
-                    </TD>
-                    <TD>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          title={t('notifications.preview')}
-                          aria-label={t('notifications.preview')}
-                          onClick={() => setPayloadTarget(notification)}
-                        >
-                          <Eye className="h-4 w-4" aria-hidden />
-                        </Button>
-                        {notification.status === 'failed' ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            loading={
-                              retryMutation.isPending &&
-                              retryMutation.variables?.id === notification.id
-                            }
-                            onClick={() => retryMutation.mutate(notification)}
-                          >
-                            {t('notifications.retry')}
-                          </Button>
-                        ) : null}
-                      </div>
-                    </TD>
-                  </TR>
-                ))}
-              </TBody>
-            </Table>
+        {notificationsQuery.isPending ? (
+          <Card className="p-4 sm:p-5">
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton key={index} className="h-12 rounded-btn" />
+              ))}
+            </div>
           </Card>
-          <Pagination
-            page={page}
-            pages={pages}
-            total={total}
-            onPageChange={setPage}
-            disabled={notificationsQuery.isFetching}
+        ) : notificationsQuery.isError ? (
+          <ErrorState error={notificationsQuery.error} onRetry={() => void notificationsQuery.refetch()} />
+        ) : items.length === 0 ? (
+          <EmptyState
+            icon={<BellRing className="h-8 w-8" aria-hidden />}
+            title={filtersActive ? t('notifications.emptyFilter') : t('notifications.noNotifications')}
+            description={
+              filtersActive
+                ? t('notifications.emptyFilterHint')
+                : t('notifications.noNotificationsHint')
+            }
           />
-        </>
-      )}
+        ) : (
+          <>
+            {/* Mobile: stacked glass rows; the wide table is desktop-only. */}
+            <div className="space-y-3 md:hidden">
+              {items.map((notification) => {
+                const retrying =
+                  retryMutation.isPending && retryMutation.variables?.id === notification.id;
+                return (
+                  <div key={notification.id} className="glass p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-body font-medium text-ink">
+                          {t(`event.${notification.eventType}`)}
+                        </p>
+                        <p className="mt-0.5 truncate text-xs text-moonlight">
+                          {notification.eventKey}
+                        </p>
+                      </div>
+                      <StatusBadge status={notification.status} />
+                    </div>
+                    <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+                      <div className="min-w-0">
+                        <dt className="type-label">{t('notifications.createdAt')}</dt>
+                        <dd className="mt-1 text-xs text-moonlight">
+                          {formatDateTime(notification.createdAt, timezone, locale)}
+                        </dd>
+                      </div>
+                      <div className="min-w-0">
+                        <dt className="type-label">{t('notifications.channel')}</dt>
+                        <dd className="mt-1 truncate text-xs text-moonlight">
+                          {notification.channelName ?? t('notifications.noChannel')}
+                        </dd>
+                      </div>
+                      {notification.lastError ? (
+                        <div className="col-span-2 min-w-0">
+                          <dt className="type-label">{t('notifications.lastError')}</dt>
+                          <dd className="mt-1 break-words text-xs text-danger">
+                            {notification.lastError}
+                          </dd>
+                        </div>
+                      ) : null}
+                    </dl>
+                    <div className="mt-4 flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        title={t('notifications.preview')}
+                        aria-label={t('notifications.preview')}
+                        onClick={() => setPayloadTarget(notification)}
+                      >
+                        <Eye className="h-4 w-4" aria-hidden />
+                      </Button>
+                      {notification.status === 'failed' ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          loading={retrying}
+                          disabled={retrying}
+                          onClick={() => retryMutation.mutate(notification)}
+                        >
+                          {t('notifications.retry')}
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <Card className="hidden overflow-hidden md:block">
+              <Table>
+                <THead>
+                  <TR>
+                    <TH>{t('notifications.createdAt')}</TH>
+                    <TH>{t('notifications.eventType')}</TH>
+                    <TH className="hidden md:table-cell">{t('notifications.channel')}</TH>
+                    <TH>{t('notifications.status')}</TH>
+                    <TH className="hidden sm:table-cell">{t('notifications.attempts')}</TH>
+                    <TH className="hidden lg:table-cell">{t('notifications.lastError')}</TH>
+                    <TH className="text-right">{t('common.actions')}</TH>
+                  </TR>
+                </THead>
+                <TBody>
+                  {items.map((notification) => {
+                    const retrying =
+                      retryMutation.isPending &&
+                      retryMutation.variables?.id === notification.id;
+                    return (
+                      <TR key={notification.id}>
+                        <TD className="whitespace-nowrap text-xs text-moonlight">
+                          {formatDateTime(notification.createdAt, timezone, locale)}
+                        </TD>
+                        <TD>
+                          <p className="text-body text-ink">{t(`event.${notification.eventType}`)}</p>
+                          <p className="max-w-[220px] truncate text-xs text-moonlight">
+                            {notification.eventKey}
+                          </p>
+                        </TD>
+                        <TD className="hidden md:table-cell">
+                          <span className="text-body text-moonlight">
+                            {notification.channelName ?? t('notifications.noChannel')}
+                          </span>
+                        </TD>
+                        <TD>
+                          <StatusBadge status={notification.status} />
+                        </TD>
+                        <TD className="hidden tabular-nums sm:table-cell">{notification.attempts}</TD>
+                        <TD className="hidden max-w-[240px] lg:table-cell">
+                          <p
+                            className="truncate text-xs text-danger"
+                            title={notification.lastError ?? undefined}
+                          >
+                            {notification.lastError ?? '—'}
+                          </p>
+                        </TD>
+                        <TD>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              title={t('notifications.preview')}
+                              aria-label={t('notifications.preview')}
+                              onClick={() => setPayloadTarget(notification)}
+                            >
+                              <Eye className="h-4 w-4" aria-hidden />
+                            </Button>
+                            {notification.status === 'failed' ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                loading={retrying}
+                                disabled={retrying}
+                                onClick={() => retryMutation.mutate(notification)}
+                              >
+                                {t('notifications.retry')}
+                              </Button>
+                            ) : null}
+                          </div>
+                        </TD>
+                      </TR>
+                    );
+                  })}
+                </TBody>
+              </Table>
+            </Card>
+            <Pagination
+              page={page}
+              pages={pages}
+              total={total}
+              onPageChange={setPage}
+              disabled={notificationsQuery.isFetching}
+            />
+          </>
+        )}
+      </section>
 
       <Dialog
         open={Boolean(payloadTarget)}
@@ -255,31 +328,37 @@ export function NotificationsPage() {
         size="lg"
       >
         {payloadTarget ? (
-          <div className="space-y-3">
-            <dl className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <dt className="text-xs text-[var(--muted-foreground)]">{t('notifications.eventType')}</dt>
-                <dd>{t(`event.${payloadTarget.eventType}`)}</dd>
+          <div className="space-y-6">
+            <dl className="glass-flat grid gap-5 rounded-btn p-4 sm:grid-cols-2 sm:p-5">
+              <div className="min-w-0">
+                <dt className="type-label">{t('notifications.eventType')}</dt>
+                <dd className="mt-2 text-body text-ink">{t(`event.${payloadTarget.eventType}`)}</dd>
               </div>
-              <div>
-                <dt className="text-xs text-[var(--muted-foreground)]">{t('notifications.channel')}</dt>
-                <dd>{payloadTarget.channelName ?? t('notifications.noChannel')}</dd>
+              <div className="min-w-0">
+                <dt className="type-label">{t('notifications.channel')}</dt>
+                <dd className="mt-2 break-words text-body text-ink">
+                  {payloadTarget.channelName ?? t('notifications.noChannel')}
+                </dd>
               </div>
-              <div>
-                <dt className="text-xs text-[var(--muted-foreground)]">{t('notifications.status')}</dt>
-                <dd>
+              <div className="min-w-0">
+                <dt className="type-label">{t('notifications.status')}</dt>
+                <dd className="mt-2">
                   <StatusBadge status={payloadTarget.status} />
                 </dd>
               </div>
-              <div>
-                <dt className="text-xs text-[var(--muted-foreground)]">{t('notifications.sentAt')}</dt>
-                <dd>{payloadTarget.sentAt ? formatDateTime(payloadTarget.sentAt, timezone, locale) : t('notifications.notSet')}</dd>
+              <div className="min-w-0">
+                <dt className="type-label">{t('notifications.sentAt')}</dt>
+                <dd className="mt-2 text-body text-ink">
+                  {payloadTarget.sentAt
+                    ? formatDateTime(payloadTarget.sentAt, timezone, locale)
+                    : t('notifications.notSet')}
+                </dd>
               </div>
             </dl>
             {payloadTarget.lastError ? (
-              <p className="break-words rounded-lg bg-[color-mix(in_srgb,var(--danger)_10%,transparent)] p-2 text-xs text-[var(--danger)]">
-                {payloadTarget.lastError}
-              </p>
+              <Alert tone="danger" title={t('notifications.lastError')}>
+                <span className="break-words font-mono text-xs">{payloadTarget.lastError}</span>
+              </Alert>
             ) : null}
             <JsonPreview value={payloadTarget.payload} />
           </div>

@@ -20,11 +20,11 @@ export function Tooltip({
       <TooltipPrimitive.Portal>
         <TooltipPrimitive.Content
           side={side}
-          sideOffset={6}
-          className="z-[70] max-w-xs rounded-md border border-[var(--border)] bg-[var(--foreground)] px-2 py-1 text-xs text-[var(--background)] shadow-md"
+          sideOffset={8}
+          className="glass-popover z-[70] max-w-xs px-3 py-1.5 text-xs text-ink/90"
         >
           {content}
-          <TooltipPrimitive.Arrow className="fill-[var(--foreground)]" />
+          <TooltipPrimitive.Arrow className="fill-[var(--color-popover-arrow)]" />
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Portal>
     </TooltipPrimitive.Root>

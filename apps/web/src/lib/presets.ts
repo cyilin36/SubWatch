@@ -1,11 +1,4 @@
-import {
-  CYCLE_VALUES,
-  OPERATOR_VALUES,
-  THEME_VALUES,
-  type Cycle,
-  type Operator,
-  type Theme,
-} from '@subwatch/shared';
+import { CYCLE_VALUES, OPERATOR_VALUES, type Cycle, type Operator } from '@subwatch/shared';
 
 /** Common monitoring intervals, in seconds. */
 export const INTERVAL_PRESETS: number[] = [
@@ -61,10 +54,6 @@ export const OPERATOR_OPTIONS: { value: Operator; labelKey: string }[] = OPERATO
   (operator) => ({ value: operator, labelKey: `operator.${operator}` }),
 );
 
-export const THEME_OPTIONS: { value: Theme; labelKey: string }[] = THEME_VALUES.map((theme) => ({
-  value: theme,
-  labelKey: `theme.${theme}`,
-}));
 
 /** Default JS extractor code shown in the monitor editor. */
 export const JS_EXTRACT_EXAMPLE = `const used = ctx.num(ctx.get(ctx.data, 'usage.used'));

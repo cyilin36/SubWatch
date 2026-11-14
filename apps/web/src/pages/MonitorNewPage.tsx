@@ -24,13 +24,14 @@ export function MonitorNewPage() {
   };
 
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader
+        label={t('nav.monitors')}
         title={t('monitors.newMonitor')}
         description={t('monitors.subtitle')}
         icon={<Activity className="h-5 w-5" />}
       />
-      <div className="mb-4">
+      <div className="space-y-8">
         <TemplateApplyCard
           kind="monitor"
           appliedTemplate={applied?.template ?? null}
@@ -38,28 +39,26 @@ export function MonitorNewPage() {
           onClear={() => setApplied(null)}
           onSelectionChange={setSelectedTemplateId}
         />
+        {pendingTemplate ? (
+          <TemplatePendingCard kind="monitor" />
+        ) : (
+          <div className="space-y-4">
+            {applied ? (
+              <p className="text-body text-moonlight">{t('templates.apply.prefilledHint')}</p>
+            ) : null}
+            <MonitorForm
+              key={applied?.template.id ?? 'blank'}
+              mode="create"
+              initialInput={applied?.input}
+              templateId={applied?.template.id ?? null}
+              onSaved={(result) => {
+                if (result.pushToken) setCreated(result as MonitorCreateResult);
+                else navigate(`/monitors/${result.id}`);
+              }}
+            />
+          </div>
+        )}
       </div>
-      {pendingTemplate ? (
-        <TemplatePendingCard kind="monitor" />
-      ) : (
-        <>
-          {applied ? (
-            <p className="mb-3 text-sm text-[var(--muted-foreground)]">
-              {t('templates.apply.prefilledHint')}
-            </p>
-          ) : null}
-          <MonitorForm
-            key={applied?.template.id ?? 'blank'}
-            mode="create"
-            initialInput={applied?.input}
-            templateId={applied?.template.id ?? null}
-            onSaved={(result) => {
-              if (result.pushToken) setCreated(result as MonitorCreateResult);
-              else navigate(`/monitors/${result.id}`);
-            }}
-          />
-        </>
-      )}
       <PushTokenDialog
         open={Boolean(created)}
         token={created?.pushToken ?? ''}

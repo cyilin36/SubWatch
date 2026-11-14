@@ -19,7 +19,7 @@ export function MonitorEditPage() {
 
   if (monitorQuery.isPending) {
     return (
-      <div>
+      <div className="space-y-8">
         <PageHeader title={t('monitors.editMonitor')} />
         <FullPageSpinner label={t('common.loading')} />
       </div>
@@ -27,7 +27,7 @@ export function MonitorEditPage() {
   }
   if (monitorQuery.isError || !monitorQuery.data) {
     return (
-      <div>
+      <div className="space-y-8">
         <PageHeader title={t('monitors.editMonitor')} />
         <ErrorState error={monitorQuery.error} onRetry={() => void monitorQuery.refetch()} />
       </div>
@@ -35,8 +35,9 @@ export function MonitorEditPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader
+        label={t('nav.monitors')}
         title={t('monitors.editMonitor')}
         description={monitorQuery.data.name}
         icon={<Activity className="h-5 w-5" />}

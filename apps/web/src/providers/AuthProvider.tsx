@@ -14,7 +14,7 @@ import type { AuthStatusDto, Locale, SettingsDto, Theme } from '@subwatch/shared
 import i18n, { persistLocale } from '../i18n';
 import { api, type MonitorMetaDto } from '../lib/api';
 import { errorMessage } from '../lib/utils';
-import { applyTheme, getStoredTheme, resolveTheme, storeTheme, THEME_STORAGE_KEY } from '../lib/theme';
+import { applyTheme, getStoredTheme, resolveTheme, storeTheme } from '../lib/theme';
 
 export interface AuthContextValue {
   status: AuthStatusDto | undefined;
@@ -43,22 +43,13 @@ export interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function readStoredTheme(): string | null {
-  try {
-    return localStorage.getItem(THEME_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const hasStoredThemeRef = useRef<boolean>(readStoredTheme() !== null);
-  const adoptedThemeRef = useRef(false);
   const unauthorizedAtRef = useRef(0);
-
   const [theme, setThemeState] = useState<Theme>(() => getStoredTheme());
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => resolveTheme(getStoredTheme()));
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() =>
+    resolveTheme(getStoredTheme()),
+  );
 
   const statusQuery = useQuery<AuthStatusDto>({
     queryKey: ['auth', 'status'],
@@ -85,27 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     staleTime: 30_000,
   });
 
-  // Apply the resolved theme whenever the preference changes.
-  useEffect(() => {
-    setResolvedTheme(applyTheme(theme));
-  }, [theme]);
-
-  // Track OS theme changes while on "system".
-  useEffect(() => {
-    if (theme !== 'system') return;
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => setResolvedTheme(applyTheme('system'));
-    media.addEventListener('change', handler);
-    return () => media.removeEventListener('change', handler);
-  }, [theme]);
-
-  // Adopt the server-side theme once when the browser has no local preference.
-  useEffect(() => {
-    if (adoptedThemeRef.current || !settingsQuery.data) return;
-    adoptedThemeRef.current = true;
-    if (!hasStoredThemeRef.current) setThemeState(settingsQuery.data.general.theme);
-  }, [settingsQuery.data]);
-
   // Keep <html lang> in sync with i18n.
   useEffect(() => {
     document.documentElement.lang = i18n.language;
@@ -118,6 +88,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Stamp the appearance on <html>; every design token is scoped by data-theme.
+  useEffect(() => {
+    setResolvedTheme(applyTheme(theme));
+  }, [theme]);
+
+  // While the preference is "system", follow the operating system live.
+  useEffect(() => {
+    if (theme !== 'system' || typeof window.matchMedia !== 'function') return;
+    const query = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => setResolvedTheme(applyTheme('system'));
+    query.addEventListener('change', handler);
+    return () => query.removeEventListener('change', handler);
+  }, [theme]);
+
+  const setTheme = useCallback((next: Theme) => {
+    storeTheme(next);
+    setThemeState(next);
+  }, []);
+
   // Global 401 handler: drop session state and let the router redirect to /login.
   useEffect(() => {
     const handler = () => {
@@ -126,7 +115,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authenticated: false,
       });
       queryClient.removeQueries({ queryKey: ['settings'] });
-      adoptedThemeRef.current = false;
       const now = Date.now();
       if (now - unauthorizedAtRef.current > 4000) {
         unauthorizedAtRef.current = now;
@@ -142,7 +130,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await api.auth.login(password);
       unauthorizedAtRef.current = 0;
       queryClient.setQueryData(['auth', 'status'], data);
-      adoptedThemeRef.current = false;
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['settings'] }),
         queryClient.invalidateQueries({ queryKey: ['meta'] }),
@@ -156,7 +143,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await api.auth.setup(password);
       unauthorizedAtRef.current = 0;
       queryClient.setQueryData(['auth', 'status'], data);
-      adoptedThemeRef.current = false;
       // Align the server notification language with the browser UI language.
       await api.settings
         .patch({ general: { locale: i18n.language as Locale } })
@@ -182,7 +168,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.removeQueries({
       predicate: (query) => query.queryKey[0] !== 'meta' && query.queryKey[0] !== 'auth',
     });
-    adoptedThemeRef.current = false;
     toast.success(i18n.t('auth.logoutSuccess'));
   }, [queryClient]);
 
@@ -204,28 +189,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [authenticated, queryClient],
   );
 
-  const setTheme = useCallback(
-    (next: Theme) => {
-      hasStoredThemeRef.current = true;
-      setThemeState(next);
-      storeTheme(next);
-      if (authenticated) {
-        api.settings
-          .patch({ general: { theme: next } })
-          .then(() => queryClient.invalidateQueries({ queryKey: ['settings'] }))
-          .catch(() => undefined);
-      }
-    },
-    [authenticated, queryClient],
-  );
-
   const syncSettings = useCallback(
     (next: SettingsDto) => {
       queryClient.setQueryData(['settings'], next);
-      const serverTheme = next.general.theme;
-      hasStoredThemeRef.current = true;
-      setThemeState(serverTheme);
-      storeTheme(serverTheme);
       const serverLocale = next.general.locale;
       if (i18n.language !== serverLocale) {
         void i18n.changeLanguage(serverLocale);
@@ -285,12 +251,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       locale,
       theme,
       resolvedTheme,
+      setTheme,
       login,
       setup,
       logout,
       retry,
       setLanguage,
-      setTheme,
       syncSettings,
       reloadSettings,
     ],

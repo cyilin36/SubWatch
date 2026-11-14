@@ -272,7 +272,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
 
             <TabsContent value="basic">
               <FormSection title={t('monitorForm.basic')} description={t('monitorForm.basicHint')}>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <Field
                     label={t('common.name')}
                     htmlFor="monitor-name"
@@ -303,7 +303,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
 
                 {monitorType === 'push' ? <Alert tone="info">{t('monitors.pushHint')}</Alert> : null}
 
-                <div className="grid gap-3 sm:grid-cols-2 sm:items-start">
+                <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
                   <Field
                     label={t('monitors.intervalSeconds')}
                     htmlFor="monitor-interval"
@@ -317,10 +317,10 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                       {...register('intervalSeconds')}
                     />
                   </Field>
-                  <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2">
+                  <div className="glass-flat flex items-center justify-between gap-3 px-4 py-3">
                     <div>
                       <p className="text-sm font-medium">{t('common.enabled')}</p>
-                      <p className="text-xs text-[var(--muted-foreground)]">
+                      <p className="text-xs text-moonlight">
                         {t('monitorDetail.enabledHint')}
                       </p>
                     </div>
@@ -332,15 +332,15 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                   </div>
                 </div>
 
-                <div>
-                  <p className="mb-1.5 text-sm font-medium">{t('monitors.channelIds')}</p>
+                <div className="space-y-2">
+                  <p className="type-label">{t('monitors.channelIds')}</p>
                   <MultiCheckbox
                     items={channelItems}
                     value={watchedChannels ?? []}
                     onChange={(next) => setValue('channelIds', next, { shouldDirty: true })}
                     emptyText={t('channels.noChannelsHint')}
                   />
-                  <p className="mt-1 text-xs text-[var(--muted-foreground)]">{t('monitors.channelsHint')}</p>
+                  <p className="text-xs text-moonlight">{t('monitors.channelsHint')}</p>
                 </div>
 
                 <Collapsible
@@ -358,7 +358,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                     />
                   </Field>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <Field
                       label={t('monitors.failureThreshold')}
                       htmlFor="monitor-failure"
@@ -401,7 +401,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
 
             <TabsContent value="request">
               <FormSection title={t('monitorForm.request')} description={t('monitorForm.requestHint')}>
-                <div className="grid gap-3 sm:grid-cols-[130px_1fr]">
+                <div className="grid gap-4 sm:grid-cols-[130px_minmax(0,1fr)]">
                   <Field label={t('monitorForm.method')}>
                     <Select
                       value={watch('request.method')}
@@ -437,7 +437,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                   defaultOpen={initiallyOpenAdvanced.request}
                   forceOpen={requestAdvancedHasError}
                 >
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-4 sm:grid-cols-3">
                     <Field
                       label={t('monitorForm.timeoutMs')}
                       error={getFieldError(errors, 'request.timeoutMs')}
@@ -475,9 +475,9 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                   </div>
 
                   {/* Headers */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium">{t('monitorForm.headers')}</p>
+                  <div className="glass-flat space-y-3 px-4 py-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="type-label">{t('monitorForm.headers')}</p>
                       <Button
                         type="button"
                         variant="outline"
@@ -489,7 +489,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                       </Button>
                     </div>
                     {headersArray.fields.length === 0 ? (
-                      <p className="text-xs text-[var(--muted-foreground)]">{t('common.none')}</p>
+                      <p className="text-xs text-moonlight">{t('common.none')}</p>
                     ) : null}
                     {headersArray.fields.map((field, index) => {
                       const secret = watch(`request.headers.${index}.secret`);
@@ -520,10 +520,10 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                               {...register(`request.headers.${index}.value`)}
                             />
                           )}
-                          <label className="flex items-center gap-1.5 whitespace-nowrap text-xs text-[var(--muted-foreground)]">
+                          <label className="flex items-center gap-1.5 whitespace-nowrap text-xs text-moonlight">
                             <input
                               type="checkbox"
-                              className="h-4 w-4 accent-[var(--brand)]"
+                              className="h-4 w-4 accent-moonlight"
                               {...register(`request.headers.${index}.secret`)}
                             />
                             {t('monitorForm.headerSecret')}
@@ -543,9 +543,9 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                   </div>
 
                   {/* Query params */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium">{t('monitorForm.query')}</p>
+                  <div className="glass-flat space-y-3 px-4 py-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="type-label">{t('monitorForm.query')}</p>
                       <Button
                         type="button"
                         variant="outline"
@@ -557,12 +557,12 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                       </Button>
                     </div>
                     {queryArray.fields.length === 0 ? (
-                      <p className="text-xs text-[var(--muted-foreground)]">{t('common.none')}</p>
+                      <p className="text-xs text-moonlight">{t('common.none')}</p>
                     ) : null}
                     {queryArray.fields.map((field, index) => (
                       <div
                         key={field.id}
-                        className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto]"
+                        className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto] sm:items-center"
                       >
                         <Input
                           placeholder={t('monitorForm.queryKey')}
@@ -588,7 +588,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                   </div>
 
                   {/* Body */}
-                  <div className="grid gap-3 sm:grid-cols-[180px_1fr] sm:items-start">
+                  <div className="grid gap-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-start">
                     <Field label={t('monitorForm.bodyType')}>
                       <Select
                         value={bodyType}
@@ -654,7 +654,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                       />
                     </Field>
                     {authType === 'basic' ? (
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="grid gap-4 sm:grid-cols-2">
                         <Field label={t('monitorForm.username')}>
                           <Input autoComplete="off" {...register('request.username')} />
                         </Field>
@@ -708,7 +708,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
 
                 {extractMode === 'json' ? (
                   <>
-                    <p className="text-xs text-[var(--muted-foreground)]">{t('monitorForm.pathHint')}</p>
+                    <p className="text-xs text-moonlight">{t('monitorForm.pathHint')}</p>
                     <datalist id={METRIC_KEYS_DATALIST_ID}>
                       {metricKeyOptions.map((option) => (
                         <option key={option.key} value={option.key}>
@@ -716,10 +716,10 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                         </option>
                       ))}
                     </datalist>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {metricsArray.fields.map((field, index) => (
-                        <div key={field.id} className="space-y-2 rounded-lg border border-[var(--border)] p-3">
-                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        <div key={field.id} className="glass-flat space-y-3 p-4">
+                          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <Field
                               label={t('monitorForm.metricKey')}
                               error={getFieldError(errors, `metrics.${index}.key`)}
@@ -747,7 +747,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                               />
                             </Field>
                           </div>
-                          <div className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+                          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
                             <Field label={t('monitorForm.metricUnit')}>
                               <Input placeholder="%" {...register(`metrics.${index}.unit`)} />
                             </Field>
@@ -762,7 +762,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                               variant="ghost"
                               size="icon-sm"
                               aria-label={t('common.remove')}
-                              className="text-[var(--danger)]"
+                              className="text-danger sm:justify-self-end"
                               onClick={() => metricsArray.remove(index)}
                             >
                               <Trash2 className="h-4 w-4" aria-hidden />
@@ -771,7 +771,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                         </div>
                       ))}
                       {getFieldError(errors, 'metrics') ? (
-                        <p className="text-xs text-[var(--danger)]">
+                        <p className="text-xs text-danger">
                           {getFieldError(errors, 'metrics')}
                         </p>
                       ) : null}
@@ -787,7 +787,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                     </div>
                   </>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <Field label={t('monitorForm.code')} error={getFieldError(errors, 'code')}>
                       <Controller
                         control={control}
@@ -812,16 +812,13 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                         <Wand2 className="h-3.5 w-3.5" aria-hidden />
                         {t('monitorForm.insertExample')}
                       </Button>
-                      <p className="text-xs text-[var(--muted-foreground)]">{t('monitorForm.codeHint')}</p>
+                      <p className="text-xs text-moonlight">{t('monitorForm.codeHint')}</p>
                     </div>
-                    <details className="rounded-lg border border-[var(--border)]">
-                      <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-[var(--muted-foreground)]">
-                        {t('monitorForm.codeExampleLabel')}
-                      </summary>
-                      <pre className="overflow-auto border-t border-[var(--border)] bg-[var(--surface-muted)] p-3 font-mono text-xs">
+                    <Collapsible title={t('monitorForm.codeExampleLabel')}>
+                      <pre className="overflow-auto font-mono text-xs leading-relaxed text-ink/80">
                         {JS_EXAMPLE}
                       </pre>
-                    </details>
+                    </Collapsible>
                   </div>
                 )}
               </FormSection>
@@ -837,9 +834,9 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                   ))}
                 </datalist>
                 {rulesArray.fields.length === 0 ? (
-                  <p className="text-sm text-[var(--muted-foreground)]">{t('monitorForm.noRules')}</p>
+                  <p className="glass-flat px-4 py-3 text-body text-moonlight">{t('monitorForm.noRules')}</p>
                 ) : null}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {rulesArray.fields.map((field, index) => {
                     const rule = watchedRules?.[index];
                     const recoveryOperator = rule?.recoveryOperator ?? 'none';
@@ -854,9 +851,9 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                       Boolean(getFieldError(errors, `rules.${index}.${advancedField}`)),
                     );
                     return (
-                      <div key={field.id} className="space-y-3 rounded-lg border border-[var(--border)] p-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium">
+                      <div key={field.id} className="glass-flat space-y-4 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-sm font-medium text-ink">
                             {t('monitorForm.rules')} #{index + 1}
                           </p>
                           <div className="flex items-center gap-2">
@@ -864,7 +861,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                               control={control}
                               name={`rules.${index}.enabled`}
                               render={({ field: enabledField }) => (
-                                <label className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]">
+                                <label className="flex items-center gap-1.5 text-xs text-moonlight">
                                   <Switch
                                     checked={enabledField.value}
                                     onCheckedChange={enabledField.onChange}
@@ -879,14 +876,14 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                               variant="ghost"
                               size="icon-sm"
                               aria-label={t('common.remove')}
-                              className="text-[var(--danger)]"
+                              className="text-danger"
                               onClick={() => rulesArray.remove(index)}
                             >
                               <Trash2 className="h-4 w-4" aria-hidden />
                             </Button>
                           </div>
                         </div>
-                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                           <Field
                             label={t('monitorForm.ruleMetric')}
                             error={getFieldError(errors, `rules.${index}.metricKey`)}
@@ -945,7 +942,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                           defaultOpen={ruleAdvancedInitialOpen}
                           forceOpen={ruleAdvancedHasError}
                         >
-                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                             <Field label={t('monitorForm.durationChecks')}>
                               <Input type="number" min={1} {...register(`rules.${index}.durationChecks`)} />
                             </Field>
@@ -986,7 +983,7 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                           </div>
                         </Collapsible>
                         {getFieldError(errors, `rules.${index}.warningValue`) ? null : (
-                          <p className="text-xs text-[var(--muted-foreground)]">
+                          <p className="text-xs text-moonlight">
                             {t('monitorForm.ruleHint')}
                           </p>
                         )}
@@ -1003,13 +1000,13 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
                   <Plus className="h-3.5 w-3.5" aria-hidden />
                   {t('monitorForm.addRule')}
                 </Button>
-                <p className="text-xs text-[var(--muted-foreground)]">{t('monitorForm.thresholdHint')}</p>
+                <p className="text-xs text-moonlight">{t('monitorForm.thresholdHint')}</p>
               </FormSection>
             </TabsContent>
           </Tabs>
         </div>
 
-        <aside className="space-y-3 xl:sticky xl:top-20 xl:self-start">
+        <aside className="min-w-0 space-y-4 xl:sticky xl:top-20 xl:self-start">
           <MonitorTestPanel
             result={testMutation.data}
             error={testMutation.error}
@@ -1021,10 +1018,10 @@ export function MonitorForm({ mode, monitor, initialInput, templateId, onSaved }
         </aside>
       </div>
 
-      <div className="mt-4 flex flex-col gap-2">
+      <div className="sticky bottom-4 z-20 mt-6 space-y-3">
         <RootError message={getFieldError(errors, 'root')} />
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => navigate('/')}>
+        <div className="glass flex flex-wrap items-center justify-end gap-3 px-5 py-4 sm:px-6">
+          <Button type="button" variant="ghost" onClick={() => navigate('/')}>
             {t('common.cancel')}
           </Button>
           <Button type="submit" loading={saveMutation.isPending}>

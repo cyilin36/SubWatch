@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -23,16 +23,12 @@ import {
   formatMetricValue,
   formatMs,
   formatRelativeTime,
-  statusTone,
 } from '../lib/utils';
 import {
   Alert,
   Badge,
   Button,
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   ConfirmDialog,
   CopyButton,
   EmptyState,
@@ -40,6 +36,7 @@ import {
   FullPageSpinner,
   PageHeader,
   Skeleton,
+  StatTile,
   StatusBadge,
   Switch,
   Table,
@@ -61,6 +58,17 @@ const OPERATOR_SYMBOLS: Record<string, string> = {
   eq: '=',
   neq: '≠',
 };
+
+/** Small recessed well for code-like or long text values. */
+function CodeWell({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div
+      className={`glass-flat min-w-0 overflow-x-auto px-4 py-3 font-mono text-xs leading-relaxed text-ink/80 ${className ?? ''}`}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function MonitorDetailPage() {
   const { t } = useTranslation();
@@ -142,7 +150,7 @@ export function MonitorDetailPage() {
 
   if (monitorQuery.isPending) {
     return (
-      <div>
+      <div className="space-y-8">
         <PageHeader title={t('nav.monitors')} />
         <FullPageSpinner label={t('common.loading')} />
       </div>
@@ -151,7 +159,7 @@ export function MonitorDetailPage() {
 
   if (monitorQuery.isError || !monitor) {
     return (
-      <div>
+      <div className="space-y-8">
         <PageHeader title={t('nav.monitors')} />
         <ErrorState error={monitorQuery.error} onRetry={() => void monitorQuery.refetch()} />
       </div>
@@ -164,10 +172,11 @@ export function MonitorDetailPage() {
   const isPush = monitor.config.type === 'push';
 
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader
+        label={t('nav.monitors')}
         title={
-          <span className="flex flex-wrap items-center gap-2">
+          <span className="flex min-w-0 flex-wrap items-center gap-3">
             <span className="truncate">{monitor.name}</span>
             <StatusBadge status={effectiveStatus} />
           </span>
@@ -176,11 +185,11 @@ export function MonitorDetailPage() {
         icon={<Activity className="h-5 w-5" />}
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={() => navigate('/')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
               <ArrowLeft className="h-4 w-4" aria-hidden />
               {t('common.back')}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate(`/monitors/${id}/edit`)}>
+            <Button variant="secondary" size="sm" onClick={() => navigate(`/monitors/${id}/edit`)}>
               <Pencil className="h-4 w-4" aria-hidden />
               {t('common.edit')}
             </Button>
@@ -192,14 +201,157 @@ export function MonitorDetailPage() {
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="min-w-0 space-y-4 lg:col-span-2">
-          {/* Summary */}
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle>{t('monitorDetail.statusLabel')}</CardTitle>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-[var(--muted-foreground)]">{t('common.enabled')}</span>
+      {/* Key numbers: the current metrics when available, otherwise the config
+          summary. Only the first tile is allowed to carry the champagne accent. */}
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {metricEntries.length > 0 ? (
+          metricEntries.slice(0, 4).map(([key, metric], index) => (
+            <StatTile
+              key={key}
+              label={metric.label || key}
+              value={<span className="block truncate">{formatMetricValue(metric)}</span>}
+              hint={index === 0 ? t('monitorDetail.currentMetrics') : undefined}
+              accent={index === 0}
+            />
+          ))
+        ) : (
+          <>
+            <StatTile
+              label={t('monitorDetail.interval')}
+              value={formatInterval(monitor.intervalSeconds, locale)}
+            />
+            <StatTile
+              label={t('monitorDetail.consecutiveFailures')}
+              value={monitor.consecutiveFailures}
+              tone={monitor.consecutiveFailures > 0 ? 'danger' : undefined}
+            />
+            <StatTile label={t('monitorDetail.rulesCountLabel')} value={monitor.rules.length} />
+          </>
+        )}
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+        <div className="min-w-0 space-y-6">
+          {/* Trend chart */}
+          {metricsQuery.isError ? (
+            <ErrorState error={metricsQuery.error} onRetry={() => void metricsQuery.refetch()} />
+          ) : (
+            <Card className="p-6 sm:p-8">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-[18px] font-medium leading-snug text-ink">
+                  {t('monitorDetail.trend')}
+                </h2>
+                <Segmented
+                  value={range}
+                  onChange={setRange}
+                  options={[
+                    { value: '24h', label: t('monitorDetail.range24h') },
+                    { value: '7d', label: t('monitorDetail.range7d') },
+                    { value: '30d', label: t('monitorDetail.range30d') },
+                  ]}
+                />
+              </div>
+              {metricsQuery.isPending ? (
+                <Skeleton className="mt-5 h-72" />
+              ) : (
+                <div className="glass-flat mt-5 rounded-btn p-4">
+                  <MetricChart series={series} range={range} timezone={timezone} locale={locale} />
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* Run history */}
+          {runsQuery.isError ? (
+            <ErrorState error={runsQuery.error} onRetry={() => void runsQuery.refetch()} />
+          ) : runsQuery.isPending ? (
+            <Card className="p-6 sm:p-8">
+              <h2 className="text-[18px] font-medium leading-snug text-ink">
+                {t('monitorDetail.runHistory')}
+              </h2>
+              <Skeleton className="mt-5 h-40" />
+            </Card>
+          ) : runs.length === 0 ? (
+            <EmptyState
+              title={t('monitorDetail.noRuns')}
+              action={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  loading={runsQuery.isFetching}
+                  onClick={() => void runsQuery.refetch()}
+                >
+                  {!runsQuery.isFetching ? <RefreshCcw className="h-3.5 w-3.5" aria-hidden /> : null}
+                  {t('common.refresh')}
+                </Button>
+              }
+            />
+          ) : (
+            <Card className="overflow-hidden">
+              <div className="flex flex-wrap items-center justify-between gap-3 p-6 sm:px-8">
+                <h2 className="text-[18px] font-medium leading-snug text-ink">
+                  {t('monitorDetail.runHistory')}
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => void runsQuery.refetch()}
+                  aria-label={t('common.refresh')}
+                  loading={runsQuery.isFetching}
+                >
+                  {!runsQuery.isFetching ? <RefreshCcw className="h-4 w-4" aria-hidden /> : null}
+                </Button>
+              </div>
+              <Table>
+                <THead>
+                  <TR>
+                    <TH>{t('monitorDetail.checkedAt')}</TH>
+                    <TH>{t('common.status')}</TH>
+                    <TH className="hidden sm:table-cell">{t('monitorDetail.httpStatusLabel')}</TH>
+                    <TH className="hidden md:table-cell">{t('monitorDetail.durationLabel')}</TH>
+                    <TH className="hidden lg:table-cell">{t('monitorDetail.triggerLabel')}</TH>
+                    <TH>{t('notifications.lastError')}</TH>
+                  </TR>
+                </THead>
+                <TBody>
+                  {runs.map((run) => (
+                    <TR key={run.id}>
+                      <TD className="whitespace-nowrap text-xs">
+                        {formatDateTime(run.startedAt, timezone, locale)}
+                      </TD>
+                      <TD>
+                        <StatusBadge status={run.status} />
+                      </TD>
+                      <TD className="hidden sm:table-cell">{run.httpStatus ?? '—'}</TD>
+                      <TD className="hidden md:table-cell">{formatMs(run.durationMs)}</TD>
+                      <TD className="hidden text-xs text-moonlight lg:table-cell">
+                        {t(`trigger.${run.trigger}`)}
+                      </TD>
+                      <TD className="max-w-[220px]">
+                        <p
+                          className="truncate text-xs text-danger"
+                          title={run.error ?? undefined}
+                        >
+                          {run.error ?? '—'}
+                        </p>
+                      </TD>
+                    </TR>
+                  ))}
+                </TBody>
+              </Table>
+            </Card>
+          )}
+        </div>
+
+        <aside className="min-w-0 space-y-6">
+          {/* Status and configuration */}
+          <Card className="p-6">
+            <div className="flex items-start justify-between gap-4">
+              <h2 className="min-w-0 text-[18px] font-medium leading-snug text-ink">
+                {t('monitorDetail.statusLabel')}
+              </h2>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="text-xs text-moonlight">{t('common.enabled')}</span>
                 <Switch
                   checked={monitor.enabled}
                   onCheckedChange={(checked) => toggleMutation.mutate(checked)}
@@ -207,240 +359,154 @@ export function MonitorDetailPage() {
                   ariaLabel={t('common.enabled')}
                 />
               </div>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('monitorDetail.interval')}</dt>
-                  <dd className="mt-0.5 text-sm font-medium">
-                    {formatInterval(monitor.intervalSeconds, locale)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('monitorDetail.lastChecked')}</dt>
-                  <dd className="mt-0.5 text-sm">
-                    {monitor.lastCheckedAt
-                      ? formatRelativeTime(monitor.lastCheckedAt, timezone, locale)
-                      : t('common.never')}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('monitorDetail.nextRun')}</dt>
-                  <dd className="mt-0.5 text-sm">
-                    {monitor.nextRunAt ? formatDateTime(monitor.nextRunAt, timezone, locale) : '—'}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">
-                    {t('monitorDetail.consecutiveFailures')}
-                  </dt>
-                  <dd className="mt-0.5 text-sm font-medium">{monitor.consecutiveFailures}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('monitorDetail.rulesCountLabel')}</dt>
-                  <dd className="mt-0.5 text-sm font-medium">{monitor.rules.length}</dd>
-                </div>
-              </dl>
-              {monitor.templateName ? (
-                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-3 text-xs">
-                  <LayoutTemplate className="h-3.5 w-3.5 text-[var(--brand)]" aria-hidden />
-                  <span className="text-[var(--muted-foreground)]">
-                    {t('monitorDetail.templateSource')}
-                  </span>
-                  {monitor.templateId ? (
-                    <Link
-                      to={`/templates/${monitor.templateId}`}
-                      className="font-medium text-[var(--brand)] hover:underline"
-                    >
-                      {monitor.templateName}
-                    </Link>
-                  ) : (
-                    <span className="font-medium">{monitor.templateName}</span>
-                  )}
-                  {!monitor.templateId ? (
-                    <Badge tone="warning">{t('monitorDetail.templateDeleted')}</Badge>
-                  ) : null}
-                </div>
-              ) : null}
-              {monitor.tags.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {monitor.tags.map((tag) => (
-                    <Badge key={tag} tone="muted">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              ) : null}
-              {monitor.lastError && !monitor.enabled ? (
-                <p className="mt-2 text-xs text-[var(--muted-foreground)]">{t('monitorDetail.enabledHint')}</p>
-              ) : null}
-            </CardContent>
+            </div>
+
+            <dl className="mt-5 grid grid-cols-2 gap-4">
+              <div>
+                <dt className="type-label">{t('monitorDetail.interval')}</dt>
+                <dd className="mt-1.5 text-body font-medium text-ink">
+                  {formatInterval(monitor.intervalSeconds, locale)}
+                </dd>
+              </div>
+              <div>
+                <dt className="type-label">{t('monitorDetail.lastChecked')}</dt>
+                <dd className="mt-1.5 text-body text-ink">
+                  {monitor.lastCheckedAt
+                    ? formatRelativeTime(monitor.lastCheckedAt, timezone, locale)
+                    : t('common.never')}
+                </dd>
+              </div>
+              <div>
+                <dt className="type-label">{t('monitorDetail.nextRun')}</dt>
+                <dd className="mt-1.5 text-body text-ink">
+                  {monitor.nextRunAt ? formatDateTime(monitor.nextRunAt, timezone, locale) : '—'}
+                </dd>
+              </div>
+              <div>
+                <dt className="type-label">{t('monitorDetail.consecutiveFailures')}</dt>
+                <dd className="mt-1.5 text-body font-medium text-ink">
+                  {monitor.consecutiveFailures}
+                </dd>
+              </div>
+              <div>
+                <dt className="type-label">{t('monitorDetail.rulesCountLabel')}</dt>
+                <dd className="mt-1.5 text-body font-medium text-ink">{monitor.rules.length}</dd>
+              </div>
+            </dl>
+
+            {monitor.templateName ? (
+              <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-4 text-xs">
+                <LayoutTemplate className="h-3.5 w-3.5 text-moonlight" aria-hidden />
+                <span className="text-moonlight">{t('monitorDetail.templateSource')}</span>
+                {monitor.templateId ? (
+                  <Link
+                    to={`/templates/${monitor.templateId}`}
+                    className="rounded-btn font-medium text-moonlight underline-offset-4 transition-colors duration-500 ease-glass hover:text-ink hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50"
+                  >
+                    {monitor.templateName}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-ink">{monitor.templateName}</span>
+                )}
+                {!monitor.templateId ? (
+                  <Badge tone="warning">{t('monitorDetail.templateDeleted')}</Badge>
+                ) : null}
+              </div>
+            ) : null}
+
+            {monitor.tags.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {monitor.tags.map((tag) => (
+                  <Badge key={tag} tone="muted">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+
+            {monitor.lastError && !monitor.enabled ? (
+              <p className="mt-3 text-xs text-moonlight">{t('monitorDetail.enabledHint')}</p>
+            ) : null}
+
+            {monitor.config.type === 'http' ? (
+              <div className="mt-5 border-t border-ink/10 pt-4">
+                <CodeWell>
+                  <p className="break-all">
+                    {monitor.config.request.method} {monitor.config.request.url}
+                  </p>
+                  <p className="mt-1">
+                    {t('monitorForm.extractMode')}:{' '}
+                    {monitor.config.extract.mode === 'json'
+                      ? t('monitorForm.modeJson')
+                      : t('monitorForm.modeJs')}
+                  </p>
+                  <p className="mt-1">{t(`monitors.${monitor.type}`)}</p>
+                </CodeWell>
+              </div>
+            ) : null}
           </Card>
 
-          {/* Current metrics */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('monitorDetail.currentMetrics')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {metricEntries.length === 0 ? (
-                <p className="text-sm text-[var(--muted-foreground)]">{t('monitorDetail.noMetrics')}</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                  {metricEntries.map(([key, metric]) => (
-                    <div key={key} className="rounded-lg border border-[var(--border)] px-3 py-2">
-                      <p className="truncate text-xs text-[var(--muted-foreground)]">{metric.label || key}</p>
-                      <p className="mt-0.5 truncate text-lg font-semibold">{formatMetricValue(metric)}</p>
+          {/* Threshold rules */}
+          <Card className="p-6">
+            <h2 className="text-[18px] font-medium leading-snug text-ink">
+              {t('monitorDetail.rulesTitle')}
+            </h2>
+            {monitor.rules.length === 0 ? (
+              <p className="mt-3 text-body text-moonlight">{t('monitorDetail.noRules')}</p>
+            ) : (
+              <ul className="mt-4 space-y-2">
+                {monitor.rules.map((rule) => (
+                  <li key={rule.id} className="glass-flat px-4 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="min-w-0 truncate text-sm font-medium text-ink">
+                        {rule.label || rule.metricKey}
+                      </p>
+                      <Badge tone={rule.enabled ? 'success' : 'muted'}>
+                        {rule.enabled ? t('common.enabled') : t('common.disabled')}
+                      </Badge>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Trend chart */}
-          <Card>
-            <CardHeader className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle>{t('monitorDetail.trend')}</CardTitle>
-              <Segmented
-                value={range}
-                onChange={setRange}
-                options={[
-                  { value: '24h', label: t('monitorDetail.range24h') },
-                  { value: '7d', label: t('monitorDetail.range7d') },
-                  { value: '30d', label: t('monitorDetail.range30d') },
-                ]}
-              />
-            </CardHeader>
-            <CardContent>
-              {metricsQuery.isPending ? (
-                <Skeleton className="h-72" />
-              ) : metricsQuery.isError ? (
-                <ErrorState error={metricsQuery.error} onRetry={() => void metricsQuery.refetch()} />
-              ) : (
-                <MetricChart series={series} range={range} timezone={timezone} locale={locale} />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Run history */}
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle>{t('monitorDetail.runHistory')}</CardTitle>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => void runsQuery.refetch()}
-                aria-label={t('common.refresh')}
-                loading={runsQuery.isFetching}
-              >
-                {!runsQuery.isFetching ? <RefreshCcw className="h-4 w-4" aria-hidden /> : null}
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {runsQuery.isPending ? (
-                <Skeleton className="h-40" />
-              ) : runsQuery.isError ? (
-                <ErrorState error={runsQuery.error} onRetry={() => void runsQuery.refetch()} />
-              ) : runs.length === 0 ? (
-                <EmptyState className="border-none py-8" title={t('monitorDetail.noRuns')} />
-              ) : (
-                <Table>
-                  <THead>
-                    <TR>
-                      <TH>{t('monitorDetail.checkedAt')}</TH>
-                      <TH>{t('common.status')}</TH>
-                      <TH className="hidden sm:table-cell">{t('monitorDetail.httpStatusLabel')}</TH>
-                      <TH className="hidden md:table-cell">{t('monitorDetail.durationLabel')}</TH>
-                      <TH className="hidden lg:table-cell">{t('monitorDetail.triggerLabel')}</TH>
-                      <TH>{t('notifications.lastError')}</TH>
-                    </TR>
-                  </THead>
-                  <TBody>
-                    {runs.map((run) => (
-                      <TR key={run.id}>
-                        <TD className="whitespace-nowrap text-xs">
-                          {formatDateTime(run.startedAt, timezone, locale)}
-                        </TD>
-                        <TD>
-                          <StatusBadge status={run.status} />
-                        </TD>
-                        <TD className="hidden sm:table-cell">{run.httpStatus ?? '—'}</TD>
-                        <TD className="hidden md:table-cell">{formatMs(run.durationMs)}</TD>
-                        <TD className="hidden lg:table-cell text-xs text-[var(--muted-foreground)]">
-                          {t(`trigger.${run.trigger}`)}
-                        </TD>
-                        <TD className="max-w-[220px]">
-                          <p className="truncate text-xs text-[var(--danger)]" title={run.error ?? undefined}>
-                            {run.error ?? '—'}
-                          </p>
-                        </TD>
-                      </TR>
-                    ))}
-                  </TBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <aside className="min-w-0 space-y-4">
-          {/* Rules */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('monitorDetail.rulesTitle')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {monitor.rules.length === 0 ? (
-                <p className="text-sm text-[var(--muted-foreground)]">{t('monitorDetail.noRules')}</p>
-              ) : (
-                <ul className="space-y-2.5">
-                  {monitor.rules.map((rule) => (
-                    <li key={rule.id} className="rounded-lg border border-[var(--border)] p-2.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-medium">{rule.label || rule.metricKey}</p>
-                        <Badge tone={rule.enabled ? 'success' : 'muted'}>
-                          {rule.enabled ? t('common.enabled') : t('common.disabled')}
-                        </Badge>
-                      </div>
-                      <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                        {rule.metricKey} {OPERATOR_SYMBOLS[rule.operator] ?? rule.operator}{' '}
-                        {rule.criticalValue ?? rule.warningValue ?? '—'}
-                        {rule.unit ? ` ${rule.unit}` : ''}
-                      </p>
-                      <p className="text-xs text-[var(--muted-foreground)]">
-                        {t('severity.warning')} {rule.warningValue ?? '—'} / {t('severity.critical')}{' '}
-                        {rule.criticalValue ?? '—'} · ×{rule.durationChecks}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
+                    <p className="mt-1 break-words text-xs text-moonlight">
+                      {rule.metricKey} {OPERATOR_SYMBOLS[rule.operator] ?? rule.operator}{' '}
+                      {rule.criticalValue ?? rule.warningValue ?? '—'}
+                      {rule.unit ? ` ${rule.unit}` : ''}
+                    </p>
+                    <p className="text-xs text-moonlight">
+                      {t('severity.warning')} {rule.warningValue ?? '—'} / {t('severity.critical')}{' '}
+                      {rule.criticalValue ?? '—'} · ×{rule.durationChecks}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
 
           {/* Push token */}
           {isPush ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <KeyRound className="h-4 w-4 text-[var(--brand)]" aria-hidden />
-                  {t('monitorDetail.pushToken')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-xs text-[var(--muted-foreground)]">{t('monitorDetail.pushTokenHint')}</p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 truncate rounded-md bg-[var(--surface-muted)] px-2 py-1.5 font-mono text-xs">
+            <Card className="p-6">
+              <h2 className="flex items-center gap-2 text-[18px] font-medium leading-snug text-ink">
+                <KeyRound className="h-4 w-4 text-moonlight" aria-hidden />
+                {t('monitorDetail.pushToken')}
+              </h2>
+              <p className="mt-2 text-xs text-moonlight">{t('monitorDetail.pushTokenHint')}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <CodeWell className="min-w-0 flex-1">
+                  <code className="block truncate">
                     {monitor.pushTokenPrefix ? `${monitor.pushTokenPrefix}…` : '—'}
                   </code>
-                  {monitor.pushTokenPrefix ? <CopyButton value={monitor.pushTokenPrefix} /> : null}
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setRotateOpen(true)}>
-                  <RefreshCcw className="h-4 w-4" aria-hidden />
-                  {t('monitorDetail.rotate')}
-                </Button>
-              </CardContent>
+                </CodeWell>
+                {monitor.pushTokenPrefix ? (
+                  <CopyButton value={monitor.pushTokenPrefix} size="sm" />
+                ) : null}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => setRotateOpen(true)}
+              >
+                <RefreshCcw className="h-4 w-4" aria-hidden />
+                {t('monitorDetail.rotate')}
+              </Button>
             </Card>
           ) : null}
 
@@ -449,26 +515,6 @@ export function MonitorDetailPage() {
             <Alert tone="danger" title={t('monitorDetail.lastError')}>
               <p className="break-words text-xs">{monitor.lastError}</p>
             </Alert>
-          ) : null}
-
-          {!isPush && monitor.config.type === 'http' ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('monitors.monitorType')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1.5 text-xs text-[var(--muted-foreground)]">
-                <p>
-                  {monitor.config.request.method} {monitor.config.request.url}
-                </p>
-                <p>
-                  {t('monitorForm.extractMode')}:{' '}
-                  {monitor.config.extract.mode === 'json'
-                    ? t('monitorForm.modeJson')
-                    : t('monitorForm.modeJs')}
-                </p>
-                <p>{t(`monitors.${monitor.type}`)}</p>
-              </CardContent>
-            </Card>
           ) : null}
         </aside>
       </div>

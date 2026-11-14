@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -25,7 +25,7 @@ import { api } from '../lib/api';
 import { applyZodIssues, getFieldError } from '../lib/form';
 import { errorMessage, formatDateTime, formatDurationSeconds } from '../lib/utils';
 import { useAuth } from '../providers/AuthProvider';
-import { getTimezoneOptions, THEME_OPTIONS } from '../lib/presets';
+import { getTimezoneOptions } from '../lib/presets';
 import {
   Alert,
   Badge,
@@ -34,6 +34,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  ErrorState,
   Field,
   Input,
   PageHeader,
@@ -80,6 +81,15 @@ function smtpFromSettings(settings: SettingsDto | undefined): SmtpFields {
     fromName: smtp?.fromName ?? 'SubWatch',
     to: smtp?.to ?? [],
   };
+}
+
+/** Shared save bar: right aligned, glass well, one primary action per tab. */
+function FormActions({ children }: { children: ReactNode }) {
+  return (
+    <div className="glass-flat flex flex-wrap items-center justify-end gap-2 rounded-btn px-4 py-3">
+      {children}
+    </div>
+  );
 }
 
 export function SettingsPage() {
@@ -262,20 +272,18 @@ export function SettingsPage() {
 
   if (!settings) {
     return (
-      <div>
-        <PageHeader title={t('settings.title')} description={t('settings.subtitle')} />
+      <div className="space-y-8">
+        <PageHeader
+          title={t('settings.title')}
+          description={t('settings.subtitle')}
+        />
         {settingsLoading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-10" />
-            <Skeleton className="h-64" />
+          <div className="space-y-4">
+            <Skeleton className="h-14 rounded-btn" />
+            <Skeleton className="h-72 rounded-panel" />
           </div>
         ) : (
-          <Card className="p-6 text-center">
-            <p className="text-sm text-[var(--muted-foreground)]">{t('errors.loadFailed')}</p>
-            <Button className="mt-3" size="sm" onClick={() => void reloadSettings()}>
-              {t('common.retry')}
-            </Button>
-          </Card>
+          <ErrorState title={t('errors.loadFailed')} onRetry={() => void reloadSettings()} />
         )}
       </div>
     );
@@ -290,7 +298,7 @@ export function SettingsPage() {
   const healthOk = healthQuery.data?.ok ?? false;
 
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader
         title={t('settings.title')}
         description={t('settings.subtitle')}
@@ -315,7 +323,7 @@ export function SettingsPage() {
             className="space-y-4"
           >
             <FormSection title={t('settings.general')} description={t('settings.generalHint')}>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
                 <Field label={t('settings.appName')} error={getFieldError(generalForm.formState.errors, 'appName')}>
                   <Input {...generalForm.register('appName')} />
                 </Field>
@@ -392,23 +400,9 @@ export function SettingsPage() {
                 >
                   <Input placeholder="https://subwatch.example.com" {...generalForm.register('baseUrl')} />
                 </Field>
-                <Field label={t('settings.theme')} hint={t('settings.themeHint')}>
-                  <Select
-                    value={generalForm.watch('theme')}
-                    onValueChange={(value) =>
-                      generalForm.setValue('theme', value as GeneralFormValues['theme'], {
-                        shouldDirty: true,
-                      })
-                    }
-                    options={THEME_OPTIONS.map((option) => ({
-                      value: option.value,
-                      label: t(option.labelKey),
-                    }))}
-                  />
-                </Field>
               </div>
               <div>
-                <p className="mb-1.5 text-sm font-medium">{t('settings.defaultChannelIds')}</p>
+                <p className="type-label mb-2">{t('settings.defaultChannelIds')}</p>
                 <MultiCheckbox
                   items={channelItems}
                   value={generalForm.watch('defaultChannelIds') ?? []}
@@ -417,16 +411,15 @@ export function SettingsPage() {
                   }
                   emptyText={t('settings.noChannels')}
                 />
-                <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                  {t('settings.defaultChannelIdsHint')}
-                </p>
+                <p className="mt-2 text-xs text-moonlight">{t('settings.defaultChannelIdsHint')}</p>
               </div>
             </FormSection>
 
-            <Card className="flex items-center justify-end gap-2 p-3">
+            <FormActions>
               <Button
                 type="button"
                 variant="outline"
+                disabled={generalMutation.isPending}
                 onClick={() => generalForm.reset(generalToForm(settings))}
               >
                 {t('common.cancel')}
@@ -435,7 +428,7 @@ export function SettingsPage() {
                 <Save className="h-4 w-4" aria-hidden />
                 {t('settings.saveGeneral')}
               </Button>
-            </Card>
+            </FormActions>
           </form>
         </TabsContent>
 
@@ -453,7 +446,7 @@ export function SettingsPage() {
             )}
 
             <FormSection title={t('settings.smtp')} description={t('settings.smtpHint')}>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
                 <Field label={t('channels.host')} required>
                   <Input
                     value={smtp.host}
@@ -515,42 +508,43 @@ export function SettingsPage() {
                 </Field>
               </div>
               <div className="grid gap-2 sm:grid-cols-3">
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2 text-sm text-moonlight">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 accent-[var(--brand)]"
+                    className="h-4 w-4 accent-moonlight"
                     checked={smtp.secure}
                     onChange={(event) => setSmtp({ ...smtp, secure: event.target.checked })}
                   />
                   {t('channels.secure')}
                 </label>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2 text-sm text-moonlight">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 accent-[var(--brand)]"
+                    className="h-4 w-4 accent-moonlight"
                     checked={smtp.requireTls}
                     onChange={(event) => setSmtp({ ...smtp, requireTls: event.target.checked })}
                   />
                   {t('channels.requireTls')}
                 </label>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2 text-sm text-moonlight">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 accent-[var(--brand)]"
+                    className="h-4 w-4 accent-moonlight"
                     checked={smtp.rejectUnauthorized}
                     onChange={(event) => setSmtp({ ...smtp, rejectUnauthorized: event.target.checked })}
                   />
                   {t('channels.rejectUnauthorized')}
                 </label>
               </div>
-              <p className="text-xs text-[var(--muted-foreground)]">{t('settings.smtpTestHint')}</p>
+              <p className="text-xs text-moonlight">{t('settings.smtpTestHint')}</p>
             </FormSection>
 
-            <Card className="flex flex-wrap items-center justify-end gap-2 p-3">
+            <FormActions>
               <Button
                 type="button"
                 variant="outline"
                 loading={testSmtpMutation.isPending}
+                disabled={smtpMutation.isPending}
                 onClick={() => {
                   const config = buildSmtpTestConfig();
                   if (config) testSmtpMutation.mutate(config);
@@ -562,7 +556,7 @@ export function SettingsPage() {
                 <Save className="h-4 w-4" aria-hidden />
                 {t('settings.saveSmtp')}
               </Button>
-            </Card>
+            </FormActions>
           </div>
         </TabsContent>
 
@@ -572,50 +566,53 @@ export function SettingsPage() {
             onSubmit={(event) => {
               void onChangePassword(event);
             }}
-            className="mx-auto max-w-xl space-y-4"
+            className="space-y-4"
             noValidate
           >
             <FormSection title={t('settings.changePassword')} description={t('settings.passwordHint')}>
-              <Field
-                label={t('settings.currentPassword')}
-                error={getFieldError(passwordForm.formState.errors, 'currentPassword')}
-                required
-              >
-                <Input
-                  type="password"
-                  autoComplete="current-password"
-                  {...passwordForm.register('currentPassword')}
-                />
-              </Field>
-              <Field
-                label={t('settings.newPassword')}
-                error={getFieldError(passwordForm.formState.errors, 'newPassword')}
-                required
-              >
-                <Input
-                  type="password"
-                  autoComplete="new-password"
-                  {...passwordForm.register('newPassword')}
-                />
-              </Field>
-              <Field
-                label={t('settings.confirmPassword')}
-                error={getFieldError(passwordForm.formState.errors, 'confirmPassword')}
-                required
-              >
-                <Input
-                  type="password"
-                  autoComplete="new-password"
-                  {...passwordForm.register('confirmPassword')}
-                />
-              </Field>
+              <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
+                <Field
+                  label={t('settings.currentPassword')}
+                  error={getFieldError(passwordForm.formState.errors, 'currentPassword')}
+                  required
+                  className="sm:col-span-2"
+                >
+                  <Input
+                    type="password"
+                    autoComplete="current-password"
+                    {...passwordForm.register('currentPassword')}
+                  />
+                </Field>
+                <Field
+                  label={t('settings.newPassword')}
+                  error={getFieldError(passwordForm.formState.errors, 'newPassword')}
+                  required
+                >
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    {...passwordForm.register('newPassword')}
+                  />
+                </Field>
+                <Field
+                  label={t('settings.confirmPassword')}
+                  error={getFieldError(passwordForm.formState.errors, 'confirmPassword')}
+                  required
+                >
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    {...passwordForm.register('confirmPassword')}
+                  />
+                </Field>
+              </div>
             </FormSection>
-            <Card className="flex items-center justify-end gap-2 p-3">
+            <FormActions>
               <Button type="submit" loading={passwordMutation.isPending}>
                 <ShieldCheck className="h-4 w-4" aria-hidden />
                 {t('settings.changePasswordButton')}
               </Button>
-            </Card>
+            </FormActions>
           </form>
         </TabsContent>
 
@@ -624,56 +621,56 @@ export function SettingsPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <Card>
               <CardHeader className="flex-row items-center gap-2">
-                <Info className="h-4 w-4 text-[var(--brand)]" aria-hidden />
+                <Info className="h-4 w-4 text-moonlight" aria-hidden />
                 <CardTitle>{t('settings.about')}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p className="text-[var(--muted-foreground)]">{t('settings.aboutText')}</p>
-                <dl className="grid grid-cols-2 gap-2 pt-2">
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('settings.apiVersion')}</dt>
-                  <dd className="text-right font-mono text-xs">{settings.version}</dd>
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('settings.uiVersion')}</dt>
-                  <dd className="text-right font-mono text-xs">{settings.version}</dd>
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('settings.timezone')}</dt>
-                  <dd className="text-right text-xs">{timezone}</dd>
+              <CardContent className="space-y-3 text-body">
+                <p className="text-moonlight">{t('settings.aboutText')}</p>
+                <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 pt-3">
+                  <dt className="text-xs text-moonlight">{t('settings.apiVersion')}</dt>
+                  <dd className="text-right font-mono text-xs text-ink">{settings.version}</dd>
+                  <dt className="text-xs text-moonlight">{t('settings.uiVersion')}</dt>
+                  <dd className="text-right font-mono text-xs text-ink">{settings.version}</dd>
+                  <dt className="text-xs text-moonlight">{t('settings.timezone')}</dt>
+                  <dd className="text-right text-xs text-ink">{timezone}</dd>
                 </dl>
-                <p className="pt-2 text-xs text-[var(--muted-foreground)]">{t('settings.aboutHint')}</p>
+                <p className="pt-2 text-xs text-moonlight">{t('settings.aboutHint')}</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex-row items-center gap-2">
-                <Server className="h-4 w-4 text-[var(--brand)]" aria-hidden />
+                <Server className="h-4 w-4 text-moonlight" aria-hidden />
                 <CardTitle>{t('settings.health')}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
+              <CardContent className="space-y-3 text-body">
+                <div className="flex flex-wrap items-center gap-2">
                   {healthQuery.isPending ? (
-                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-6 w-24 rounded-pill" />
                   ) : healthOk ? (
                     <>
-                      <CheckCircle2 className="h-4 w-4 text-[var(--success)]" aria-hidden />
-                      <span>{t('settings.healthy')}</span>
+                      <CheckCircle2 className="h-4 w-4 text-success" aria-hidden />
+                      <span className="text-ink">{t('settings.healthy')}</span>
                       <Badge tone="success">
                         {formatDurationSeconds(healthQuery.data?.uptimeSeconds, locale)}
                       </Badge>
                     </>
                   ) : (
                     <>
-                      <XCircle className="h-4 w-4 text-[var(--danger)]" aria-hidden />
-                      <span>{t('settings.unhealthy')}</span>
+                      <XCircle className="h-4 w-4 text-danger" aria-hidden />
+                      <span className="text-ink">{t('settings.unhealthy')}</span>
                     </>
                   )}
                 </div>
-                <dl className="grid grid-cols-2 gap-2 pt-2">
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('settings.apiVersion')}</dt>
-                  <dd className="text-right font-mono text-xs">{healthQuery.data?.version ?? settings.version}</dd>
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('settings.health')}</dt>
-                  <dd className="text-right text-xs">
+                <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 pt-3">
+                  <dt className="text-xs text-moonlight">{t('settings.apiVersion')}</dt>
+                  <dd className="text-right font-mono text-xs text-ink">{healthQuery.data?.version ?? settings.version}</dd>
+                  <dt className="text-xs text-moonlight">{t('settings.health')}</dt>
+                  <dd className="text-right text-xs text-ink">
                     {healthQuery.data?.ok ? t('settings.healthy') : t('settings.unhealthy')}
                   </dd>
-                  <dt className="text-xs text-[var(--muted-foreground)]">{t('common.updatedAt')}</dt>
-                  <dd className="text-right text-xs">
+                  <dt className="text-xs text-moonlight">{t('common.updatedAt')}</dt>
+                  <dd className="text-right text-xs text-ink">
                     {healthQuery.dataUpdatedAt
                       ? formatDateTime(new Date(healthQuery.dataUpdatedAt).toISOString(), timezone, 'en')
                       : '—'}
@@ -682,8 +679,9 @@ export function SettingsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="mt-2"
+                  className="mt-1"
                   loading={healthQuery.isFetching}
+                  disabled={healthQuery.isFetching}
                   onClick={() => void healthQuery.refetch()}
                 >
                   {t('common.refresh')}

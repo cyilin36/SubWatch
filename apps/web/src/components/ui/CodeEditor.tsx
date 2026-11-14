@@ -1,7 +1,7 @@
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
-import { useAuth } from '../../providers/AuthProvider';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../providers/AuthProvider';
 
 export interface CodeEditorProps {
   value: string;
@@ -27,7 +27,7 @@ export function CodeEditor({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] [&_.cm-editor]:text-[13px] [&_.cm-editor.cm-focused]:outline-none',
+        'glass-flat overflow-hidden rounded-btn [&_.cm-editor]:bg-transparent [&_.cm-editor]:text-[13px] [&_.cm-editor.cm-focused]:outline-none [&_.cm-scroller]:font-mono',
         className,
       )}
     >

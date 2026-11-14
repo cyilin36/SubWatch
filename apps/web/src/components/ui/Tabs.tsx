@@ -7,7 +7,7 @@ export function TabsList({ className, children }: { className?: string; children
   return (
     <TabsPrimitive.List
       className={cn(
-        'inline-flex w-full max-w-full flex-wrap items-center gap-1 rounded-lg bg-[var(--surface-muted)] p-1',
+        'glass-flat inline-flex w-full max-w-full flex-wrap items-center gap-1 rounded-btn p-1.5',
         className,
       )}
     >
@@ -32,9 +32,9 @@ export function TabsTrigger({
       value={value}
       disabled={disabled}
       className={cn(
-        'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium text-[var(--muted-foreground)] transition-colors',
-        'hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]',
-        'data-[state=active]:bg-[var(--surface)] data-[state=active]:text-[var(--foreground)] data-[state=active]:shadow-sm',
+        'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-btn px-4 py-2 text-sm font-medium text-moonlight transition-colors duration-300',
+        'hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50',
+        'data-[state=active]:bg-ink/12 data-[state=active]:text-ink data-[state=active]:shadow-[inset_0_1px_0_var(--inset-highlight)]',
         'disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
@@ -56,7 +56,7 @@ export function TabsContent({
   return (
     <TabsPrimitive.Content
       value={value}
-      className={cn('mt-4 focus-visible:outline-none', className)}
+      className={cn('mt-6 focus-visible:outline-none', className)}
     >
       {children}
     </TabsPrimitive.Content>

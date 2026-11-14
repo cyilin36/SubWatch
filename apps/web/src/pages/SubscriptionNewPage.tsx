@@ -21,7 +21,7 @@ import {
 } from '../lib/subscriptions';
 import { errorMessage } from '../lib/utils';
 import { useAuth } from '../providers/AuthProvider';
-import { Button, Card, ErrorState, PageHeader } from '../components/ui';
+import { Alert, Button, ErrorState, PageHeader } from '../components/ui';
 import { SubscriptionFormFields } from '../components/subscriptions/SubscriptionFormFields';
 import { TemplateApplyCard } from '../components/templates/TemplateApplyCard';
 import { TemplatePendingCard } from '../components/templates/TemplatePendingCard';
@@ -96,8 +96,9 @@ export function SubscriptionNewPage() {
   });
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div>
       <PageHeader
+        label={t('nav.subscriptions')}
         title={t('subscriptions.newSubscription')}
         icon={<CreditCard className="h-5 w-5" />}
         actions={
@@ -108,7 +109,7 @@ export function SubscriptionNewPage() {
         }
       />
 
-      <div className="mb-4">
+      <div className="space-y-6">
         <TemplateApplyCard
           kind="subscription"
           appliedTemplate={appliedTemplate}
@@ -116,42 +117,42 @@ export function SubscriptionNewPage() {
           onClear={handleClearTemplate}
           onSelectionChange={setSelectedTemplateId}
         />
-      </div>
 
-      {pendingTemplate ? (
-        <TemplatePendingCard kind="subscription" />
-      ) : channelsQuery.isError ? (
-        <ErrorState error={channelsQuery.error} onRetry={() => void channelsQuery.refetch()} />
-      ) : (
-        <>
-          {appliedTemplate ? (
-            <p className="mb-3 text-sm text-[var(--muted-foreground)]">
-              {t('templates.apply.prefilledHint')}
-            </p>
-          ) : null}
-          <form
-            onSubmit={(event) => {
-              void onSubmit(event);
-            }}
-            noValidate
-            className="space-y-4"
-          >
-            <SubscriptionFormFields
-              form={form}
-              channels={channelsQuery.data ?? []}
-              timezone={timezone}
-            />
-            <Card className="flex flex-wrap items-center justify-end gap-2 p-3">
-              <Button type="button" variant="outline" onClick={() => navigate('/')}>
-                {t('common.cancel')}
-              </Button>
-              <Button type="submit" loading={createMutation.isPending}>
-                {createMutation.isPending ? t('subscriptionForm.submitting') : t('subscriptionForm.submit')}
-              </Button>
-            </Card>
-          </form>
-        </>
-      )}
+        {pendingTemplate ? (
+          <TemplatePendingCard kind="subscription" />
+        ) : channelsQuery.isError ? (
+          <ErrorState error={channelsQuery.error} onRetry={() => void channelsQuery.refetch()} />
+        ) : (
+          <>
+            {appliedTemplate ? (
+              <Alert tone="info">
+                {t('templates.apply.prefilledHint')}
+              </Alert>
+            ) : null}
+            <form
+              onSubmit={(event) => {
+                void onSubmit(event);
+              }}
+              noValidate
+              className="space-y-6"
+            >
+              <SubscriptionFormFields
+                form={form}
+                channels={channelsQuery.data ?? []}
+                timezone={timezone}
+              />
+              <div className="glass flex flex-wrap items-center justify-end gap-2 p-3">
+                <Button type="button" variant="outline" onClick={() => navigate('/')}>
+                  {t('common.cancel')}
+                </Button>
+                <Button type="submit" loading={createMutation.isPending}>
+                  {createMutation.isPending ? t('subscriptionForm.submitting') : t('subscriptionForm.submit')}
+                </Button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
     </div>
   );
 }

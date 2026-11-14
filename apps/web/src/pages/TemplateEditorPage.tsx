@@ -41,8 +41,6 @@ import {
   Alert,
   Badge,
   Button,
-  Card,
-  EmptyState,
   ErrorState,
   Field,
   FullPageSpinner,
@@ -59,6 +57,8 @@ import {
 import { CodeEditor } from '../components/ui/CodeEditor';
 import { FormSection, JsonPreview, Segmented } from '../components/common/fields';
 import { TemplateFields } from '../components/templates/TemplateFields';
+
+type EditorTab = 'basic' | 'fields' | 'payload';
 
 // ---------------------------------------------------------------------------
 // Page shell
@@ -84,7 +84,7 @@ export function TemplateEditorPage() {
     if (templateQuery.isPending) {
       return (
         <div>
-          <PageHeader title={t('templates.editTemplate')} />
+          <PageHeader label={t('nav.templates')} title={t('templates.editTemplate')} />
           <FullPageSpinner label={t('common.loading')} />
         </div>
       );
@@ -92,7 +92,7 @@ export function TemplateEditorPage() {
     if (templateQuery.isError || !templateQuery.data) {
       return (
         <div>
-          <PageHeader title={t('templates.editTemplate')} />
+          <PageHeader label={t('nav.templates')} title={t('templates.editTemplate')} />
           <ErrorState error={templateQuery.error} onRetry={() => void templateQuery.refetch()} />
         </div>
       );
@@ -143,6 +143,7 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
   const queryClient = useQueryClient();
 
   const isCreate = !template;
+  const [tab, setTab] = useState<EditorTab>('basic');
   const [kind, setKind] = useState<TemplateKind>(template?.kind ?? initialKind);
   const [name, setName] = useState(template?.name ?? '');
   const [description, setDescription] = useState(template?.description ?? '');
@@ -252,6 +253,7 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
   return (
     <div>
       <PageHeader
+        label={t('nav.templates')}
         title={isCreate ? t('templates.newTemplate') : t('templates.editTemplate')}
         description={isCreate ? t('templates.editor.subtitleCreate') : template.name}
         icon={<LayoutTemplate className="h-5 w-5" />}
@@ -263,169 +265,193 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
         }
       />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
-        <div className="min-w-0 space-y-4">
-          <FormSection title={t('templates.editor.basicInfo')} description={t('templates.editor.basicHint')}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field
-                label={t('common.name')}
-                htmlFor="template-name"
-                required
-                className="sm:col-span-2"
-              >
-                <Input
-                  id="template-name"
-                  value={name}
-                  maxLength={100}
-                  placeholder={t('templates.editor.namePlaceholder')}
-                  onChange={(event) => setName(event.target.value)}
-                />
-              </Field>
-
-              <Field label={t('templates.editor.kind')} hint={isCreate ? undefined : t('templates.editor.kindFixedHint')}>
-                {isCreate ? (
-                  <Segmented
-                    value={kind}
-                    onChange={setKind}
-                    options={TEMPLATE_KINDS.map((entry) => ({
-                      value: entry,
-                      label: t(templateKindLabelKey(entry)),
-                    }))}
-                  />
-                ) : (
-                  <Badge tone="info">{t(templateKindLabelKey(kind))}</Badge>
-                )}
-              </Field>
-
-              <Field label={t('templates.editor.icon')} htmlFor="template-icon" hint={t('templates.editor.iconHint')}>
-                <Input
-                  id="template-icon"
-                  value={icon}
-                  maxLength={16}
-                  placeholder="🔔"
-                  onChange={(event) => setIcon(event.target.value)}
-                />
-              </Field>
-
-              <Field label={t('templates.editor.color')} htmlFor="template-color" hint={t('templates.editor.colorHint')}>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="template-color"
-                    value={color}
-                    maxLength={20}
-                    placeholder="#RRGGBB"
-                    className="font-mono"
-                    onChange={(event) => setColor(event.target.value)}
-                  />
-                  <span
-                    className="h-9 w-9 shrink-0 rounded-lg border border-[var(--border)]"
-                    style={{ backgroundColor: /^#[0-9a-fA-F]{6}$/.test(color) ? color : 'transparent' }}
-                    aria-hidden
-                  />
-                </div>
-              </Field>
-
-              <Field label={t('templates.editor.category')} htmlFor="template-category">
-                <Input
-                  id="template-category"
-                  value={category}
-                  maxLength={50}
-                  list="template-categories"
-                  placeholder={t('templates.editor.categoryPlaceholder')}
-                  onChange={(event) => setCategory(event.target.value)}
-                />
-                <datalist id="template-categories">
-                  {categories.map((entry) => (
-                    <option key={entry} value={entry} />
-                  ))}
-                </datalist>
-              </Field>
-
-              <Field
-                label={t('common.description')}
-                htmlFor="template-description"
-                className="sm:col-span-2"
-              >
-                <Textarea
-                  id="template-description"
-                  rows={2}
-                  maxLength={500}
-                  value={description}
-                  placeholder={t('templates.editor.descriptionPlaceholder')}
-                  onChange={(event) => setDescription(event.target.value)}
-                />
-              </Field>
-            </div>
-          </FormSection>
-
-          <FormSection title={t('templates.editor.fields.title')} description={t('templates.editor.fields.hint')}>
-            {fields.length === 0 ? (
-              <EmptyState
-                className="border-none py-6"
-                title={t('templates.editor.fields.empty')}
-                description={t('templates.editor.fields.emptyHint')}
-              />
-            ) : (
-              <div className="space-y-3">
-                {fields.map((draft, index) => (
-                  <TemplateFieldRow
-                    key={index}
-                    index={index}
-                    draft={draft}
-                    canMoveUp={index > 0}
-                    canMoveDown={index < fields.length - 1}
-                    onChange={(patch) => updateField(index, patch)}
-                    onMove={(delta) => moveField(index, delta)}
-                    onRemove={() => setFields((current) => current.filter((_entry, position) => position !== index))}
-                  />
-                ))}
-              </div>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFields((current) => [...current, blankTemplateFieldDraft()])}
-            >
-              <Plus className="h-3.5 w-3.5" aria-hidden />
-              {t('templates.editor.fields.add')}
-            </Button>
-          </FormSection>
-
-          <FormSection title={t('templates.editor.payload.title')} description={t('templates.editor.payload.hint')}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs text-[var(--muted-foreground)]">
-                  {t('templates.editor.payload.placeholders')}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+        <div className="min-w-0 space-y-6">
+          <Tabs value={tab} onValueChange={(value) => setTab(value as EditorTab)}>
+            <TabsList className="sm:w-auto">
+              <TabsTrigger value="basic">{t('templates.editor.basicInfo')}</TabsTrigger>
+              <TabsTrigger value="fields">
+                {t('templates.editor.fields.title')}
+                <span className="rounded-pill bg-ink/10 px-1.5 py-0.5 text-[10px] leading-none text-moonlight">
+                  {fields.length}
                 </span>
-                {draftRefs.length === 0 ? (
-                  <span className="text-xs text-[var(--muted-foreground)]">
-                    {t('templates.editor.payload.noPlaceholders')}
-                  </span>
+              </TabsTrigger>
+              <TabsTrigger value="payload">{t('templates.editor.payload.title')}</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="basic">
+              <FormSection description={t('templates.editor.basicHint')}>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field
+                    label={t('common.name')}
+                    htmlFor="template-name"
+                    required
+                    className="sm:col-span-2"
+                  >
+                    <Input
+                      id="template-name"
+                      value={name}
+                      maxLength={100}
+                      placeholder={t('templates.editor.namePlaceholder')}
+                      onChange={(event) => setName(event.target.value)}
+                    />
+                  </Field>
+
+                  <Field
+                    label={t('templates.editor.kind')}
+                    hint={isCreate ? undefined : t('templates.editor.kindFixedHint')}
+                  >
+                    {isCreate ? (
+                      <Segmented
+                        value={kind}
+                        onChange={setKind}
+                        options={TEMPLATE_KINDS.map((entry) => ({
+                          value: entry,
+                          label: t(templateKindLabelKey(entry)),
+                        }))}
+                      />
+                    ) : (
+                      <Badge tone="info">{t(templateKindLabelKey(kind))}</Badge>
+                    )}
+                  </Field>
+
+                  <Field label={t('templates.editor.icon')} htmlFor="template-icon" hint={t('templates.editor.iconHint')}>
+                    <Input
+                      id="template-icon"
+                      value={icon}
+                      maxLength={16}
+                      placeholder="🔔"
+                      onChange={(event) => setIcon(event.target.value)}
+                    />
+                  </Field>
+
+                  <Field label={t('templates.editor.color')} htmlFor="template-color" hint={t('templates.editor.colorHint')}>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="template-color"
+                        value={color}
+                        maxLength={20}
+                        placeholder="#RRGGBB"
+                        className="font-mono"
+                        onChange={(event) => setColor(event.target.value)}
+                      />
+                      <span
+                        className="glass-flat h-10 w-10 shrink-0"
+                        style={{ backgroundColor: /^#[0-9a-fA-F]{6}$/.test(color) ? color : 'transparent' }}
+                        aria-hidden
+                      />
+                    </div>
+                  </Field>
+
+                  <Field label={t('templates.editor.category')} htmlFor="template-category">
+                    <Input
+                      id="template-category"
+                      value={category}
+                      maxLength={50}
+                      list="template-categories"
+                      placeholder={t('templates.editor.categoryPlaceholder')}
+                      onChange={(event) => setCategory(event.target.value)}
+                    />
+                    <datalist id="template-categories">
+                      {categories.map((entry) => (
+                        <option key={entry} value={entry} />
+                      ))}
+                    </datalist>
+                  </Field>
+
+                  <Field
+                    label={t('common.description')}
+                    htmlFor="template-description"
+                    className="sm:col-span-2"
+                  >
+                    <Textarea
+                      id="template-description"
+                      rows={2}
+                      maxLength={500}
+                      value={description}
+                      placeholder={t('templates.editor.descriptionPlaceholder')}
+                      onChange={(event) => setDescription(event.target.value)}
+                    />
+                  </Field>
+                </div>
+              </FormSection>
+            </TabsContent>
+
+            <TabsContent value="fields">
+              <FormSection description={t('templates.editor.fields.hint')}>
+                {fields.length === 0 ? (
+                  <div className="glass-flat flex flex-col items-center px-6 py-8 text-center">
+                    <LayoutTemplate className="h-6 w-6 text-moonlight" aria-hidden />
+                    <p className="mt-3 text-body font-medium text-ink/85">
+                      {t('templates.editor.fields.empty')}
+                    </p>
+                    <p className="mt-1 text-xs text-moonlight">{t('templates.editor.fields.emptyHint')}</p>
+                  </div>
                 ) : (
-                  draftRefs.map((ref) => (
-                    <code
-                      key={ref.key}
-                      className="rounded bg-[var(--surface-muted)] px-1.5 py-0.5 font-mono text-xs"
-                    >
-                      {`{{${ref.key}}}`}
-                    </code>
-                  ))
+                  <div className="space-y-4">
+                    {fields.map((draft, index) => (
+                      <TemplateFieldRow
+                        key={index}
+                        index={index}
+                        draft={draft}
+                        canMoveUp={index > 0}
+                        canMoveDown={index < fields.length - 1}
+                        onChange={(patch) => updateField(index, patch)}
+                        onMove={(delta) => moveField(index, delta)}
+                        onRemove={() => setFields((current) => current.filter((_entry, position) => position !== index))}
+                      />
+                    ))}
+                  </div>
                 )}
-              </div>
-              <Button variant="outline" size="sm" onClick={insertExample}>
-                <Wand2 className="h-3.5 w-3.5" aria-hidden />
-                {t('templates.editor.payload.example')}
-              </Button>
-            </div>
-            <CodeEditor
-              value={payloadText}
-              onChange={setPayloadText}
-              language="json"
-              height="300px"
-              placeholder={t('templates.editor.payload.placeholder')}
-            />
-            {payloadIssue ? <p className="text-xs text-[var(--danger)]">{payloadIssue}</p> : null}
-          </FormSection>
+                <div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFields((current) => [...current, blankTemplateFieldDraft()])}
+                  >
+                    <Plus className="h-3.5 w-3.5" aria-hidden />
+                    {t('templates.editor.fields.add')}
+                  </Button>
+                </div>
+              </FormSection>
+            </TabsContent>
+
+            <TabsContent value="payload">
+              <FormSection description={t('templates.editor.payload.hint')}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <span className="type-label">{t('templates.editor.payload.placeholders')}</span>
+                    {draftRefs.length === 0 ? (
+                      <span className="text-xs text-moonlight">
+                        {t('templates.editor.payload.noPlaceholders')}
+                      </span>
+                    ) : (
+                      draftRefs.map((ref) => (
+                        <code
+                          key={ref.key}
+                          className="rounded-pill border border-ink/10 bg-ink/5 px-2 py-0.5 font-mono text-xs text-moonlight"
+                        >
+                          {`{{${ref.key}}}`}
+                        </code>
+                      ))
+                    )}
+                  </div>
+                  <Button variant="outline" size="sm" onClick={insertExample}>
+                    <Wand2 className="h-3.5 w-3.5" aria-hidden />
+                    {t('templates.editor.payload.example')}
+                  </Button>
+                </div>
+                <CodeEditor
+                  value={payloadText}
+                  onChange={setPayloadText}
+                  language="json"
+                  height="300px"
+                  placeholder={t('templates.editor.payload.placeholder')}
+                />
+                {payloadIssue ? <p className="text-xs text-danger">{payloadIssue}</p> : null}
+              </FormSection>
+            </TabsContent>
+          </Tabs>
 
           {issues.length > 0 ? (
             <Alert tone="danger" title={t('templates.editor.issuesTitle')}>
@@ -439,7 +465,7 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
             </Alert>
           ) : null}
 
-          <Card className="flex flex-wrap items-center justify-end gap-2 p-3">
+          <div className="glass flex flex-wrap items-center justify-end gap-2 p-3">
             <Button variant="outline" onClick={onBack}>
               {t('common.cancel')}
             </Button>
@@ -447,10 +473,10 @@ function TemplateEditorContent({ template, initialKind, onBack }: TemplateEditor
               <Save className="h-4 w-4" aria-hidden />
               {isCreate ? t('templates.editor.create') : t('templates.editor.save')}
             </Button>
-          </Card>
+          </div>
         </div>
 
-        <aside className="min-w-0 space-y-3 xl:sticky xl:top-20 xl:self-start">
+        <aside className="min-w-0 space-y-4 xl:sticky xl:top-24 xl:self-start">
           <TemplateTestRenderPanel template={template} />
           <Alert tone="info">{t('templates.editor.testPanel.rateLimitHint')}</Alert>
           <Alert tone="warning">{t('templates.editor.securityHint')}</Alert>
@@ -488,6 +514,7 @@ function TemplateFieldRow({
   const { t } = useTranslation();
   const textConstraints = fieldTypeSupportsTextConstraints(draft.type);
   const selectOptions = parseOptionsText(draft.optionsText);
+  const idPrefix = `template-field-${index}`;
 
   let defaultControl: React.ReactNode;
   switch (draft.type) {
@@ -584,9 +611,9 @@ function TemplateFieldRow({
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-[var(--border)] p-3">
+    <div className="glass-flat space-y-4 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-medium">
+        <p className="text-body font-medium text-ink">
           {t('templates.editor.fields.fieldIndex', { index: index + 1 })}
         </p>
         <div className="flex items-center gap-1">
@@ -611,7 +638,7 @@ function TemplateFieldRow({
           <Button
             variant="ghost"
             size="icon-sm"
-            className="text-[var(--danger)]"
+            className="text-danger"
             aria-label={t('common.remove')}
             onClick={onRemove}
           >
@@ -620,9 +647,10 @@ function TemplateFieldRow({
         </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_160px_auto]">
-        <Field label={t('templates.editor.fields.key')} required>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_160px_auto]">
+        <Field label={t('templates.editor.fields.key')} htmlFor={`${idPrefix}-key`} required>
           <Input
+            id={`${idPrefix}-key`}
             value={draft.key}
             maxLength={50}
             className="font-mono"
@@ -630,16 +658,18 @@ function TemplateFieldRow({
             onChange={(event) => onChange({ key: event.target.value })}
           />
         </Field>
-        <Field label={t('templates.editor.fields.label')} required>
+        <Field label={t('templates.editor.fields.label')} htmlFor={`${idPrefix}-label`} required>
           <Input
+            id={`${idPrefix}-label`}
             value={draft.label}
             maxLength={100}
             placeholder={t('templates.editor.fields.labelPlaceholder')}
             onChange={(event) => onChange({ label: event.target.value })}
           />
         </Field>
-        <Field label={t('templates.editor.fields.type')}>
+        <Field label={t('templates.editor.fields.type')} htmlFor={`${idPrefix}-type`}>
           <Select
+            id={`${idPrefix}-type`}
             value={draft.type}
             onValueChange={(value) =>
               onChange({
@@ -659,18 +689,26 @@ function TemplateFieldRow({
             }))}
           />
         </Field>
-        <div className="flex items-end pb-1">
-          <label className="flex items-center gap-2 pb-1.5 text-sm">
-            <Switch checked={draft.required} onCheckedChange={(checked) => onChange({ required: checked })} />
-            {t('templates.editor.fields.required')}
-          </label>
+        <div className="flex items-end pb-2">
+          <div className="flex items-center gap-2 text-sm text-ink/90">
+            <Switch
+              id={`${idPrefix}-required`}
+              checked={draft.required}
+              ariaLabel={t('templates.editor.fields.required')}
+              onCheckedChange={(checked) => onChange({ required: checked })}
+            />
+            <label htmlFor={`${idPrefix}-required`} className="cursor-pointer select-none">
+              {t('templates.editor.fields.required')}
+            </label>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         {draft.type !== 'switch' ? (
-          <Field label={t('templates.editor.fields.placeholder')}>
+          <Field label={t('templates.editor.fields.placeholder')} htmlFor={`${idPrefix}-placeholder`}>
             <Input
+              id={`${idPrefix}-placeholder`}
               value={draft.placeholder}
               maxLength={200}
               placeholder={t('templates.editor.fields.placeholderHint')}
@@ -678,8 +716,9 @@ function TemplateFieldRow({
             />
           </Field>
         ) : null}
-        <Field label={t('templates.editor.fields.help')}>
+        <Field label={t('templates.editor.fields.help')} htmlFor={`${idPrefix}-help`}>
           <Input
+            id={`${idPrefix}-help`}
             value={draft.help}
             maxLength={500}
             placeholder={t('templates.editor.fields.helpHint')}
@@ -708,17 +747,19 @@ function TemplateFieldRow({
       ) : null}
 
       {draft.type === 'number' ? (
-        <div className="grid gap-2 sm:grid-cols-2">
-          <Field label={t('templates.editor.fields.min')}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label={t('templates.editor.fields.min')} htmlFor={`${idPrefix}-min`}>
             <Input
+              id={`${idPrefix}-min`}
               type="number"
               step="any"
               value={draft.min}
               onChange={(event) => onChange({ min: event.target.value })}
             />
           </Field>
-          <Field label={t('templates.editor.fields.max')}>
+          <Field label={t('templates.editor.fields.max')} htmlFor={`${idPrefix}-max`}>
             <Input
+              id={`${idPrefix}-max`}
               type="number"
               step="any"
               value={draft.max}
@@ -729,25 +770,28 @@ function TemplateFieldRow({
       ) : null}
 
       {textConstraints ? (
-        <div className="grid gap-2 sm:grid-cols-3">
-          <Field label={t('templates.editor.fields.minLength')}>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label={t('templates.editor.fields.minLength')} htmlFor={`${idPrefix}-min-length`}>
             <Input
+              id={`${idPrefix}-min-length`}
               type="number"
               min={0}
               value={draft.minLength}
               onChange={(event) => onChange({ minLength: event.target.value })}
             />
           </Field>
-          <Field label={t('templates.editor.fields.maxLength')}>
+          <Field label={t('templates.editor.fields.maxLength')} htmlFor={`${idPrefix}-max-length`}>
             <Input
+              id={`${idPrefix}-max-length`}
               type="number"
               min={1}
               value={draft.maxLength}
               onChange={(event) => onChange({ maxLength: event.target.value })}
             />
           </Field>
-          <Field label={t('templates.editor.fields.pattern')}>
+          <Field label={t('templates.editor.fields.pattern')} htmlFor={`${idPrefix}-pattern`}>
             <Input
+              id={`${idPrefix}-pattern`}
               value={draft.pattern}
               className="font-mono"
               placeholder="^[a-z]+$"
@@ -788,25 +832,21 @@ function TemplateTestRenderPanel({ template }: { template?: TemplateDto }) {
 
   if (!template) {
     return (
-      <Card className="p-4">
-        <p className="text-sm font-semibold">{t('templates.editor.testPanel.title')}</p>
-        <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-          {t('templates.editor.testPanel.unsavedHint')}
-        </p>
-      </Card>
+      <div className="glass-flat p-5">
+        <p className="text-body font-medium text-ink">{t('templates.editor.testPanel.title')}</p>
+        <p className="mt-1.5 text-xs text-moonlight">{t('templates.editor.testPanel.unsavedHint')}</p>
+      </div>
     );
   }
 
   const errorSummary = renderMutation.error ? summarizeTemplateError(renderMutation.error) : null;
 
   return (
-    <Card className="p-4">
-      <p className="text-sm font-semibold">{t('templates.editor.testPanel.title')}</p>
-      <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">
-        {t('templates.editor.testPanel.hint')}
-      </p>
+    <div className="glass-flat p-5">
+      <p className="text-body font-medium text-ink">{t('templates.editor.testPanel.title')}</p>
+      <p className="mt-1 text-xs text-moonlight">{t('templates.editor.testPanel.hint')}</p>
 
-      <div className="mt-3">
+      <div className="mt-4">
         <TemplateFields
           fields={template.fields}
           values={values}
@@ -816,14 +856,14 @@ function TemplateTestRenderPanel({ template }: { template?: TemplateDto }) {
         />
       </div>
 
-      <div className="mt-3 flex justify-end">
-        <Button size="sm" loading={renderMutation.isPending} onClick={() => renderMutation.mutate()}>
+      <div className="mt-4 flex justify-end">
+        <Button variant="outline" size="sm" loading={renderMutation.isPending} onClick={() => renderMutation.mutate()}>
           {t('templates.editor.testPanel.run')}
         </Button>
       </div>
 
       {errorSummary ? (
-        <Alert tone="danger" title={t('templates.editor.testPanel.failed')} className="mt-3">
+        <Alert tone="danger" title={t('templates.editor.testPanel.failed')} className="mt-4">
           <ul className="list-disc space-y-0.5 pl-4 text-xs">
             {errorSummary.messages.map((message, index) => (
               <li key={index} className="break-words">
@@ -835,7 +875,7 @@ function TemplateTestRenderPanel({ template }: { template?: TemplateDto }) {
       ) : null}
 
       {renderMutation.data ? (
-        <div className="mt-3 space-y-2">
+        <div className="mt-4">
           <Tabs value={tab} onValueChange={(value) => setTab(value as 'payload' | 'values')}>
             <TabsList>
               <TabsTrigger value="payload">{t('templates.editor.testPanel.renderResult')}</TabsTrigger>
@@ -850,10 +890,8 @@ function TemplateTestRenderPanel({ template }: { template?: TemplateDto }) {
           </Tabs>
         </div>
       ) : (
-        <p className="mt-3 text-xs text-[var(--muted-foreground)]">
-          {t('templates.editor.testPanel.empty')}
-        </p>
+        <p className="mt-4 text-xs text-moonlight">{t('templates.editor.testPanel.empty')}</p>
       )}
-    </Card>
+    </div>
   );
 }

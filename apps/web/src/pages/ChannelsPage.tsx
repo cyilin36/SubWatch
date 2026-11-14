@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Mail, Pencil, Plus, Send, Trash2, Webhook } from 'lucide-react';
+import { Pencil, Plus, Send, Trash2 } from 'lucide-react';
 import type { z } from 'zod';
 import {
   emailChannelConfigSchema,
@@ -23,7 +23,6 @@ import {
   Badge,
   Button,
   Card,
-  CardContent,
   ConfirmDialog,
   Dialog,
   EmptyState,
@@ -35,9 +34,9 @@ import {
   Select,
   Skeleton,
   Switch,
-  Textarea,
 } from '../components/ui';
 import { CodeEditor } from '../components/ui/CodeEditor';
+import { ChannelIcon } from '../components/common/icons';
 import { TagsInput } from '../components/common/fields';
 
 interface EmailFormState {
@@ -291,6 +290,7 @@ function ChannelDialog({
             type="button"
             variant="outline"
             loading={testDraftMutation.isPending}
+            disabled={saveMutation.isPending}
             onClick={onTest}
           >
             <Send className="h-4 w-4" aria-hidden />
@@ -308,12 +308,12 @@ function ChannelDialog({
       <form
         id="channel-form"
         noValidate
-        className="space-y-4"
+        className="space-y-6"
         onSubmit={(event) => {
           void onSubmit(event);
         }}
       >
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t('channels.name')} error={getFieldError(errors, 'name')} required>
             <Input
               placeholder={t('channels.namePlaceholder')}
@@ -334,8 +334,8 @@ function ChannelDialog({
             />
           </Field>
         </div>
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2">
-          <p className="text-sm font-medium">{t('channels.enabled')}</p>
+        <div className="glass-flat flex items-center justify-between gap-3 rounded-btn px-4 py-3">
+          <p className="text-body font-medium text-ink">{t('channels.enabled')}</p>
           <Switch
             checked={form.watch('enabled')}
             onCheckedChange={(checked) => form.setValue('enabled', checked, { shouldDirty: true })}
@@ -344,8 +344,8 @@ function ChannelDialog({
         </div>
 
         {type === 'email' ? (
-          <div className="space-y-3 rounded-lg border border-[var(--border)] p-3">
-            <div className="grid gap-3 sm:grid-cols-2">
+          <div className="glass-flat space-y-4 rounded-btn p-4 sm:p-5">
+            <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('channels.host')} error={getFieldError(errors, 'email.host')} required>
                 <Input
                   placeholder="smtp.example.com"
@@ -405,27 +405,27 @@ function ChannelDialog({
               />
             </Field>
             <div className="grid gap-2 sm:grid-cols-3">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="h-4 w-4 accent-[var(--brand)]" {...form.register('email.secure')} />
+              <label className="flex items-center gap-2 text-sm text-moonlight">
+                <input type="checkbox" className="h-4 w-4 accent-moonlight" {...form.register('email.secure')} />
                 {t('channels.secure')}
               </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="h-4 w-4 accent-[var(--brand)]" {...form.register('email.requireTls')} />
+              <label className="flex items-center gap-2 text-sm text-moonlight">
+                <input type="checkbox" className="h-4 w-4 accent-moonlight" {...form.register('email.requireTls')} />
                 {t('channels.requireTls')}
               </label>
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2 text-sm text-moonlight">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 accent-[var(--brand)]"
+                  className="h-4 w-4 accent-moonlight"
                   {...form.register('email.rejectUnauthorized')}
                 />
                 {t('channels.rejectUnauthorized')}
               </label>
             </div>
-            <p className="text-xs text-[var(--muted-foreground)]">{t('channels.emailTestHint')}</p>
+            <p className="text-xs text-moonlight">{t('channels.emailTestHint')}</p>
           </div>
         ) : (
-          <div className="space-y-3 rounded-lg border border-[var(--border)] p-3">
+          <div className="glass-flat space-y-4 rounded-btn p-4 sm:p-5">
             <Field label={t('channels.preset')} hint={t('channels.presetHint')}>
               <Select
                 value={presetId || undefined}
@@ -438,14 +438,14 @@ function ChannelDialog({
               />
             </Field>
             {preset ? (
-              <p className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-xs text-[var(--muted-foreground)]">
+              <p className="glass-flat rounded-btn px-4 py-3 text-xs leading-relaxed break-words text-moonlight">
                 {t(preset.hintKey)}
                 <br />
-                <span className="font-mono">{t('channels.urlExample')}: {preset.urlExample}</span>
+                <span className="font-mono break-all">{t('channels.urlExample')}: {preset.urlExample}</span>
               </p>
             ) : null}
 
-            <div className="grid gap-3 sm:grid-cols-[140px_1fr]">
+            <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
               <Field label={t('channels.method')}>
                 <Select
                   value={form.watch('webhook.method')}
@@ -476,7 +476,7 @@ function ChannelDialog({
               </Field>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('channels.contentType')} error={getFieldError(errors, 'webhook.contentType')}>
                 <Input {...form.register('webhook.contentType')} />
               </Field>
@@ -520,9 +520,9 @@ function ChannelDialog({
               />
             </Field>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">{t('channels.headers')}</p>
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-body font-medium text-ink">{t('channels.headers')}</p>
                 <Button
                   type="button"
                   variant="outline"
@@ -533,9 +533,9 @@ function ChannelDialog({
                   {t('channels.addHeader')}
                 </Button>
               </div>
-              <p className="text-xs text-[var(--muted-foreground)]">{t('channels.headersHint')}</p>
+              <p className="text-xs text-moonlight">{t('channels.headersHint')}</p>
               {headersArray.fields.length === 0 ? (
-                <p className="text-xs text-[var(--muted-foreground)]">{t('common.none')}</p>
+                <p className="text-xs text-moonlight">{t('common.none')}</p>
               ) : null}
               {headersArray.fields.map((field, index) => {
                 const secret = form.watch(`webhook.headers.${index}.secret`);
@@ -566,10 +566,10 @@ function ChannelDialog({
                         {...form.register(`webhook.headers.${index}.value`)}
                       />
                     )}
-                    <label className="flex items-center gap-1.5 whitespace-nowrap text-xs text-[var(--muted-foreground)]">
+                    <label className="flex items-center gap-1.5 whitespace-nowrap text-xs text-moonlight">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 accent-[var(--brand)]"
+                        className="h-4 w-4 accent-moonlight"
                         {...form.register(`webhook.headers.${index}.secret`)}
                       />
                       {t('channels.headerSecret')}
@@ -589,7 +589,7 @@ function ChannelDialog({
             </div>
           </div>
         )}
-        <p className="text-xs text-[var(--muted-foreground)]">{t('channels.testHint')}</p>
+        <p className="text-xs text-moonlight">{t('channels.testHint')}</p>
       </form>
     </Dialog>
   );
@@ -647,20 +647,19 @@ export function ChannelsPage() {
 
   const channels = channelsQuery.data ?? [];
 
+  const openCreate = () => {
+    setEditingChannel(null);
+    setDialogOpen(true);
+  };
+
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader
         title={t('channels.title')}
         description={t('channels.subtitle')}
         icon={<Send className="h-5 w-5" />}
         actions={
-          <Button
-            size="sm"
-            onClick={() => {
-              setEditingChannel(null);
-              setDialogOpen(true);
-            }}
-          >
+          <Button variant="secondary" size="sm" onClick={openCreate} disabled={channelsQuery.isPending}>
             <Plus className="h-4 w-4" aria-hidden />
             {t('channels.newChannel')}
           </Button>
@@ -668,9 +667,9 @@ export function ChannelsPage() {
       />
 
       {channelsQuery.isPending ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-36" />
+            <Skeleton key={index} className="h-48 rounded-card" />
           ))}
         </div>
       ) : channelsQuery.isError ? (
@@ -681,63 +680,68 @@ export function ChannelsPage() {
           title={t('channels.noChannels')}
           description={t('channels.noChannelsHint')}
           action={
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditingChannel(null);
-                setDialogOpen(true);
-              }}
-            >
+            <Button variant="secondary" size="sm" onClick={openCreate}>
               <Plus className="h-4 w-4" aria-hidden />
               {t('channels.createFirst')}
             </Button>
           }
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {channels.map((channel) => {
             const isEmail = channel.type === 'email';
             const summary = isEmail
               ? `${String(channel.config.host ?? '')}:${String(channel.config.port ?? '')} → ${(channel.config.to as string[] | undefined)?.join(', ') ?? ''}`
               : `${String(channel.config.method ?? 'POST')} ${String(channel.config.url ?? '')}`;
+            const toggling =
+              toggleMutation.isPending && toggleMutation.variables?.channel.id === channel.id;
+            const testing =
+              testMutation.isPending && testMutation.variables?.id === channel.id;
             return (
-              <Card key={channel.id} className="flex flex-col p-4">
+              <Card key={channel.id} className="flex flex-col p-5 sm:p-6">
                 <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-muted)] text-[var(--brand)]">
-                    {isEmail ? <Mail className="h-5 w-5" aria-hidden /> : <Webhook className="h-5 w-5" aria-hidden />}
+                  <span className="glass-flat flex h-12 w-12 shrink-0 items-center justify-center rounded-btn text-moonlight">
+                    <ChannelIcon type={channel.type} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{channel.name}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      <Badge tone={isEmail ? 'info' : 'warning'}>
+                    <p className="truncate text-body font-medium text-ink">{channel.name}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <Badge tone="muted">
                         {isEmail ? t('channels.email') : t('channels.webhook')}
                       </Badge>
+                      <Badge tone={channel.enabled ? 'success' : 'muted'} dot>
+                        {channel.enabled ? t('common.enabled') : t('common.disabled')}
+                      </Badge>
                     </div>
-                    <p className="mt-1.5 line-clamp-2 break-all text-xs text-[var(--muted-foreground)]" title={summary}>
+                    <p
+                      className="mt-2 line-clamp-2 break-words text-xs leading-relaxed text-moonlight"
+                      title={summary}
+                    >
                       {summary || t('channels.noConfig')}
                     </p>
                   </div>
                   <Switch
                     checked={channel.enabled}
+                    disabled={toggling}
                     onCheckedChange={(checked) => toggleMutation.mutate({ channel, enabled: checked })}
                     ariaLabel={`${t('channels.enabled')} ${channel.name}`}
                   />
                 </div>
-                <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-[var(--border)] pt-3">
+                <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-4">
                   <Button
                     variant="outline"
                     size="sm"
-                    loading={testMutation.isPending && testMutation.variables?.id === channel.id}
+                    loading={testing}
+                    disabled={toggling || deleteMutation.isPending}
                     onClick={() => testMutation.mutate(channel)}
                   >
-                    {!(testMutation.isPending && testMutation.variables?.id === channel.id) ? (
-                      <Send className="h-3.5 w-3.5" aria-hidden />
-                    ) : null}
+                    {!testing ? <Send className="h-3.5 w-3.5" aria-hidden /> : null}
                     {t('channels.test')}
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
+                    disabled={toggling}
                     onClick={() => {
                       setEditingChannel(channel);
                       setDialogOpen(true);
@@ -749,7 +753,8 @@ export function ChannelsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-[var(--danger)]"
+                    className="text-danger hover:text-danger"
+                    disabled={toggling}
                     onClick={() => setDeleteTarget(channel)}
                   >
                     <Trash2 className="h-3.5 w-3.5" aria-hidden />

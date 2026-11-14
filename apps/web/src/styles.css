@@ -1,42 +1,263 @@
 @import 'tailwindcss';
 
+/*
+ * SubWatch — Glass design system, two appearances.
+ *
+ * Night Glass (default): a deep night base with two or three large, soft light
+ * blooms and translucent panels floating above them.
+ * Day Glass (opt-in): the same geometry on a warm ivory base, with white glass
+ * and ink text. Glass never carries its own colour; it borrows, bends and
+ * softens the light behind it.
+ *
+ * Every surface, line, shadow and text tone is a token, overridden once under
+ * `html[data-theme='light']`. Components never branch on the appearance.
+ * The single accent colour is champagne: the primary action, one key number and
+ * the brand mark. Champagne is deepened for the light base so it keeps its
+ * contrast against ivory.
+ */
+
 @theme {
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    'Inter', 'SF Pro Display', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
+    sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+
+  /* Night palette — the light behind the glass. */
+  --color-night-deep: #060a13;
+  --color-night: #0b1322;
+  --color-night-steel: #16233a;
+  --color-moon-steel: #33517a;
+  --color-moonlight: #7c9cc4;
+  --color-champagne: #e4b863;
+  --color-champagne-ink: #e4b863;
+
+  /* Text and icon tones. `ink` is the inverted text colour used by components. */
+  --color-ink: #ffffff;
+  --color-cta-foreground: #060a13;
+  --color-tone-muted: #9db6d6;
+  --color-popover-arrow: #121c30;
+  --inset-highlight: rgb(255 255 255 / 0.24);
+
+  /* Glass surfaces — the panels themselves never hold colour. */
+  --color-glass: rgb(255 255 255 / 0.08);
+  --color-glass-raised: rgb(255 255 255 / 0.14);
+  --color-glass-soft: rgb(255 255 255 / 0.05);
+  --color-glass-popover: rgb(18 28 48 / 0.82);
+  --color-glass-dialog: rgb(255 255 255 / 0.1);
+  --color-glass-opaque: rgb(22 35 58 / 0.92);
+  --color-line: rgb(255 255 255 / 0.15);
+  --color-line-strong: rgb(255 255 255 / 0.3);
+  --color-line-soft: rgb(255 255 255 / 0.1);
+
+  /* Recessed blocks: inputs, nav bar, hover veils. */
+  --color-field: rgb(255 255 255 / 0.03);
+  --color-field-focus: rgb(255 255 255 / 0.05);
+  --color-nav: rgb(255 255 255 / 0.04);
+  --color-nav-scrolled: rgb(255 255 255 / 0.08);
+  --color-veil: rgb(255 255 255 / 0.06);
+  --color-scrim: rgb(6 10 19 / 0.8);
+  --field-placeholder: rgb(124 156 196 / 0.72);
+
+  /* Ambient blooms behind the glass. */
+  --bloom-moon: rgb(51 81 122 / 0.95);
+  --bloom-moon-fade: rgb(51 81 122 / 0);
+  --bloom-champagne: rgb(228 184 99 / 0.55);
+  --bloom-champagne-fade: rgb(228 184 99 / 0);
+  --bloom-deep: rgb(36 58 92 / 0.85);
+  --bloom-deep-fade: rgb(36 58 92 / 0);
+
+  /* Status colours, tuned for the base they sit on. */
+  --color-success: #6fd3a0;
+  --color-warning: #f0a75e;
+  --color-danger: #f0807f;
+  --color-info: #7c9cc4;
+
+  /* Chart chrome — values are final, the chart does not re-apply opacity. */
+  --chart-grid: rgb(255 255 255 / 0.04);
+  --chart-axis: rgb(124 156 196 / 0.22);
+  --chart-tick: rgb(124 156 196 / 0.85);
+
+  /* Code editor chrome. */
+  --color-code-gutter: rgb(6 10 19 / 0.45);
+  --color-code-active-line: rgb(255 255 255 / 0.03);
+
+  /* Type scale — one family, hierarchy through weight and size. */
+  --text-display: 64px;
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 600;
+  --text-heading: 40px;
+  --text-heading--line-height: 1.15;
+  --text-heading--letter-spacing: -0.01em;
+  --text-heading--font-weight: 600;
+  --text-subheading: 24px;
+  --text-subheading--line-height: 1.3;
+  --text-subheading--font-weight: 500;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 1.6;
+  --text-body: 14px;
+  --text-body--line-height: 1.6;
+  --text-label: 12px;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.14em;
+  --text-label--font-weight: 500;
+
+  /* Radii */
+  --radius-card: 24px;
+  --radius-panel: 32px;
+  --radius-btn: 16px;
+  --radius-input: 14px;
+  --radius-pill: 999px;
+
+  /* Elevation — three layers at once: outer depth, top highlight, bottom shade. */
+  --shadow-glass:
+    0 16px 40px rgb(3 7 18 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(2 6 16 / 0.35);
+  --shadow-glass-hover:
+    0 24px 64px rgb(3 7 18 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.32),
+    inset 0 -1px 0 rgb(2 6 16 / 0.35);
+  --shadow-tile:
+    0 12px 32px rgb(3 7 18 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.18),
+    inset 0 -1px 0 rgb(2 6 16 / 0.3);
+  --shadow-popover:
+    0 24px 64px rgb(3 7 18 / 0.65), inset 0 1px 0 rgb(255 255 255 / 0.2),
+    inset 0 -1px 0 rgb(2 6 16 / 0.35);
+  --shadow-dialog:
+    0 32px 80px rgb(3 7 18 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.24),
+    inset 0 -1px 0 rgb(2 6 16 / 0.35);
+  --shadow-nav-active: inset 0 1px 0 rgb(255 255 255 / 0.24), inset 0 -1px 0 rgb(2 6 16 / 0.3);
+  --shadow-thumb: 0 2px 8px rgb(3 7 18 / 0.55);
+  --shadow-brand:
+    0 8px 24px rgb(3 7 18 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.3),
+    inset 0 -1px 0 rgb(2 6 16 / 0.3);
+  --shadow-glow: 0 12px 32px rgb(228 184 99 / 0.25);
+  --glass-sheen: rgb(255 255 255 / 0.05);
+  --selection-bg: rgb(228 184 99 / 0.28);
+  --selection-fg: #ffffff;
+  --scrollbar-thumb: rgb(255 255 255 / 0.16);
+  --scrollbar-thumb-hover: rgb(255 255 255 / 0.28);
+
+  /* Glass relies on slow, soft motion. */
+  --blur-glass: 40px;
+  --blur-panel: 24px;
+  --ease-glass: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Every bare `transition`/`transition-colors` inherits the glass pacing. */
+  --default-transition-duration: 500ms;
+  --default-transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-:root {
-  --background: #f6f7f9;
-  --surface: #ffffff;
-  --surface-muted: #f0f2f5;
-  --border: #e3e6eb;
-  --foreground: #1d2129;
-  --muted-foreground: #6b7280;
-  --brand: #2563eb;
-  --brand-foreground: #ffffff;
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger: #dc2626;
-  --info: #0ea5e9;
+/*
+ * Day Glass. One block flips the whole system: warm ivory base, white glass,
+ * ink text, and champagne deepened so it still reads against paper.
+ */
+html[data-theme='light'] {
+  --color-night-deep: #eef1f5;
+  --color-night: #ffffff;
+  --color-night-steel: #f4f6f9;
+  --color-moon-steel: #aab4c0;
+  --color-moonlight: #5a6675;
+  --color-champagne: #c8942b;
+  --color-champagne-ink: #8a6217;
+  --color-ink: #101d2e;
+  --color-cta-foreground: #1a1408;
+  --color-tone-muted: #5a6675;
+  --color-popover-arrow: #ffffff;
+  --inset-highlight: rgb(255 255 255 / 0.75);
+
+  --color-glass: rgb(255 255 255 / 0.72);
+  --color-glass-raised: rgb(255 255 255 / 0.88);
+  --color-glass-soft: rgb(255 255 255 / 0.55);
+  --color-glass-popover: rgb(255 255 255 / 0.94);
+  --color-glass-dialog: rgb(255 255 255 / 0.84);
+  --color-glass-opaque: rgb(255 255 255 / 0.97);
+  --color-line: rgb(15 23 42 / 0.08);
+  --color-line-strong: rgb(15 23 42 / 0.16);
+  --color-line-soft: rgb(15 23 42 / 0.05);
+
+  --color-field: rgb(255 255 255 / 0.78);
+  --color-field-focus: rgb(255 255 255 / 0.95);
+  --color-nav: rgb(255 255 255 / 0.7);
+  --color-nav-scrolled: rgb(255 255 255 / 0.85);
+  --color-veil: rgb(15 23 42 / 0.04);
+  --color-scrim: rgb(15 23 42 / 0.25);
+  --field-placeholder: rgb(16 29 46 / 0.62);
+
+  --bloom-moon: rgb(221 233 247 / 0.85);
+  --bloom-moon-fade: rgb(221 233 247 / 0);
+  --bloom-champagne: rgb(232 236 241 / 0.45);
+  --bloom-champagne-fade: rgb(232 236 241 / 0);
+  --bloom-deep: rgb(224 231 239 / 0.8);
+  --bloom-deep-fade: rgb(224 231 239 / 0);
+
+  --color-success: #1d7a4d;
+  --color-warning: #8f5a12;
+  --color-danger: #b23b3b;
+  --color-info: #2f5f97;
+
+  --chart-grid: rgb(20 36 56 / 0.12);
+  --chart-axis: rgb(83 104 138 / 0.4);
+  --chart-tick: rgb(83 104 138 / 0.92);
+
+  --color-code-gutter: rgb(255 255 255 / 0.5);
+  --color-code-active-line: rgb(20 36 56 / 0.04);
+
+  --shadow-glass:
+    0 16px 40px rgb(31 45 61 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -1px 0 rgb(31 45 61 / 0.05);
+  --shadow-glass-hover:
+    0 24px 64px rgb(31 45 61 / 0.16), inset 0 1px 0 rgb(255 255 255 / 0.95),
+    inset 0 -1px 0 rgb(31 45 61 / 0.05);
+  --shadow-tile:
+    0 10px 28px rgb(31 45 61 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -1px 0 rgb(31 45 61 / 0.04);
+  --shadow-popover:
+    0 24px 64px rgb(31 45 61 / 0.18), inset 0 1px 0 rgb(255 255 255 / 0.95),
+    inset 0 -1px 0 rgb(31 45 61 / 0.06);
+  --shadow-dialog:
+    0 32px 80px rgb(31 45 61 / 0.22), inset 0 1px 0 rgb(255 255 255 / 0.95),
+    inset 0 -1px 0 rgb(31 45 61 / 0.06);
+  --shadow-nav-active: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -1px 0 rgb(31 45 61 / 0.06);
+  --shadow-thumb: 0 2px 8px rgb(31 45 61 / 0.22);
+  --shadow-brand:
+    0 8px 24px rgb(31 45 61 / 0.14), inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -1px 0 rgb(31 45 61 / 0.05);
+  --shadow-glow: 0 12px 32px rgb(176 125 28 / 0.25);
+  --glass-sheen: rgb(255 255 255 / 0.6);
+  --selection-bg: rgb(176 125 28 / 0.22);
+  --selection-fg: #101d2e;
+  --scrollbar-thumb: rgb(20 36 56 / 0.18);
+  --scrollbar-thumb-hover: rgb(20 36 56 / 0.3);
+}
+
+html[data-theme='light'] {
   color-scheme: light;
 }
 
-.dark {
-  --background: #0f1115;
-  --surface: #171a21;
-  --surface-muted: #1e222b;
-  --border: #2a2f3a;
-  --foreground: #e5e7eb;
-  --muted-foreground: #9ca3af;
-  --brand: #3b82f6;
-  --brand-foreground: #ffffff;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #38bdf8;
+html[data-theme='dark'] {
   color-scheme: dark;
+}
+
+/*
+ * Transitional aliases: the pre-glass code base speaks in these names. They now
+ * resolve to glass values so untouched markup still reads as one system while
+ * files are migrated to the tokens above.
+ */
+:root {
+  color-scheme: light;
+  --background: var(--color-night);
+  --surface: var(--color-glass);
+  --surface-muted: var(--color-glass-soft);
+  --border: var(--color-line);
+  --foreground: var(--color-ink);
+  --muted-foreground: var(--color-moonlight);
+  --brand: var(--color-champagne);
+  --brand-foreground: var(--color-night-deep);
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --danger: var(--color-danger);
+  --info: var(--color-info);
 }
 
 html,
@@ -45,27 +266,86 @@ body,
   min-height: 100%;
 }
 
-body {
-  margin: 0;
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+html {
+  background-color: var(--color-night-deep);
 }
 
-* {
-  border-color: var(--border);
+body {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  background-color: var(--color-night);
+  background-image: linear-gradient(
+    180deg,
+    var(--color-night-deep) 0%,
+    var(--color-night) 45%,
+    var(--color-night-deep) 100%
+  );
+  background-attachment: fixed;
+  transition:
+    background-color 500ms var(--ease-glass),
+    color 500ms var(--ease-glass);
+}
+
+/* Ambient light layer: the glass needs something to blur behind it. */
+.ambient-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-blob {
+  position: absolute;
+  border-radius: 999px;
+  will-change: transform;
+}
+
+.ambient-blob--moon {
+  width: 52rem;
+  height: 52rem;
+  top: -18rem;
+  left: -12rem;
+  background: radial-gradient(circle, var(--bloom-moon) 0%, var(--bloom-moon-fade) 68%);
+  filter: blur(40px);
+}
+
+.ambient-blob--champagne {
+  width: 38rem;
+  height: 38rem;
+  top: -10rem;
+  right: -10rem;
+  background: radial-gradient(
+    circle,
+    var(--bloom-champagne) 0%,
+    var(--bloom-champagne-fade) 70%
+  );
+  filter: blur(48px);
+}
+
+.ambient-blob--deep {
+  width: 64rem;
+  height: 44rem;
+  bottom: -24rem;
+  left: 18%;
+  background: radial-gradient(circle, var(--bloom-deep) 0%, var(--bloom-deep-fade) 72%);
+  filter: blur(56px);
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--brand) 25%, transparent);
+  background: var(--selection-bg);
+  color: var(--selection-fg);
 }
 
-/* Thin, theme-aware scrollbars for long tables/log panels. */
+/* Thin, glass-toned scrollbars for long tables and log panels. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -74,6 +354,254 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 9999px;
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+@layer components {
+  /* ---------------------------------------------------------------- glass */
+
+  .glass {
+    background-color: var(--color-glass);
+    background-image: linear-gradient(180deg, var(--glass-sheen) 0%, rgb(255 255 255 / 0) 45%);
+    -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(180%);
+    backdrop-filter: blur(var(--blur-glass)) saturate(180%);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-glass);
+    transition:
+      background-color 500ms var(--ease-glass),
+      border-color 500ms var(--ease-glass),
+      box-shadow 500ms var(--ease-glass),
+      transform 500ms var(--ease-glass);
+  }
+
+  .glass-panel {
+    border-radius: var(--radius-panel);
+  }
+
+  /* Only panels that are actually actionable lift on hover. */
+  .glass-interactive:hover {
+    background-color: var(--color-glass-raised);
+    border-color: var(--color-line-strong);
+    box-shadow: var(--shadow-glass-hover);
+    transform: translateY(-2px);
+  }
+
+  /* Light glass tile: the statistic variant, 5% fill and a 24px blur. */
+  .glass-tile {
+    background-color: var(--color-glass-soft);
+    -webkit-backdrop-filter: blur(var(--blur-panel)) saturate(180%);
+    backdrop-filter: blur(var(--blur-panel)) saturate(180%);
+    border: 1px solid var(--color-line-soft);
+    border-radius: 16px;
+    box-shadow: var(--shadow-tile);
+    transition:
+      background-color 500ms var(--ease-glass),
+      border-color 500ms var(--ease-glass);
+  }
+
+  /* Recessed glass: chip rows, inline blocks, secondary wells. */
+  .glass-flat {
+    background-color: var(--color-glass-soft);
+    -webkit-backdrop-filter: blur(var(--blur-panel)) saturate(180%);
+    backdrop-filter: blur(var(--blur-panel)) saturate(180%);
+    border: 1px solid var(--color-line-soft);
+    border-radius: var(--radius-btn);
+    box-shadow: inset 0 1px 0 var(--glass-sheen);
+  }
+
+  /* Floating layers (menus, dialogs, tooltips) sit above the page glass. */
+  .glass-popover {
+    background-color: var(--color-glass-popover);
+    -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(180%);
+    backdrop-filter: blur(var(--blur-glass)) saturate(180%);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-btn);
+    box-shadow: var(--shadow-popover);
+  }
+
+  .glass-dialog {
+    background-color: var(--color-glass-dialog);
+    -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(180%);
+    backdrop-filter: blur(var(--blur-glass)) saturate(180%);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-dialog);
+  }
+
+  /* The only champagne-filled component in the system. */
+  .cta {
+    background-color: var(--color-champagne);
+    color: var(--color-cta-foreground);
+    border: none;
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+    box-shadow: 0 6px 18px var(--selection-bg);
+    transition:
+      background-color 500ms var(--ease-glass),
+      box-shadow 500ms var(--ease-glass),
+      transform 500ms var(--ease-glass);
+  }
+
+  .cta:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--color-champagne) 92%, var(--color-ink));
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-1px);
+  }
+
+  .cta:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px var(--selection-bg);
+  }
+
+  .cta:focus-visible {
+    outline: 2px solid var(--color-champagne-ink);
+    outline-offset: 2px;
+  }
+
+  /* --------------------------------------------------------------- fields */
+
+  .field {
+    width: 100%;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-line);
+    background-color: var(--color-field);
+    color: var(--color-ink);
+    font-size: var(--text-body);
+    line-height: 1.5;
+    transition:
+      background-color 300ms var(--ease-glass),
+      border-color 300ms var(--ease-glass),
+      box-shadow 300ms var(--ease-glass);
+  }
+
+  .field::placeholder {
+    color: var(--field-placeholder);
+  }
+
+  .field:hover:not(:disabled) {
+    border-color: var(--color-line-strong);
+  }
+
+  .field:focus {
+    outline: none;
+    border-color: var(--color-line-strong);
+    background-color: var(--color-field-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ink) 8%, transparent);
+  }
+
+  .field[aria-invalid='true'] {
+    border-color: color-mix(in srgb, var(--color-danger) 60%, transparent);
+  }
+
+  .field[aria-invalid='true']:focus {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 16%, transparent);
+  }
+
+  .field:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  /* ------------------------------------------------------------------ nav */
+
+  .night-nav {
+    background-color: var(--color-nav);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--color-line);
+    transition: background-color 500ms var(--ease-glass);
+  }
+
+  .night-nav[data-scrolled='true'] {
+    background-color: var(--color-nav-scrolled);
+  }
+
+  .nav-link {
+    color: var(--color-moonlight);
+    border-radius: var(--radius-pill);
+    transition:
+      color 300ms var(--ease-glass),
+      background-color 300ms var(--ease-glass),
+      box-shadow 300ms var(--ease-glass);
+  }
+
+  .nav-link:hover {
+    color: var(--color-ink);
+    background-color: var(--color-veil);
+  }
+
+  .nav-link[aria-current='page'] {
+    color: var(--color-ink);
+    background-color: var(--color-glass-raised);
+    box-shadow: var(--shadow-nav-active);
+  }
+
+  /* Brand tile: the wordmark's own glass chip. */
+  .brand-mark {
+    background-color: var(--color-glass-raised);
+    border: 1px solid var(--color-line-strong);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: var(--shadow-brand);
+  }
+
+  /* --------------------------------------------------------------- labels */
+
+  .type-label {
+    font-size: var(--text-label);
+    line-height: 1.4;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-moonlight);
+  }
+
+  /* Glass without blurred support degrades to an opaque, theme-matched panel. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass,
+    .glass-flat,
+    .glass-tile,
+    .glass-popover,
+    .glass-dialog {
+      background-color: var(--color-glass-opaque);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .glass-interactive:hover,
+  .cta:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* CodeMirror inherits the glass shell instead of its default chrome. */
+.cm-editor {
+  background-color: transparent !important;
+}
+
+.cm-editor .cm-gutters {
+  background-color: var(--color-code-gutter) !important;
+  border-right: 1px solid var(--color-line-soft) !important;
+  color: var(--color-moonlight) !important;
+}
+
+.cm-editor .cm-activeLine {
+  background-color: var(--color-code-active-line) !important;
 }

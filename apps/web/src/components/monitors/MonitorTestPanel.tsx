@@ -1,5 +1,6 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, ChevronRight, ClipboardList, Play, Terminal } from 'lucide-react';
+import { ChevronRight, ClipboardList, Play, Terminal } from 'lucide-react';
 import type { MonitorTestResult } from '@subwatch/shared';
 import {
   Alert,
@@ -26,6 +27,41 @@ const LEVEL_TONES: Record<string, Tone> = {
   critical: 'danger',
 };
 
+/** Recessed glass disclosure used for logs and raw payloads. */
+function OutputWell({
+  label,
+  icon,
+  children,
+  mono = false,
+}: {
+  label: string;
+  icon?: ReactNode;
+  children: ReactNode;
+  mono?: boolean;
+}) {
+  return (
+    <details className="glass-flat group overflow-hidden">
+      <summary className="flex cursor-pointer list-none select-none items-center gap-2 px-4 py-2.5 text-moonlight transition-colors duration-500 ease-glass hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/50 [&::-webkit-details-marker]:hidden">
+        <ChevronRight
+          className="h-3.5 w-3.5 shrink-0 transition-transform duration-500 ease-glass group-open:rotate-90"
+          aria-hidden
+        />
+        {icon}
+        <span className="type-label min-w-0 flex-1 truncate">{label}</span>
+      </summary>
+      <div
+        className={
+          mono
+            ? 'max-h-60 overflow-auto border-t border-ink/10 px-4 py-3 font-mono text-xs leading-relaxed text-ink/80'
+            : 'max-h-48 overflow-auto border-t border-ink/10 px-4 py-3 text-xs leading-relaxed text-ink/80'
+        }
+      >
+        {children}
+      </div>
+    </details>
+  );
+}
+
 export interface MonitorTestPanelProps {
   result: MonitorTestResult | undefined;
   error: unknown;
@@ -41,9 +77,9 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between">
+      <CardHeader className="flex-row items-center justify-between gap-3">
         <CardTitle className="flex items-center gap-2">
-          <ClipboardList className="h-4 w-4 text-[var(--brand)]" aria-hidden />
+          <ClipboardList className="h-4 w-4 text-moonlight" aria-hidden />
           {t('monitorForm.testResult')}
         </CardTitle>
         <Button size="sm" variant="outline" loading={pending} onClick={onRun} disabled={disabled}>
@@ -51,9 +87,9 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
           {pending ? t('monitorForm.testing') : t('monitorForm.testRun')}
         </Button>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
         {pending ? (
-          <div className="flex items-center gap-2 py-4 text-sm text-[var(--muted-foreground)]">
+          <div className="glass-flat flex items-center gap-3 px-4 py-6 text-body text-moonlight">
             <Spinner size="sm" />
             {t('monitorForm.testing')}
           </div>
@@ -62,25 +98,27 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
             {errorMessage(error)}
           </Alert>
         ) : !result ? (
-          <p className="py-2 text-sm text-[var(--muted-foreground)]">{t('monitorForm.testChannelHint')}</p>
+          <p className="glass-flat px-4 py-6 text-center text-body text-moonlight">
+            {t('monitorForm.testChannelHint')}
+          </p>
         ) : (
           <>
-            <Alert
-              tone={result.ok ? 'success' : 'danger'}
-              title={result.ok ? t('monitorForm.testSuccess') : t('monitorForm.testFailed')}
-            >
-              <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <Badge tone={statusTone(result.status)}>{t(`status.${result.status}`)}</Badge>
-                {result.httpStatus !== null && result.httpStatus !== undefined ? (
-                  <span>
-                    {t('monitorForm.httpStatus')}: <strong>{result.httpStatus}</strong>
-                  </span>
-                ) : null}
-                <span>
-                  {t('monitorForm.duration')}: <strong>{formatMs(result.durationMs)}</strong>
+            <div className="glass-flat flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+              <Badge tone={result.ok ? 'success' : 'danger'} dot>
+                {result.ok ? t('monitorForm.testSuccess') : t('monitorForm.testFailed')}
+              </Badge>
+              <Badge tone={statusTone(result.status)}>{t(`status.${result.status}`)}</Badge>
+              {result.httpStatus !== null && result.httpStatus !== undefined ? (
+                <span className="text-xs text-moonlight">
+                  {t('monitorForm.httpStatus')}{' '}
+                  <strong className="font-medium text-ink">{result.httpStatus}</strong>
                 </span>
+              ) : null}
+              <span className="text-xs text-moonlight">
+                {t('monitorForm.duration')}{' '}
+                <strong className="font-medium text-ink">{formatMs(result.durationMs)}</strong>
               </span>
-            </Alert>
+            </div>
 
             {result.error ? (
               <Alert tone="warning" title={t('monitorDetail.lastError')}>
@@ -88,43 +126,41 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
               </Alert>
             ) : null}
 
-            <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
-                {t('monitorForm.metricsResult')}
-              </p>
+            <div className="space-y-2">
+              <p className="type-label">{t('monitorForm.metricsResult')}</p>
               {metricEntries.length === 0 ? (
-                <p className="text-sm text-[var(--muted-foreground)]">{t('monitorForm.noMetrics')}</p>
+                <p className="text-body text-moonlight">{t('monitorForm.noMetrics')}</p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {metricEntries.map(([key, metric]) => (
-                    <div key={key} className="rounded-lg border border-[var(--border)] px-2.5 py-1.5">
-                      <p className="truncate text-xs text-[var(--muted-foreground)]">{metric.label || key}</p>
-                      <p className="truncate text-sm font-semibold">{formatMetricValue(metric)}</p>
+                    <div key={key} className="glass-flat min-w-0 px-3 py-2">
+                      <p className="truncate text-xs text-moonlight">{metric.label || key}</p>
+                      <p className="mt-0.5 truncate text-sm font-medium text-ink">
+                        {formatMetricValue(metric)}
+                      </p>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
-                {t('monitorForm.evaluations')}
-              </p>
+            <div className="space-y-2">
+              <p className="type-label">{t('monitorForm.evaluations')}</p>
               {result.evaluations.length === 0 ? (
-                <p className="text-sm text-[var(--muted-foreground)]">{t('monitorForm.noRules')}</p>
+                <p className="text-body text-moonlight">{t('monitorForm.noRules')}</p>
               ) : (
-                <ul className="space-y-1.5">
+                <ul className="space-y-2">
                   {result.evaluations.map((evaluation) => (
                     <li
                       key={`${evaluation.ruleId}-${evaluation.metricKey}`}
-                      className="flex items-start gap-2 rounded-lg border border-[var(--border)] px-2.5 py-1.5 text-sm"
+                      className="glass-flat flex items-start gap-3 px-3 py-2"
                     >
                       <Badge tone={LEVEL_TONES[evaluation.level] ?? 'neutral'}>
                         {t(`severity.${evaluation.level === 'ok' ? 'success' : evaluation.level}`)}
                       </Badge>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{evaluation.metricKey}</p>
-                        <p className="truncate text-xs text-[var(--muted-foreground)]">
+                        <p className="truncate text-sm font-medium text-ink">{evaluation.metricKey}</p>
+                        <p className="truncate text-xs text-moonlight">
                           {evaluation.message || formatMetricValue(evaluation.value)}
                         </p>
                       </div>
@@ -134,45 +170,33 @@ export function MonitorTestPanel({ result, error, pending, onRun, disabled }: Mo
               )}
             </div>
 
-            <details className="rounded-lg border border-[var(--border)]">
-              <summary className="flex cursor-pointer items-center gap-1.5 px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
-                <Terminal className="h-3.5 w-3.5" aria-hidden />
-                {t('monitorForm.logs')}
-              </summary>
-              <div className="max-h-48 overflow-auto border-t border-[var(--border)] bg-[var(--surface-muted)] p-2.5 font-mono text-xs">
-                {result.logs.length === 0 ? (
-                  <p className="text-[var(--muted-foreground)]">{t('monitorForm.noLogs')}</p>
-                ) : (
-                  result.logs.map((line, index) => (
-                    <p key={index} className="whitespace-pre-wrap break-words">
-                      {line}
-                    </p>
-                  ))
-                )}
-              </div>
-            </details>
+            <OutputWell
+              label={t('monitorForm.logs')}
+              icon={<Terminal className="h-3.5 w-3.5" aria-hidden />}
+              mono
+            >
+              {result.logs.length === 0 ? (
+                <p className="text-moonlight">{t('monitorForm.noLogs')}</p>
+              ) : (
+                result.logs.map((line, index) => (
+                  <p key={index} className="whitespace-pre-wrap break-words">
+                    {line}
+                  </p>
+                ))
+              )}
+            </OutputWell>
 
-            <details className="rounded-lg border border-[var(--border)]">
-              <summary className="flex cursor-pointer items-center gap-1.5 px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
-                <ChevronRight className="h-3.5 w-3.5" aria-hidden />
-                {t('monitorForm.rawResponse')}
-              </summary>
-              <pre className="max-h-60 overflow-auto whitespace-pre-wrap break-words border-t border-[var(--border)] bg-[var(--surface-muted)] p-2.5 font-mono text-xs">
+            <OutputWell label={t('monitorForm.rawResponse')} mono>
+              <pre className="whitespace-pre-wrap break-words font-mono text-xs">
                 {result.rawText
                   ? result.rawText
                   : result.rawBody !== undefined
                     ? prettyJson(result.rawBody)
                     : t('monitorForm.noData')}
               </pre>
-            </details>
+            </OutputWell>
           </>
         )}
-        {error ? (
-          <p className="flex items-center gap-1 text-xs text-[var(--danger)]">
-            <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
-            {t('monitorForm.testFailed')}
-          </p>
-        ) : null}
       </CardContent>
     </Card>
   );
