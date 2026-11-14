@@ -43,6 +43,17 @@ function assertInsideSourceRoot(ctx: CoreContext, target: string): void {
   }
 }
 
+/**
+ * Delete the local clone of one template source (best-effort cleanup when a
+ * source is removed). The path is re-validated so cleanup can never escape the
+ * data dir.
+ */
+export function removeSourceDir(ctx: CoreContext, sourceId: string): void {
+  const dir = templateSourceDir(ctx, sourceId);
+  assertInsideSourceRoot(ctx, dir);
+  rmSync(dir, { recursive: true, force: true });
+}
+
 interface GitResult {
   code: number | null;
   signal: NodeJS.Signals | null;

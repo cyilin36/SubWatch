@@ -16,6 +16,7 @@ import {
   listTemplateSources,
   updateTemplateSource,
 } from './repository.js';
+import { removeSourceDir } from './git.js';
 import { syncTemplateSource } from './sync.js';
 
 const idParamsSchema = z.object({ id: z.string().min(1).max(64) });
@@ -64,6 +65,12 @@ export function registerTemplateSourceRoutes(app: FastifyInstance, ctx: CoreCont
       const { id } = idParamsSchema.parse(request.params);
       const removed = deleteTemplateSourceWithTemplates(ctx, id);
       if (!removed) throw new NotFoundError('Template source not found');
+      // Best-effort removal of the local clone; never fail the request over it.
+      try {
+        removeSourceDir(ctx, id);
+      } catch (error) {
+        ctx.logger.warn({ err: error, sourceId: id }, 'failed to remove template source clone directory');
+      }
       reply.code(204);
       return reply.send();
     },
