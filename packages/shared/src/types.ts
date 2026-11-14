@@ -180,10 +180,10 @@ export interface TemplateSummaryDto {
   fieldCount: number;
   /** Number of subscriptions/monitors currently referencing this template. */
   usageCount: number;
-  /** Repository that owns this template, or `null` for user-authored templates. */
-  sourceId: string | null;
-  /** Display name of the owning repository, or `null`. */
-  sourceName: string | null;
+  /** Git repository URL this template was imported from, or `null` for manual templates. */
+  sourceUrl: string | null;
+  /** Short repository label (e.g. `owner/repo`) for display, or `null`. */
+  sourceLabel: string | null;
   updatedAt: string;
 }
 
@@ -200,12 +200,16 @@ export interface TemplateDto {
   version: string;
   fields: TemplateField[];
   payload: Record<string, unknown>;
-  /** Repository that owns this template, or `null` for user-authored templates. */
-  sourceId: string | null;
-  /** Path of the template file inside the owning repository. */
+  /** Git repository URL this template was imported from, or `null`. */
+  sourceUrl: string | null;
+  /** Git branch the template was imported from (empty string = default branch). */
+  sourceBranch: string;
+  /** Path of the template file inside the source repository. */
   sourcePath: string | null;
-  /** Git commit the template was last synced from. */
+  /** Git commit the template was last imported/updated from. */
   sourceRevision: string | null;
+  /** Short repository label (e.g. `owner/repo`) for display. */
+  sourceLabel: string | null;
   createdAt: string;
   updatedAt: string;
 }

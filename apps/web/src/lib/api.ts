@@ -19,13 +19,10 @@ import type {
   MetricValue,
   RuleInput,
   TemplateDto,
+  TemplateGitImportResultDto,
+  TemplateGitPreviewDto,
   TemplateKind,
   TemplateRenderResultDto,
-  TemplateSourceAvailableDto,
-  TemplateSourceDetailDto,
-  TemplateSourceDto,
-  TemplateSourceInput,
-  TemplateSourceSyncResultDto,
   TemplateSummaryDto,
 } from '@subwatch/shared';
 import type {
@@ -33,6 +30,8 @@ import type {
   renewInputSchema,
   settingsUpdateSchema,
   templateExportEnvelopeSchema,
+  templateGitImportInputSchema,
+  templateGitPreviewInputSchema,
   templateInputSchema,
 } from '@subwatch/shared';
 
@@ -43,6 +42,10 @@ export type ChangePasswordInput = z.input<typeof changePasswordSchema>;
 export type TemplateInput = z.input<typeof templateInputSchema>;
 /** Shareable template envelope returned by the export endpoint. */
 export type TemplateExportEnvelope = z.input<typeof templateExportEnvelopeSchema>;
+/** Git preview body; the branch defaults to the repository default when omitted. */
+export type TemplateGitPreviewInput = z.input<typeof templateGitPreviewInputSchema>;
+/** Git import body; `paths` lists the manifest entries to import. */
+export type TemplateGitImportInput = z.input<typeof templateGitImportInputSchema>;
 
 export interface MonitorTestInput {
   config: MonitorConfig;
@@ -261,24 +264,12 @@ export const api = {
       request<TemplateExportEnvelope>(`/templates/${encodeURIComponent(id)}/export`),
     import: (envelope: TemplateExportEnvelope) =>
       post<TemplateDto>('/templates/import', envelope),
-  },
-
-  templateSources: {
-    list: () => request<TemplateSourceDto[]>('/template-sources'),
-    get: (id: string) => request<TemplateSourceDetailDto>(`/template-sources/${encodeURIComponent(id)}`),
-    create: (input: TemplateSourceInput) => post<TemplateSourceDto>('/template-sources', input),
-    update: (id: string, input: TemplateSourceInput) =>
-      put<TemplateSourceDto>(`/template-sources/${encodeURIComponent(id)}`, input),
-    remove: (id: string) => del<undefined>(`/template-sources/${encodeURIComponent(id)}`),
-    available: (id: string) =>
-      request<TemplateSourceAvailableDto>(`/template-sources/${encodeURIComponent(id)}/available`),
-    sync: (id: string, paths?: string[]) =>
-      post<TemplateSourceSyncResultDto>(
-        `/template-sources/${encodeURIComponent(id)}/sync`,
-        paths ? { paths } : {},
-      ),
-    uninstall: (id: string, paths: string[]) =>
-      post<{ removed: number }>(`/template-sources/${encodeURIComponent(id)}/uninstall`, { paths }),
+    gitPreview: (input: TemplateGitPreviewInput) =>
+      post<TemplateGitPreviewDto>('/templates/git/preview', input),
+    gitImport: (input: TemplateGitImportInput) =>
+      post<TemplateGitImportResultDto>('/templates/git/import', input),
+    updateFromSource: (id: string) =>
+      post<TemplateDto>(`/templates/${encodeURIComponent(id)}/update-from-source`),
   },
 
   channels: {
