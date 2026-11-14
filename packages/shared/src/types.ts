@@ -175,6 +175,8 @@ export interface TemplateSummaryDto {
   icon: string;
   color: string;
   category: string;
+  /** Author-declared template version, or empty string. */
+  version: string;
   fieldCount: number;
   /** Number of subscriptions/monitors currently referencing this template. */
   usageCount: number;
@@ -194,6 +196,8 @@ export interface TemplateDto {
   icon: string;
   color: string;
   category: string;
+  /** Author-declared template version, or empty string. */
+  version: string;
   fields: TemplateField[];
   payload: Record<string, unknown>;
   /** Repository that owns this template, or `null` for user-authored templates. */

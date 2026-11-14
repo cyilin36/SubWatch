@@ -79,6 +79,7 @@ export function getTemplateSourceDetail(
     icon: row.icon,
     color: row.color,
     category: row.category,
+    version: row.version,
     updatedAt: row.updated_at,
   }));
   return { ...source, templates };
@@ -155,4 +156,13 @@ export function recordSync(
     'UPDATE template_sources SET last_synced_at = ?, last_commit = ?, last_error = ? WHERE id = ?',
     [nowIso(), result.commit, result.error, id],
   );
+}
+
+/** The set of `source_path`s currently installed from a source. */
+export function listInstalledSourcePaths(ctx: CoreContext, sourceId: string): Set<string> {
+  const paths = new Set<string>();
+  for (const row of listTemplateRowsBySource(ctx, sourceId)) {
+    if (row.source_path !== null) paths.add(row.source_path);
+  }
+  return paths;
 }

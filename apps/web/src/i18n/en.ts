@@ -159,6 +159,7 @@ const en = {
       managedHint: 'Managed by a template repository. Edit it in the repository, then sync again.',
       readOnly: 'Read-only',
       manageSources: 'Template repositories',
+      versionBadge: 'v{{version}}',
     },
     editor: {
       subtitleCreate: 'Create a subscription or monitor template',
@@ -173,6 +174,9 @@ const en = {
       colorHint: 'Optional, #RRGGBB.',
       category: 'Category',
       categoryPlaceholder: 'e.g. Cloud',
+      version: 'Version',
+      versionPlaceholder: 'Optional, e.g. 1.0.0',
+      versionHint: 'Author-declared version number; shown for reference only.',
       descriptionPlaceholder: 'Briefly describe what the template is for',
       fields: {
         title: 'Parameters',
@@ -316,6 +320,24 @@ const en = {
     updated: 'Repository updated',
     deleted: 'Repository deleted',
     saveFailed: 'Failed to save repository',
+    browseTemplates: 'Browse templates',
+    availableTitle: 'Browse and install templates',
+    availableDescription: 'Review the templates this repository currently offers and install only the ones you select.',
+    installSelected: 'Install selected',
+    installSuccess:
+      'Install complete: {{added}} added, {{updated}} updated, {{removed}} removed, {{skipped}} skipped',
+    installFailed: 'Failed to install selected templates',
+    installed: 'Installed',
+    uninstall: 'Uninstall',
+    uninstallConfirm:
+      'Uninstall template "{{name}}"? Subscriptions and monitors keep their parameter snapshot.',
+    uninstallSuccess: 'Uninstalled {{count}} templates',
+    uninstallFailed: 'Failed to uninstall template',
+    noAvailableTemplates: 'This repository offers no installable templates.',
+    catalogError: 'Could not read the repository catalogue',
+    commitLabel: 'Commit',
+    selectedCount: '{{count}} selected',
+    selectAll: 'Select all',
   },
   monitors: {
     title: 'Monitors',

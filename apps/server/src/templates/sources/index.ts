@@ -2,6 +2,9 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import {
   templateSourceInputSchema,
+  templateSourcePathsSchema,
+  templateSourceSyncInputSchema,
+  type TemplateSourceAvailableDto,
   type TemplateSourceDetailDto,
   type TemplateSourceDto,
   type TemplateSourceSyncResultDto,
@@ -9,15 +12,17 @@ import {
 import type { CoreContext } from '../../context.js';
 import { createRequireAuth } from '../../auth/guard.js';
 import { NotFoundError } from '../../lib/errors.js';
+import { deleteSourceTemplatesByPaths } from '../repository.js';
 import {
   createTemplateSource,
   deleteTemplateSourceWithTemplates,
+  getTemplateSource,
   getTemplateSourceDetail,
   listTemplateSources,
   updateTemplateSource,
 } from './repository.js';
 import { removeSourceDir } from './git.js';
-import { syncTemplateSource } from './sync.js';
+import { previewTemplateSource, syncTemplateSource } from './sync.js';
 
 const idParamsSchema = z.object({ id: z.string().min(1).max(64) });
 
@@ -76,12 +81,35 @@ export function registerTemplateSourceRoutes(app: FastifyInstance, ctx: CoreCont
     },
   );
 
+  app.get<{ Params: { id: string } }>(
+    '/api/template-sources/:id/available',
+    { preHandler: requireAuth, config: { rateLimit: { max: 20, timeWindow: '1 minute' } } },
+    async (request): Promise<TemplateSourceAvailableDto> => {
+      const { id } = idParamsSchema.parse(request.params);
+      return previewTemplateSource(ctx, id);
+    },
+  );
+
   app.post<{ Params: { id: string } }>(
     '/api/template-sources/:id/sync',
     { preHandler: requireAuth, config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
     async (request): Promise<TemplateSourceSyncResultDto> => {
       const { id } = idParamsSchema.parse(request.params);
-      return syncTemplateSource(ctx, id);
+      const body = templateSourceSyncInputSchema.parse(request.body ?? {});
+      return syncTemplateSource(ctx, id, body.paths);
+    },
+  );
+
+  app.post<{ Params: { id: string } }>(
+    '/api/template-sources/:id/uninstall',
+    { preHandler: requireAuth },
+    async (request): Promise<{ removed: number }> => {
+      const { id } = idParamsSchema.parse(request.params);
+      const { paths } = templateSourcePathsSchema.parse(request.body ?? {});
+      const source = getTemplateSource(ctx, id);
+      if (!source) throw new NotFoundError('Template source not found');
+      const removed = deleteSourceTemplatesByPaths(ctx, id, paths);
+      return { removed };
     },
   );
 }

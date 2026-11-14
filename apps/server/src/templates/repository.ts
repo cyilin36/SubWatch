@@ -18,6 +18,7 @@ export interface TemplateRow {
   icon: string;
   color: string;
   category: string;
+  version: string;
   fields: string;
   payload: string;
   source_id: string | null;
@@ -57,6 +58,7 @@ export function rowToTemplateDto(row: TemplateRow): TemplateDto {
     icon: row.icon,
     color: row.color,
     category: row.category,
+    version: row.version,
     fields: parseFields(row),
     payload: parsePayload(row),
     sourceId: row.source_id,
@@ -76,6 +78,7 @@ function rowToSummary(row: TemplateSummaryRow): TemplateSummaryDto {
     icon: row.icon,
     color: row.color,
     category: row.category,
+    version: row.version,
     fieldCount: parseFields(row).length,
     usageCount: Number(row.usage_count ?? 0),
     sourceId: row.source_id,
@@ -108,8 +111,8 @@ export function createTemplate(ctx: CoreContext, input: TemplateInput): Template
   run(
     ctx.db,
     `INSERT INTO templates
-       (id, kind, name, description, icon, color, category, fields, payload, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (id, kind, name, description, icon, color, category, version, fields, payload, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       input.kind,
@@ -118,6 +121,7 @@ export function createTemplate(ctx: CoreContext, input: TemplateInput): Template
       input.icon,
       input.color,
       input.category,
+      input.version,
       toJson(input.fields),
       toJson(input.payload),
       now,
@@ -135,7 +139,7 @@ export function updateTemplate(ctx: CoreContext, id: string, input: TemplateInpu
   run(
     ctx.db,
     `UPDATE templates SET
-       name = ?, description = ?, icon = ?, color = ?, category = ?, fields = ?, payload = ?, updated_at = ?
+       name = ?, description = ?, icon = ?, color = ?, category = ?, version = ?, fields = ?, payload = ?, updated_at = ?
      WHERE id = ?`,
     [
       input.name,
@@ -143,6 +147,7 @@ export function updateTemplate(ctx: CoreContext, id: string, input: TemplateInpu
       input.icon,
       input.color,
       input.category,
+      input.version,
       toJson(input.fields),
       toJson(input.payload),
       nowIso(),
@@ -176,6 +181,7 @@ function templateInputsEqual(existing: TemplateRow, input: TemplateInput): boole
     existing.icon === input.icon &&
     existing.color === input.color &&
     existing.category === input.category &&
+    existing.version === input.version &&
     existing.kind === input.kind &&
     isDeepStrictEqual(parseFields(existing), input.fields) &&
     isDeepStrictEqual(parsePayload(existing), input.payload)
@@ -211,9 +217,9 @@ export function upsertSourceTemplate(
     run(
       ctx.db,
       `INSERT INTO templates
-         (id, kind, name, description, icon, color, category, fields, payload,
+         (id, kind, name, description, icon, color, category, version, fields, payload,
           source_id, source_path, source_revision, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         input.kind,
@@ -222,6 +228,7 @@ export function upsertSourceTemplate(
         input.icon,
         input.color,
         input.category,
+        input.version,
         toJson(input.fields),
         toJson(input.payload),
         sourceId,
@@ -238,7 +245,7 @@ export function upsertSourceTemplate(
     run(
       ctx.db,
       `UPDATE templates SET
-         kind = ?, name = ?, description = ?, icon = ?, color = ?, category = ?,
+         kind = ?, name = ?, description = ?, icon = ?, color = ?, category = ?, version = ?,
          fields = ?, payload = ?, source_revision = ?, updated_at = ?
        WHERE id = ?`,
       [
@@ -248,6 +255,7 @@ export function upsertSourceTemplate(
         input.icon,
         input.color,
         input.category,
+        input.version,
         toJson(input.fields),
         toJson(input.payload),
         sourceRevision,
@@ -285,4 +293,26 @@ export function pruneSourceTemplates(ctx: CoreContext, sourceId: string, keepPat
 /** Delete every template installed from a source. Returns the number removed. */
 export function deleteSourceTemplates(ctx: CoreContext, sourceId: string): number {
   return Number(run(ctx.db, 'DELETE FROM templates WHERE source_id = ?', [sourceId]).changes);
+}
+
+/**
+ * Delete the source's templates whose `source_path` is in `paths`. Used by the
+ * selective "uninstall" action. Returns the number of rows removed; unknown
+ * paths are ignored.
+ */
+export function deleteSourceTemplatesByPaths(
+  ctx: CoreContext,
+  sourceId: string,
+  paths: string[],
+): number {
+  const unique = [...new Set(paths)];
+  if (unique.length === 0) return 0;
+  const placeholders = unique.map(() => '?').join(', ');
+  return Number(
+    run(
+      ctx.db,
+      `DELETE FROM templates WHERE source_id = ? AND source_path IN (${placeholders})`,
+      [sourceId, ...unique],
+    ).changes,
+  );
 }
