@@ -57,7 +57,8 @@ data/
 
 ### templates
 
-用户自定义模板（v4；v5 增加模板仓库来源列；v6 增加版本列）。模板是订阅/监控的创建蓝图，本身不产生业务实体。
+用户自定义模板（v4；v5 增加版本列与 git 来源列）。模板是订阅/监控的创建蓝图，本身不产生业务实体；
+从 git 仓库导入的模板与手动创建的模板存于同一张表，仅来源列不同。
 
 | 列 | 说明 |
 |---|---|
@@ -67,28 +68,13 @@ data/
 | `version` | 可选作者版本号，空字符串表示未声明 |
 | `fields` | `TemplateField[]` JSON，参数定义 |
 | `payload` | 渲染草稿 JSON，可含 `{{参数}}` 占位符 |
-| `source_id` | 来源模板仓库，`NULL` 表示本地创建 |
-| `source_path` | 仓库内相对路径，来源为仓库时非空 |
-| `source_revision` | 上次同步的 commit |
+| `source_url` | 导入来源 git 地址，`NULL` 表示手动创建 |
+| `source_branch` | 导入来源分支（空串表示默认分支） |
+| `source_path` | 来源仓库内相对路径 |
+| `source_revision` | 上次导入/更新的 commit |
 | `created_at` / `updated_at` | 时间戳 |
 
-索引：`(kind, name)`、`(source_id, source_path)` 唯一、`(source_id)`。
-
-### template_sources
-
-模板仓库（v5）。记录可拉取模板的 git 仓库与上次同步状态。
-
-| 列 | 说明 |
-|---|---|
-| `id` | 主键 |
-| `name` / `url` / `branch` | 展示名、git 地址、分支 |
-| `enabled` | 是否启用 |
-| `last_synced_at` | 上次同步时间 |
-| `last_commit` | 上次同步的 commit |
-| `last_error` | 上次同步错误（凭据已脱敏） |
-| `created_at` / `updated_at` | 时间戳 |
-
-索引：`(url, branch)` 唯一。
+索引：`(kind, name)`、`(source_path)`。
 
 ### subscriptions
 
@@ -260,10 +246,9 @@ data/
   `template_id`（外键 → `templates`，`ON DELETE SET NULL`）、`template_name`、`field_defs`、`fields`；
   `monitors` 增加 `template_id`、`template_name`。既有订阅/监控的模板列为空值，不做数据回填。
   删除模板只会清空引用行的 `template_id`，模板名与字段/参数快照保留。
-- v5 迁移要点：新增 `template_sources` 表（模板仓库）；`templates` 增加 `source_id`（外键 → `template_sources`，
-  `ON DELETE SET NULL`）、`source_path`、`source_revision` 与 `(source_id, source_path)` 唯一索引。
-  既有模板的来源列为空，视为本地模板，不做数据回填。删除仓库会移除其托管模板，订阅/监控的模板快照按既有语义保留。
-- v6 迁移要点：`templates` 增加 `version`（`TEXT NOT NULL DEFAULT ''`），用于展示模板版本；既有模板为空串。
+- v5 迁移要点：`templates` 增加 `version`（`TEXT NOT NULL DEFAULT ''`）与 git 来源列
+  `source_url`、`source_branch`、`source_path`、`source_revision`，并建 `(source_path)` 索引。
+  既有模板的来源列为空，视为手动创建的模板，不做数据回填。程序不持久化“模板仓库”实体，只保存模板及其来源。
 
 ## 运维提示
 

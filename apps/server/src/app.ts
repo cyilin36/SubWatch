@@ -11,7 +11,6 @@ import type { AppModules, CoreContext } from './context.js';
 import { registerAuthRoutes } from './auth/routes.js';
 import { registerSettingsRoutes } from './api/settings.js';
 import { registerTemplateRoutes } from './templates/index.js';
-import { registerTemplateSourceRoutes } from './templates/sources/index.js';
 import { AppError, ForbiddenError } from './lib/errors.js';
 
 export async function buildApp(context: CoreContext, modules: AppModules): Promise<FastifyInstance> {
@@ -177,7 +176,6 @@ export async function buildApp(context: CoreContext, modules: AppModules): Promi
 
   await registerAuthRoutes(app, context);
   registerTemplateRoutes(app, context);
-  registerTemplateSourceRoutes(app, context);
   modules.notifications.registerRoutes(app);
   modules.monitors.registerRoutes(app);
   modules.subscriptions.registerRoutes(app);
