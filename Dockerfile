@@ -39,8 +39,9 @@ RUN pnpm install --frozen-lockfile --prod
 # Runtime stage: only compiled artifacts and production dependencies.
 # ---------------------------------------------------------------------------
 FROM node:24-bookworm-slim AS runtime
+# git is required at runtime to clone template repositories.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates \
+    && apt-get install -y --no-install-recommends ca-certificates git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

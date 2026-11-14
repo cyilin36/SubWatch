@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { BellRing, LayoutTemplate, ListChecks, Send, Settings } from 'lucide-react';
+import { BellRing, GitBranch, LayoutTemplate, ListChecks, Send, Settings } from 'lucide-react';
 
 export interface NavItem {
   to: string;
@@ -12,6 +12,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { to: '/', labelKey: 'nav.home', icon: ListChecks, end: true },
   { to: '/templates', labelKey: 'nav.templates', icon: LayoutTemplate },
+  { to: '/template-sources', labelKey: 'nav.templateSources', icon: GitBranch },
   { to: '/channels', labelKey: 'nav.channels', icon: Send },
   { to: '/notifications', labelKey: 'nav.notifications', icon: BellRing },
   { to: '/settings', labelKey: 'nav.settings', icon: Settings },
@@ -42,6 +43,7 @@ export function navLabelKey(pathname: string): string {
   if (pathname === '/monitors/new') return 'monitors.newMonitor';
   if (pathname.endsWith('/edit')) return 'monitors.editMonitor';
   if (pathname.startsWith('/monitors')) return 'nav.monitors';
+  if (pathname.startsWith('/template-sources')) return 'nav.templateSources';
   if (pathname === '/templates/new') return 'templates.newTemplate';
   if (pathname === '/templates') return 'nav.templates';
   if (pathname.startsWith('/templates')) return 'templates.editTemplate';

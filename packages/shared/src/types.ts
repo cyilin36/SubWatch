@@ -178,6 +178,10 @@ export interface TemplateSummaryDto {
   fieldCount: number;
   /** Number of subscriptions/monitors currently referencing this template. */
   usageCount: number;
+  /** Repository that owns this template, or `null` for user-authored templates. */
+  sourceId: string | null;
+  /** Display name of the owning repository, or `null`. */
+  sourceName: string | null;
   updatedAt: string;
 }
 
@@ -192,6 +196,12 @@ export interface TemplateDto {
   category: string;
   fields: TemplateField[];
   payload: Record<string, unknown>;
+  /** Repository that owns this template, or `null` for user-authored templates. */
+  sourceId: string | null;
+  /** Path of the template file inside the owning repository. */
+  sourcePath: string | null;
+  /** Git commit the template was last synced from. */
+  sourceRevision: string | null;
   createdAt: string;
   updatedAt: string;
 }
